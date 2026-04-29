@@ -20,7 +20,7 @@ import { motion } from 'motion/react';
 
 export default function HomeAcompanharPedido() {
   return (
-    <div className="bg-[#fcf9f8] min-h-dvh pb-40 font-body text-[#1c1b1b]">
+    <div className="bg-[#fcf9f8] min-h-dvh pb-72 font-body text-[#1c1b1b]">
       {/* TopAppBar */}
       <header className="fixed top-0 w-full z-50">
         <div className="bg-white py-3 border-b border-[#e5e2e1] flex justify-center items-center shadow-sm">
@@ -86,7 +86,21 @@ export default function HomeAcompanharPedido() {
         
         {/* Categories */}
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-          {['Todos', 'Smoothies', 'Açaí', 'Sucos Detox', 'Refrescantes'].map((cat, i) => (
+          {[
+            'Mais pedidos',
+            'Premium',
+            'Mix de frutas',
+            'Açaís',
+            'Bowl',
+            'Milkshakes',
+            'Linha caribe',
+            'Funcional',
+            'Boa de hoje',
+            'Salada de frutas',
+            'Comece bem seu dia',
+            'Especiais',
+            'Promoção Seu Cosechas'
+          ].map((cat, i) => (
             <button key={cat} className={`${i === 0 ? 'bg-[#bd002a] text-white' : 'bg-[#e5e2e1] text-[#5d3f3e]'} px-6 py-2.5 rounded-full font-bold text-sm whitespace-nowrap`}>{cat}</button>
           ))}
         </div>
@@ -126,7 +140,7 @@ export default function HomeAcompanharPedido() {
       </main>
 
       {/* Floating Order Tracker */}
-      <div className="fixed bottom-28 left-4 right-4 z-40">
+      <div className="fixed bottom-[96px] left-4 right-4 z-40">
         <div className="bg-[#E8173A] text-white px-5 py-4 rounded-3xl flex items-center justify-between shadow-[0_12px_40px_rgba(232,23,58,0.3)] transition-all active:scale-95 cursor-pointer">
           <div className="flex items-center gap-4">
             <div className="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center">

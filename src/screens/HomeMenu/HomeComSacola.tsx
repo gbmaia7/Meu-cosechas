@@ -13,11 +13,12 @@ import {
   ShoppingBag, 
   User, 
   UserPlus, 
-  Award
+  Award,
+  ChevronRight
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
-export default function HomeSemSacola() {
+export default function HomeComSacola() {
   return (
     <div className="bg-[#fcf9f8] min-h-dvh pb-40 font-body text-[#1c1b1b]">
       {/* TopAppBar */}
@@ -137,6 +138,23 @@ export default function HomeSemSacola() {
           </div>
         </section>
       </main>
+
+      {/* Sticky Bottom Cart Bar */}
+      <div className="fixed bottom-[96px] left-4 right-4 z-40 mt-4">
+        <div className="bg-[#E8173A] text-white px-5 py-4 rounded-3xl flex items-center justify-between shadow-[0_12px_40px_rgba(232,23,58,0.4)] transition-all active:scale-95 cursor-pointer">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <ShoppingBag className="text-white w-6 h-6" />
+              <span className="absolute -top-1.5 -right-1.5 bg-white text-[#bd002a] text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center">2</span>
+            </div>
+            <span className="text-sm font-extrabold tracking-tight font-semibold">Ver sacola</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold">R$ 43,40</span>
+            <ChevronRight className="text-white/50 w-5 h-5" />
+          </div>
+        </div>
+      </div>
 
       {/* BottomNavBar */}
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
