@@ -1,0 +1,6 @@
+{
+  "name": "Meu Cosechas",
+  "description": "App de pedidos Cosechas",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": []
+}
