@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { Link } from 'react-router-dom';
 import { 
   MapPin, 
   Search, 
@@ -218,13 +219,17 @@ export default function HomeAcompanharPedido() {
       {/* BottomNavBar */}
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
         {[
-          { icon: Utensils, label: 'Menu', active: true },
-          { icon: CreditCard, label: 'Assinatura', active: false },
-          { icon: Star, label: 'Clube', active: false },
-          { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems },
-          { icon: User, label: 'Perfil', active: false },
+          { icon: Utensils, label: 'Menu', active: true, path: '/HomeComSacola' },
+          { icon: CreditCard, label: 'Assinatura', active: false, path: '#' },
+          { icon: Star, label: 'Clube', active: false, path: '#' },
+          { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
+          { icon: User, label: 'Perfil', active: false, path: '#' },
         ].map(item => (
-          <a key={item.label} href="#" className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a] bg-[#e8173a]/10' : 'text-[#a8a29e]'} rounded-full px-4 py-2 transition-transform duration-300 ${item.active ? 'scale-105' : 'active:scale-95'}`}>
+          <Link 
+            key={item.label} 
+            to={item.path} 
+            className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a] bg-[#e8173a]/10' : 'text-[#a8a29e]'} rounded-full px-4 py-2 transition-transform duration-300 ${item.active ? 'scale-105' : 'active:scale-95'}`}
+          >
             <div className="relative">
               <item.icon className="w-6 h-6" />
               {item.badge && item.badge > 0 && (
@@ -234,7 +239,7 @@ export default function HomeAcompanharPedido() {
               )}
             </div>
             <span className="font-display text-[10px] font-semibold mt-1">{item.label}</span>
-          </a>
+          </Link>
         ))}
       </nav>
 

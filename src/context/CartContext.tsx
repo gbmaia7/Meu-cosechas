@@ -20,6 +20,9 @@ interface CartItem {
 interface CartContextType {
   items: CartItem[];
   addToCart: (item: Omit<CartItem, 'id' | 'quantity'> & { quantity?: number }) => void;
+  updateQuantity: (id: string, delta: number) => void;
+  removeFromCart: (id: string) => void;
+  updateItem: (id: string, updates: Partial<CartItem>) => void;
   totalItems: number;
   totalPrice: number;
   clearCart: () => void;
@@ -54,13 +57,31 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const updateQuantity = (id: string, delta: number) => {
+    setItems((prev) => 
+      prev.map(item => 
+        item.id === id 
+          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+          : item
+      )
+    );
+  };
+
+  const removeFromCart = (id: string) => {
+    setItems((prev) => prev.filter(item => item.id !== id));
+  };
+
+  const updateItem = (id: string, updates: Partial<CartItem>) => {
+    setItems((prev) => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+  };
+
   const clearCart = () => setItems([]);
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, totalItems, totalPrice, clearCart }}>
+    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, totalItems, totalPrice, clearCart }}>
       {children}
     </CartContext.Provider>
   );

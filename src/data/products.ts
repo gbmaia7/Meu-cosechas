@@ -47,19 +47,19 @@ export const CATEGORY_COLORS: Record<CategoryKey, string> = {
   'Especial': 'bg-red-600 text-white',
 };
 
-const EXTRA_ACAI: Extra[] = [
+export const EXTRA_ACAI: Extra[] = [
   { id: 'extra-granola', name: 'Granola', description: 'Crocante e nutritiva', price: 3.00, icon: 'nutrition' },
   { id: 'extra-aveia', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain' },
   { id: 'extra-mel', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
 ];
 
-const EXTRA_FITNESS: Extra[] = [
+export const EXTRA_FITNESS: Extra[] = [
   { id: 'extra-whey', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
   { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
-const EXTRA_CARIBE: Extra[] = [
+export const EXTRA_CARIBE: Extra[] = [
   { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
