@@ -17,8 +17,53 @@ import {
   Award
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useState } from 'react';
+import { PRODUCTS, CATEGORY_COLORS, Product, Extra } from '../../data/products';
+import { useCart } from '../../context/CartContext';
+import ProductBottomSheet from '../../components/ProductBottomSheet';
+import ImageLightbox from '../../components/ImageLightbox';
 
 export default function HomeAcompanharPedido() {
+  const { addToCart, totalItems } = useCart();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState('');
+
+  const handleImageClick = (img: string) => {
+    setLightboxImage(img);
+    setIsLightboxOpen(true);
+  };
+
+  const handlePlusClick = (prod: Product) => {
+    if ((prod.sizes && prod.sizes.length > 0) || (prod.extras && prod.extras.length > 0)) {
+      setSelectedProduct(prod);
+    } else {
+      const price = parseFloat(prod.priceDisplay.replace(/[^\d,]/g, '').replace(',', '.'));
+      addToCart({
+        productId: prod.id,
+        name: prod.name,
+        price: price,
+      });
+    }
+  };
+
+  const handleAddFromSheet = (options: { sizeLabel?: string; price: number; extras: Extra[]; notes: string; quantity: number }) => {
+    if (selectedProduct) {
+      let displayName = selectedProduct.name;
+      if (options.sizeLabel) displayName += ` (${options.sizeLabel})`;
+      
+      addToCart({
+        productId: selectedProduct.id,
+        name: displayName,
+        price: options.price,
+        size: options.sizeLabel,
+        extras: options.extras,
+        notes: options.notes,
+        quantity: options.quantity
+      });
+      setSelectedProduct(null);
+    }
+  };
   return (
     <div className="bg-[#fcf9f8] min-h-dvh pb-72 font-body text-[#1c1b1b]">
       {/* TopAppBar */}
@@ -112,23 +157,38 @@ export default function HomeAcompanharPedido() {
             <span className="text-[#bd002a] font-bold text-sm">Ver tudo</span>
           </div>
           <div className="space-y-4">
-            {[
-              { name: 'Frutas Vermelhas', desc: 'Morango, amora, mirtilo e suco de laranja.', price: 'R$ 18,90' },
-              { name: 'Detox Power', desc: 'Couve, abacaxi, maçã verde e gengibre.', price: 'R$ 16,50' },
-              { name: 'Copo Açaí Clássico', desc: 'Açaí puro com granola e banana.', price: 'R$ 22,00' },
-            ].map(prod => (
-              <div key={prod.name} className="bg-white p-4 rounded-lg flex gap-4 transition-transform active:scale-[0.98]">
-                <div className="relative w-24 h-24 rounded-md overflow-hidden bg-[#f0eded]">
-                  <div className="absolute top-1 left-1 bg-[#008388] text-white px-1.5 py-0.5 rounded-full text-[8px] font-bold">+1 ponto</div>
-                </div>
-                <div className="flex-1 flex flex-col justify-between py-1">
+            {PRODUCTS.map(prod => (
+              <div key={prod.id} className="bg-white p-4 rounded-lg flex gap-4 transition-transform active:scale-[0.98]">
+                <button 
+                  onClick={() => handleImageClick(prod.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuB21WTQIQ2EsX2xg7nMbuctpTWvS4hhYAqD_dqH5VzJpimCmEPUJ_n576SDIhFT6uuNfRU4-UdPLn6HVHE5Rc0UqIGh3OWSs1upbNIh1VATp99vlKooECRXXFPCkkKxPcGI8rOoUOdNstd7Nf6cmk7-rhCBZ61d0LfeFitALEKhgvL-7nTD5tPxPTew8ZE1pH1sULKI419idSgujvKEiBh74jVsIPK7mhotM9Goepyoo6aQIkiGhlJuMOz6AQzfLY7cC-Ml2t0XS4g")}
+                  className="relative w-24 h-24 rounded-md overflow-hidden bg-[#f0eded] shrink-0 hover:opacity-90 active:scale-95 transition-all"
+                >
+                  <img 
+                    src={prod.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuB21WTQIQ2EsX2xg7nMbuctpTWvS4hhYAqD_dqH5VzJpimCmEPUJ_n576SDIhFT6uuNfRU4-UdPLn6HVHE5Rc0UqIGh3OWSs1upbNIh1VATp99vlKooECRXXFPCkkKxPcGI8rOoUOdNstd7Nf6cmk7-rhCBZ61d0LfeFitALEKhgvL-7nTD5tPxPTew8ZE1pH1sULKI419idSgujvKEiBh74jVsIPK7mhotM9Goepyoo6aQIkiGhlJuMOz6AQzfLY7cC-Ml2t0XS4g"} 
+                    alt={prod.name} 
+                    className="w-full h-full object-cover" 
+                  />
+                </button>
+                <div className="flex-1 flex flex-col justify-between py-0.5 overflow-hidden">
                   <div>
-                    <h4 className="font-bold text-[#1c1b1b]">{prod.name}</h4>
-                    <p className="text-[#5d3f3e] text-xs mt-1 line-clamp-1">{prod.desc}</p>
+                    <h4 className="font-bold text-[#1c1b1b] text-sm leading-tight">
+                      {prod.name}
+                    </h4>
+                    
+                    <div className="flex flex-col gap-1 mt-1.5 mb-2">
+                      <div className={`inline-flex self-start ${CATEGORY_COLORS[prod.category]} px-1.5 py-0.5 rounded-full text-[7px] font-bold uppercase shadow-sm`}>
+                        {prod.category}
+                      </div>
+                    </div>
+
+                    <p className="text-[#5d3f3e] text-[10px] line-clamp-2 leading-tight">{prod.description}</p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-extrabold text-[#bd002a]">{prod.price}</span>
-                    <button className="w-8 h-8 bg-[#bd002a] rounded-full flex items-center justify-center text-white">
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="font-extrabold text-[#bd002a] text-sm">{prod.priceDisplay}</span>
+                    <button 
+                      onClick={() => handlePlusClick(prod)}
+                      className="w-8 h-8 bg-[#bd002a] rounded-full flex items-center justify-center text-white shrink-0 shadow-sm active:scale-90 transition-transform"
+                    >
                       <Plus className="w-4 h-4" />
                     </button>
                   </div>
@@ -161,15 +221,34 @@ export default function HomeAcompanharPedido() {
           { icon: Utensils, label: 'Menu', active: true },
           { icon: CreditCard, label: 'Assinatura', active: false },
           { icon: Star, label: 'Clube', active: false },
-          { icon: ShoppingBag, label: 'Sacola', active: false },
+          { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems },
           { icon: User, label: 'Perfil', active: false },
         ].map(item => (
           <a key={item.label} href="#" className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a] bg-[#e8173a]/10' : 'text-[#a8a29e]'} rounded-full px-4 py-2 transition-transform duration-300 ${item.active ? 'scale-105' : 'active:scale-95'}`}>
-            <item.icon className="w-6 h-6" />
+            <div className="relative">
+              <item.icon className="w-6 h-6" />
+              {item.badge && item.badge > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-[#bd002a] text-white text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
+                  {item.badge}
+                </span>
+              )}
+            </div>
             <span className="font-display text-[10px] font-semibold mt-1">{item.label}</span>
           </a>
         ))}
       </nav>
+
+      <ProductBottomSheet 
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        onAdd={handleAddFromSheet}
+      />
+
+      <ImageLightbox 
+        isOpen={isLightboxOpen} 
+        onClose={() => setIsLightboxOpen(false)} 
+        imageSrc={lightboxImage} 
+      />
     </div>
   );
 }
