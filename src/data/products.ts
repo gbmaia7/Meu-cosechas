@@ -80,6 +80,23 @@ export const EXTRA_CARIBE: Extra[] = [
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
+export const LINHA_CARIBE: Product[] = [
+  {
+    id: 'caribe-1',
+    name: 'Limonada de Coco',
+    category: 'Linha Caribe',
+    description: 'Limão, creme de coco e coco ralado. Cremosa e refrescante.',
+    priceDisplay: 'a partir de R$ 20,00',
+    points: 1,
+    image: 'https://i.imgur.com/oe8Cfvb.png',
+    sizes: [
+      { label: 'M', price: 20.00, volume: '500ml' },
+      { label: 'G', price: 22.00, volume: '700ml' },
+    ],
+    extras: EXTRA_CARIBE
+  }
+];
+
 export const EXTRA_MIX_FRUTAS: Extra[] = [
   { id: 'extra-cha-verde', name: 'Chá Verde', description: 'Mais energia e antioxidante', price: 3.00, icon: 'leaf' },
   { id: 'extra-suco-laranja', name: 'Suco de Laranja', description: 'Vitamina C extra', price: 3.00, icon: 'citrus' },
@@ -149,7 +166,7 @@ export const PRODUCTS: Product[] = [
     image: 'https://i.imgur.com/oe8Cfvb.png',
     sizes: [
       { label: 'M', price: 20.00, volume: '500ml' },
-      { label: 'G', price: 25.00, volume: '700ml' },
+      { label: 'G', price: 22.00, volume: '700ml' },
     ],
     extras: EXTRA_CARIBE
   },

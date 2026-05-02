@@ -5,7 +5,7 @@
 
 import { X, Check, Minus, Plus, Zap, Flower2, Activity, PlusCircle, Apple, Wheat, Heart, Star, Leaf, Citrus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Product, Extra } from '../data/products';
 import ImageLightbox from './ImageLightbox';
 
@@ -30,16 +30,23 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
 };
 
 export default function ProductBottomSheet({ product, onClose, onAdd }: ProductBottomSheetProps) {
-  const [selectedSizeIndex, setSelectedSizeIndex] = useState(() => {
-    if (product?.sizes) {
-      const gIndex = product.sizes.findIndex(s => s.label === 'G');
-      return gIndex !== -1 ? gIndex : 0;
-    }
-    return 0;
-  });
+  const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
   const [selectedExtras, setSelectedExtras] = useState<Extra[]>([]);
   const [notes, setNotes] = useState('');
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (product) {
+      if (product.sizes) {
+        const gIndex = product.sizes.findIndex(s => s.label === 'G');
+        setSelectedSizeIndex(gIndex !== -1 ? gIndex : 0);
+      } else {
+        setSelectedSizeIndex(0);
+      }
+      setSelectedExtras([]);
+      setNotes('');
+    }
+  }, [product?.id]);
 
   const baseUnitPrice = useMemo(() => {
     if (!product) return 0;

@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
-import { PRODUCTS, CATEGORY_COLORS, Product, Extra } from '../../data/products';
+import { PRODUCTS, CATEGORY_COLORS, Product, Extra, LINHA_CARIBE } from '../../data/products';
 import { useCart } from '../../context/CartContext';
 import ProductBottomSheet from '../../components/ProductBottomSheet';
 import ImageLightbox from '../../components/ImageLightbox';
@@ -140,7 +140,7 @@ export default function HomeAcompanharPedido() {
             'Mix de frutas',
             'Açaís',
             'Milkshakes',
-            'Linha caribe',
+            'Linha Caribe',
             'Funcional',
             'Boa de hoje',
             'Salada de frutas',
@@ -257,8 +257,22 @@ export default function HomeAcompanharPedido() {
             </>
           )}
 
+          {/* Linha Caribe Section */}
+          {selectedCategory === 'Linha Caribe' && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Linha Caribe</h3>
+              </div>
+              <div className="space-y-4">
+                {LINHA_CARIBE.map(prod => (
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                ))}
+              </div>
+            </>
+          )}
+
           {/* Placeholder for other categories */}
-          {selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && (
+          {selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && selectedCategory !== 'Linha Caribe' && (
             <div className="py-12 flex flex-col items-center justify-center text-center px-4">
               <div className="bg-[#f0eded] w-16 h-16 rounded-full flex items-center justify-center mb-4">
                 <Utensils className="text-[#a8a29e] w-8 h-8" />

@@ -9,8 +9,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS } from '../data/products';
+import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE } from '../data/products';
 import ProductBottomSheet from '../components/ProductBottomSheet';
+
+const ALL_PRODUCTS = [...PRODUCTS, ...LINHA_CARIBE];
 
 const ExtraIcon = ({ iconName }: { iconName: string }) => {
   switch (iconName) {
@@ -56,7 +58,7 @@ export default function Sacola() {
     const sections: any[] = [];
     
     items.forEach(item => {
-      const product = PRODUCTS.find(p => p.id === item.productId);
+      const product = ALL_PRODUCTS.find(p => p.id === item.productId);
       if (!product) return;
 
       const productExtras = product.extras || [];
@@ -95,7 +97,7 @@ export default function Sacola() {
 
   const handleUpgrade = (itemId: string, productId: string) => {
     const item = items.find(i => i.id === itemId);
-    const product = PRODUCTS.find(p => p.id === productId);
+    const product = ALL_PRODUCTS.find(p => p.id === productId);
     if (!item || !product || !product.sizes) return;
 
     const mSize = product.sizes.find(s => s.label === 'M');
@@ -112,7 +114,7 @@ export default function Sacola() {
   };
 
   const handleEditItem = (itemId: string, productId: string) => {
-    const product = PRODUCTS.find(p => p.id === productId);
+    const product = ALL_PRODUCTS.find(p => p.id === productId);
     if (product) {
       setSelectedProductForEdit({ product, itemId });
     }
@@ -280,7 +282,7 @@ export default function Sacola() {
         {/* Product List */}
         <section className="space-y-6">
           {items.map((item) => {
-            const product = PRODUCTS.find(p => p.id === item.productId);
+            const product = ALL_PRODUCTS.find(p => p.id === item.productId);
             const canUpgrade = item.size === 'M' && product?.sizes?.some(s => s.label === 'G');
             const upgradePrice = product?.sizes?.find(s => s.label === 'G')?.price! - (product?.sizes?.find(s => s.label === 'M')?.price || 0);
 
