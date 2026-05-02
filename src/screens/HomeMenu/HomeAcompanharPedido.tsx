@@ -15,7 +15,8 @@ import {
   ShoppingBag, 
   User, 
   UserPlus, 
-  Award
+  Award,
+  ChevronRight
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
@@ -25,10 +26,11 @@ import ProductBottomSheet from '../../components/ProductBottomSheet';
 import ImageLightbox from '../../components/ImageLightbox';
 
 export default function HomeAcompanharPedido() {
-  const { addToCart, totalItems } = useCart();
+  const { addToCart, totalItems, userPoints } = useCart();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Mais pedidos');
 
   const handleImageClick = (img: string) => {
     setLightboxImage(img);
@@ -97,7 +99,7 @@ export default function HomeAcompanharPedido() {
             <h3 className="font-bold text-[13px] leading-tight mb-1">Clube Cosechas</h3>
             <p className="text-[10px] text-[#5d3f3e] leading-snug mb-3 flex-grow">Ganhe pontos em cada compra e troque por prêmios</p>
             <div className="mt-auto">
-              <p className="font-extrabold text-[#bd002a] mb-2 tracking-wide text-[11px]">SEUS PONTOS: 5</p>
+              <p className="font-extrabold text-[#bd002a] mb-2 tracking-wide text-[11px]">SEUS PONTOS: {userPoints}</p>
               <button className="w-full text-center bg-[#bd002a] text-white text-[9px] font-bold py-2 rounded-lg uppercase tracking-tight">VER COMO FUNCIONA</button>
             </div>
           </div>
@@ -137,7 +139,6 @@ export default function HomeAcompanharPedido() {
             'Premium',
             'Mix de frutas',
             'Açaís',
-            'Bowl',
             'Milkshakes',
             'Linha caribe',
             'Funcional',
@@ -146,57 +147,126 @@ export default function HomeAcompanharPedido() {
             'Comece bem seu dia',
             'Especiais',
             'Promoção Seu Cosechas'
-          ].map((cat, i) => (
-            <button key={cat} className={`${i === 0 ? 'bg-[#bd002a] text-white' : 'bg-[#e5e2e1] text-[#5d3f3e]'} px-6 py-2.5 rounded-full font-bold text-sm whitespace-nowrap`}>{cat}</button>
+          ].map((cat) => (
+            <button 
+              key={cat} 
+              onClick={() => setSelectedCategory(cat)}
+              className={`${selectedCategory === cat ? 'bg-[#bd002a] text-white' : 'bg-[#e5e2e1] text-[#5d3f3e]'} px-6 py-2.5 rounded-full font-bold text-sm whitespace-nowrap transition-all active:scale-95`}
+            >
+              {cat}
+            </button>
           ))}
         </div>
 
         {/* Products */}
         <section className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-extrabold font-display">Mais Pedidos</h3>
-            <span className="text-[#bd002a] font-bold text-sm">Ver tudo</span>
-          </div>
-          <div className="space-y-4">
-            {PRODUCTS.map(prod => (
-              <div key={prod.id} className="bg-white p-4 rounded-lg flex gap-4 transition-transform active:scale-[0.98]">
-                <button 
-                  onClick={() => handleImageClick(prod.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuB21WTQIQ2EsX2xg7nMbuctpTWvS4hhYAqD_dqH5VzJpimCmEPUJ_n576SDIhFT6uuNfRU4-UdPLn6HVHE5Rc0UqIGh3OWSs1upbNIh1VATp99vlKooECRXXFPCkkKxPcGI8rOoUOdNstd7Nf6cmk7-rhCBZ61d0LfeFitALEKhgvL-7nTD5tPxPTew8ZE1pH1sULKI419idSgujvKEiBh74jVsIPK7mhotM9Goepyoo6aQIkiGhlJuMOz6AQzfLY7cC-Ml2t0XS4g")}
-                  className="relative w-24 h-24 rounded-md overflow-hidden bg-[#f0eded] shrink-0 hover:opacity-90 active:scale-95 transition-all"
-                >
-                  <img 
-                    src={prod.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuB21WTQIQ2EsX2xg7nMbuctpTWvS4hhYAqD_dqH5VzJpimCmEPUJ_n576SDIhFT6uuNfRU4-UdPLn6HVHE5Rc0UqIGh3OWSs1upbNIh1VATp99vlKooECRXXFPCkkKxPcGI8rOoUOdNstd7Nf6cmk7-rhCBZ61d0LfeFitALEKhgvL-7nTD5tPxPTew8ZE1pH1sULKI419idSgujvKEiBh74jVsIPK7mhotM9Goepyoo6aQIkiGhlJuMOz6AQzfLY7cC-Ml2t0XS4g"} 
-                    alt={prod.name} 
-                    className="w-full h-full object-cover" 
-                  />
-                </button>
-                <div className="flex-1 flex flex-col justify-between py-0.5 overflow-hidden">
-                  <div>
-                    <h4 className="font-bold text-[#1c1b1b] text-sm leading-tight">
-                      {prod.name}
-                    </h4>
-                    
-                    <div className="flex flex-col gap-1 mt-1.5 mb-2">
-                      <div className={`inline-flex self-start ${CATEGORY_COLORS[prod.category]} px-1.5 py-0.5 rounded-full text-[7px] font-bold uppercase shadow-sm`}>
-                        {prod.category}
-                      </div>
-                    </div>
+          {/* Mais Pedidos Section */}
+          {selectedCategory === 'Mais pedidos' && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Mais Pedidos</h3>
+              </div>
+              <div className="space-y-4">
+                {PRODUCTS.filter(p => parseInt(p.id) >= 1 && parseInt(p.id) <= 10).map(prod => (
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                ))}
+              </div>
+            </>
+          )}
 
-                    <p className="text-[#5d3f3e] text-[10px] line-clamp-2 leading-tight">{prod.description}</p>
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="font-extrabold text-[#bd002a] text-sm">{prod.priceDisplay}</span>
-                    <button 
-                      onClick={() => handlePlusClick(prod)}
-                      className="w-8 h-8 bg-[#bd002a] rounded-full flex items-center justify-center text-white shrink-0 shadow-sm active:scale-90 transition-transform"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
+          {/* Mix de Frutas Section */}
+          {selectedCategory === 'Mix de frutas' && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Mix de Frutas</h3>
+              </div>
+              <div className="space-y-4">
+                {PRODUCTS.filter(p => p.category === 'Mix de Frutas').map(prod => (
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Premium Section */}
+          {selectedCategory === 'Premium' && (
+            <div className="space-y-8">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-1 bg-purple-500 rounded-full" />
+                  <h4 className="font-black text-xs uppercase tracking-widest text-purple-600">Iogurte</h4>
+                </div>
+                <div className="space-y-4">
+                  {PRODUCTS.filter(p => p.category === 'Premium' && p.name.toLowerCase().includes('iogurte')).map(prod => (
+                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-1 bg-purple-500 rounded-full" />
+                  <h4 className="font-black text-xs uppercase tracking-widest text-purple-600">Sorvete</h4>
+                </div>
+                <div className="space-y-4">
+                  {PRODUCTS.filter(p => p.category === 'Premium' && p.name.toLowerCase().includes('sorvete')).map(prod => (
+                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-1 bg-blue-400 rounded-full" />
+                  <h4 className="font-black text-xs uppercase tracking-widest text-blue-500">Água</h4>
+                </div>
+                <div className="space-y-4">
+                  {PRODUCTS.filter(p => p.category === 'Premium' && !p.name.toLowerCase().includes('iogurte') && !p.name.toLowerCase().includes('sorvete')).map(prod => (
+                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Açaís Section */}
+          {selectedCategory === 'Açaís' && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Açaís</h3>
+              </div>
+              <div className="space-y-4">
+                {PRODUCTS.filter(p => p.category === 'Açaí').map(prod => (
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Milkshakes Section */}
+          {selectedCategory === 'Milkshakes' && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Milkshakes</h3>
+              </div>
+              <div className="space-y-4">
+                {PRODUCTS.filter(p => p.category === 'Milkshake').map(prod => (
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Placeholder for other categories */}
+          {selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && (
+            <div className="py-12 flex flex-col items-center justify-center text-center px-4">
+              <div className="bg-[#f0eded] w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                <Utensils className="text-[#a8a29e] w-8 h-8" />
+              </div>
+              <h4 className="font-bold text-[#1c1b1b] mb-1">Seção em breve</h4>
+              <p className="text-xs text-[#5d3f3e]">Novos produtos de {selectedCategory} estão chegando!</p>
+            </div>
+          )}
         </section>
       </main>
 
@@ -232,8 +302,8 @@ export default function HomeAcompanharPedido() {
           >
             <div className="relative">
               <item.icon className="w-6 h-6" />
-              {item.badge && item.badge > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#bd002a] text-white text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center">
+              {typeof item.badge === 'number' && item.badge > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-[#E8173A] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
                   {item.badge}
                 </span>
               )}
@@ -254,6 +324,47 @@ export default function HomeAcompanharPedido() {
         onClose={() => setIsLightboxOpen(false)} 
         imageSrc={lightboxImage} 
       />
+    </div>
+  );
+}
+
+function ProductCard({ prod, onImageClick, onPlusClick }: { prod: Product; onImageClick: (img: string) => void; onPlusClick: (prod: Product) => void; key?: string }) {
+  return (
+    <div className="bg-white p-4 rounded-lg flex gap-4 transition-transform active:scale-[0.98] border border-[#e5e2e1]/30 shadow-sm">
+      <button 
+        onClick={() => onImageClick(prod.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuB21WTQIQ2EsX2xg7nMbuctpTWvS4hhYAqD_dqH5VzJpimCmEPUJ_n576SDIhFT6uuNfRU4-UdPLn6HVHE5Rc0UqIGh3OWSs1upbNIh1VATp99vlKooECRXXFPCkkKxPcGI8rOoUOdNstd7Nf6cmk7-rhCBZ61d0LfeFitALEKhgvL-7nTD5tPxPTew8ZE1pH1sULKI419idSgujvKEiBh74jVsIPK7mhotM9Goepyoo6aQIkiGhlJuMOz6AQzfLY7cC-Ml2t0XS4g")}
+        className="relative w-24 h-24 rounded-md overflow-hidden bg-[#f0eded] shrink-0 hover:opacity-90 active:scale-95 transition-all"
+      >
+        <img 
+          src={prod.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuB21WTQIQ2EsX2xg7nMbuctpTWvS4hhYAqD_dqH5VzJpimCmEPUJ_n576SDIhFT6uuNfRU4-UdPLn6HVHE5Rc0UqIGh3OWSs1upbNIh1VATp99vlKooECRXXFPCkkKxPcGI8rOoUOdNstd7Nf6cmk7-rhCBZ61d0LfeFitALEKhgvL-7nTD5tPxPTew8ZE1pH1sULKI419idSgujvKEiBh74jVsIPK7mhotM9Goepyoo6aQIkiGhlJuMOz6AQzfLY7cC-Ml2t0XS4g"} 
+          alt={prod.name} 
+          className="w-full h-full object-cover" 
+        />
+      </button>
+      <div className="flex-1 flex flex-col justify-between py-0.5 overflow-hidden">
+        <div>
+          <h4 className="font-bold text-[#1c1b1b] text-sm leading-tight">
+            {prod.name}
+          </h4>
+          
+          <div className="flex flex-col gap-1 mt-1.5 mb-2">
+            <div className={`inline-flex self-start ${CATEGORY_COLORS[prod.category]} px-1.5 py-0.5 rounded-full text-[7px] font-bold uppercase shadow-sm`}>
+              {prod.category}
+            </div>
+          </div>
+
+          <p className="text-[#5d3f3e] text-[10px] line-clamp-2 leading-tight">{prod.description}</p>
+        </div>
+        <div className="flex items-center justify-between mt-1">
+          <span className="font-extrabold text-[#bd002a] text-sm">{prod.priceDisplay}</span>
+          <button 
+            onClick={() => onPlusClick(prod)}
+            className="w-8 h-8 bg-[#bd002a] rounded-full flex items-center justify-center text-white shrink-0 shadow-sm active:scale-90 transition-transform"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -9,6 +9,7 @@ export interface Extra {
   description: string;
   price: number;
   icon: string;
+  glutenFree?: boolean;
 }
 
 export interface Product {
@@ -19,9 +20,11 @@ export interface Product {
   priceDisplay: string;
   points: number;
   image?: string;
+  volume?: string;
   sizes?: {
     label: string;
     price: number;
+    volume?: string;
   }[];
   extras?: Extra[];
 }
@@ -48,9 +51,22 @@ export const CATEGORY_COLORS: Record<CategoryKey, string> = {
 };
 
 export const EXTRA_ACAI: Extra[] = [
-  { id: 'extra-granola', name: 'Granola', description: 'Crocante e nutritiva', price: 3.00, icon: 'nutrition' },
-  { id: 'extra-aveia', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain' },
+  { id: 'extra-granola', name: 'Granola', description: 'Crocante e nutritiva', price: 3.00, icon: 'nutrition', glutenFree: false },
+  { id: 'extra-aveia', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
   { id: 'extra-mel', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
+];
+
+export const EXTRA_MILKSHAKE: Extra[] = [
+  { id: 'extra-leite-desnatado', name: 'Leite Desnatado', description: 'Mais leve', price: 3.00, icon: 'local_drink' },
+  { id: 'extra-leite-soja', name: 'Leite de Soja', description: 'Alternativa vegetal', price: 3.00, icon: 'eco' },
+  { id: 'extra-mel', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
+  { id: 'extra-iogurte', name: 'Iogurte', description: 'Mais cremosidade', price: 3.00, icon: 'icecream' },
+  { id: 'extra-granola', name: 'Granola', description: 'Crocante e nutritiva', price: 3.00, icon: 'nutrition', glutenFree: false },
+  { id: 'extra-sorvete', name: 'Sorvete', description: 'Super cremoso', price: 3.00, icon: 'icecream' },
+  { id: 'extra-aveia', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
+  { id: 'extra-whey', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
+  { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
+  { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
 export const EXTRA_FITNESS: Extra[] = [
@@ -60,6 +76,14 @@ export const EXTRA_FITNESS: Extra[] = [
 ];
 
 export const EXTRA_CARIBE: Extra[] = [
+  { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
+  { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
+];
+
+export const EXTRA_MIX_FRUTAS: Extra[] = [
+  { id: 'extra-cha-verde', name: 'Chá Verde', description: 'Mais energia e antioxidante', price: 3.00, icon: 'leaf' },
+  { id: 'extra-suco-laranja', name: 'Suco de Laranja', description: 'Vitamina C extra', price: 3.00, icon: 'citrus' },
+  { id: 'extra-whey', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
   { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
@@ -74,8 +98,8 @@ export const PRODUCTS: Product[] = [
     points: 1,
     image: 'https://i.imgur.com/NTA4Y3s.png',
     sizes: [
-      { label: 'M', price: 21.50 },
-      { label: 'G', price: 26.50 },
+      { label: 'M', price: 21.50, volume: '500ml' },
+      { label: 'G', price: 23.50, volume: '700ml' },
     ],
     extras: EXTRA_FITNESS
   },
@@ -83,30 +107,35 @@ export const PRODUCTS: Product[] = [
     id: '2',
     name: 'Trio Açaí',
     category: 'Açaí',
-    description: 'Açaí cremoso com banana, morango, 3 bolas de sorvete e granola. 700ml.',
+    description: 'Açaí cremoso com banana, morango, 3 bolas de sorvete e granola.',
     priceDisplay: 'R$ 24,90',
     points: 1,
+    volume: '700ml',
+    image: 'https://i.imgur.com/VkTJsar.png',
     extras: EXTRA_ACAI
   },
   {
     id: '3',
     name: 'Açaí Médio',
     category: 'Açaí',
-    description: 'Açaí batido com banana ou morango, granola e leite em pó. 500ml.',
+    description: 'Açaí batido com banana ou morango, granola e leite em pó.',
     priceDisplay: 'R$ 22,90',
     points: 1,
+    volume: '500ml',
+    image: 'https://i.imgur.com/vuCVqBo.png',
     extras: EXTRA_ACAI
   },
   {
     id: '4',
     name: 'Açaí Bowl',
-    category: 'Bowl',
+    category: 'Açaí',
     description: 'Morango picado, rodelas de banana e granola premium.',
     priceDisplay: 'a partir de R$ 20,50',
     points: 1,
+    image: 'https://i.imgur.com/WmTLF3W.png',
     sizes: [
-      { label: 'M', price: 20.50 },
-      { label: 'G', price: 25.50 },
+      { label: 'M', price: 20.50, volume: '500ml' },
+      { label: 'G', price: 24.50, volume: '700ml' },
     ],
     extras: EXTRA_ACAI
   },
@@ -117,9 +146,10 @@ export const PRODUCTS: Product[] = [
     description: 'Limão, creme de coco e coco ralado. Cremosa e refrescante.',
     priceDisplay: 'a partir de R$ 20,00',
     points: 1,
+    image: 'https://i.imgur.com/oe8Cfvb.png',
     sizes: [
-      { label: 'M', price: 20.00 },
-      { label: 'G', price: 25.00 },
+      { label: 'M', price: 20.00, volume: '500ml' },
+      { label: 'G', price: 25.00, volume: '700ml' },
     ],
     extras: EXTRA_CARIBE
   },
@@ -132,10 +162,10 @@ export const PRODUCTS: Product[] = [
     points: 1,
     image: 'https://i.imgur.com/CJAF9uZ.png',
     sizes: [
-      { label: 'M', price: 15.50 },
-      { label: 'G', price: 19.50 },
+      { label: 'M', price: 15.50, volume: '500ml' },
+      { label: 'G', price: 17.50, volume: '700ml' },
     ],
-    extras: EXTRA_FITNESS
+    extras: EXTRA_MIX_FRUTAS
   },
   {
     id: '7',
@@ -146,10 +176,10 @@ export const PRODUCTS: Product[] = [
     points: 1,
     image: 'https://i.imgur.com/vB3X9EN.png',
     sizes: [
-      { label: 'M', price: 15.50 },
-      { label: 'G', price: 19.50 },
+      { label: 'M', price: 15.50, volume: '500ml' },
+      { label: 'G', price: 17.50, volume: '700ml' },
     ],
-    extras: EXTRA_FITNESS
+    extras: EXTRA_MIX_FRUTAS
   },
   {
     id: '8',
@@ -160,10 +190,10 @@ export const PRODUCTS: Product[] = [
     points: 1,
     image: 'https://i.imgur.com/elWE6s9.png',
     sizes: [
-      { label: 'M', price: 15.50 },
-      { label: 'G', price: 19.50 },
+      { label: 'M', price: 15.50, volume: '500ml' },
+      { label: 'G', price: 19.50, volume: '700ml' },
     ],
-    extras: EXTRA_FITNESS
+    extras: EXTRA_MIX_FRUTAS
   },
   {
     id: '9',
@@ -174,8 +204,8 @@ export const PRODUCTS: Product[] = [
     points: 1,
     image: 'https://i.imgur.com/4flsEjI.png',
     sizes: [
-      { label: 'M', price: 16.50 },
-      { label: 'G', price: 21.50 },
+      { label: 'M', price: 16.50, volume: '500ml' },
+      { label: 'G', price: 21.50, volume: '700ml' },
     ],
     extras: EXTRA_FITNESS
   },
@@ -188,9 +218,192 @@ export const PRODUCTS: Product[] = [
     points: 1,
     image: 'https://i.imgur.com/dHyfW4u.png',
     sizes: [
-      { label: 'M', price: 15.50 },
-      { label: 'G', price: 19.50 },
+      { label: 'M', price: 15.50, volume: '500ml' },
+      { label: 'G', price: 19.50, volume: '700ml' },
+    ],
+    extras: EXTRA_MIX_FRUTAS
+  },
+  {
+    id: '11',
+    name: 'Abacaxi + Laranja + Mamão',
+    category: 'Mix de Frutas',
+    description: 'Tropical e cheio de vitamina C.',
+    priceDisplay: 'a partir de R$ 15,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 15.50, volume: '500ml' },
+      { label: 'G', price: 17.50, volume: '700ml' },
+    ],
+    extras: EXTRA_MIX_FRUTAS
+  },
+  {
+    id: '12',
+    name: 'Banana + Mamão + Laranja',
+    category: 'Mix de Frutas',
+    description: 'Cremoso, doce e rico em potássio.',
+    priceDisplay: 'a partir de R$ 15,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 15.50, volume: '500ml' },
+      { label: 'G', price: 17.50, volume: '700ml' },
+    ],
+    extras: EXTRA_MIX_FRUTAS
+  },
+  {
+    id: '13',
+    name: 'Maçã + Banana + Laranja',
+    category: 'Mix de Frutas',
+    description: 'Leve e equilibrado, para qualquer hora do dia.',
+    priceDisplay: 'a partir de R$ 15,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 15.50, volume: '500ml' },
+      { label: 'G', price: 17.50, volume: '700ml' },
+    ],
+    extras: EXTRA_MIX_FRUTAS
+  },
+  {
+    id: '14',
+    name: 'Berrynana com Iogurte',
+    category: 'Premium',
+    description: 'Morango, banana e amora batidos com iogurte.',
+    priceDisplay: 'a partir de R$ 21,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 21.50, volume: '500ml' },
+      { label: 'G', price: 23.50, volume: '700ml' },
     ],
     extras: EXTRA_FITNESS
+  },
+  {
+    id: '15',
+    name: 'Borboleta Laranja com Iogurte',
+    category: 'Premium',
+    description: 'Laranja, manga e pêssego batidos com iogurte.',
+    priceDisplay: 'a partir de R$ 21,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 21.50, volume: '500ml' },
+      { label: 'G', price: 23.50, volume: '700ml' },
+    ],
+    extras: EXTRA_FITNESS
+  },
+  {
+    id: '16',
+    name: 'Colibri Roxo com Sorvete',
+    category: 'Premium',
+    description: 'Amora, blueberry, morango e cranberry batidos com sorvete.',
+    priceDisplay: 'a partir de R$ 21,50',
+    points: 1,
+    image: 'https://i.imgur.com/NTA4Y3s.png',
+    sizes: [
+      { label: 'M', price: 21.50, volume: '500ml' },
+      { label: 'G', price: 23.50, volume: '700ml' },
+    ],
+    extras: EXTRA_FITNESS
+  },
+  {
+    id: '17',
+    name: 'Berrynana com Sorvete',
+    category: 'Premium',
+    description: 'Morango, banana e amora batidos com sorvete.',
+    priceDisplay: 'a partir de R$ 21,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 21.50, volume: '500ml' },
+      { label: 'G', price: 23.50, volume: '700ml' },
+    ],
+    extras: EXTRA_FITNESS
+  },
+  {
+    id: '18',
+    name: 'Arara Vermelha',
+    category: 'Premium',
+    description: 'Kiwi, uvas e melancia. Leve e refrescante.',
+    priceDisplay: 'a partir de R$ 19,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 19.50, volume: '500ml' },
+      { label: 'G', price: 20.90, volume: '700ml' },
+    ],
+    extras: EXTRA_FITNESS
+  },
+  {
+    id: '19',
+    name: 'Tartaruga Verde',
+    category: 'Premium',
+    description: 'Kiwi, uvas verdes e abacaxi. Leve e hidratante.',
+    priceDisplay: 'a partir de R$ 19,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 19.50, volume: '500ml' },
+      { label: 'G', price: 20.90, volume: '700ml' },
+    ],
+    extras: EXTRA_FITNESS
+  },
+  {
+    id: '20',
+    name: 'Melancia + Banana + Coco',
+    category: 'Milkshake',
+    description: 'Refrescante e cremoso com toque tropical.',
+    priceDisplay: 'a partir de R$ 19,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 19.50, volume: '500ml' },
+      { label: 'G', price: 21.00, volume: '700ml' },
+    ],
+    extras: EXTRA_MILKSHAKE
+  },
+  {
+    id: '21',
+    name: 'Manga + Banana + Mamão',
+    category: 'Milkshake',
+    description: 'Tropical e cremoso, cheio de vitaminas.',
+    priceDisplay: 'a partir de R$ 19,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 19.50, volume: '500ml' },
+      { label: 'G', price: 21.00, volume: '700ml' },
+    ],
+    extras: EXTRA_MILKSHAKE
+  },
+  {
+    id: '22',
+    name: 'Morango + Graviola',
+    category: 'Milkshake',
+    description: 'Agridoce e cremoso, combinação surpreendente.',
+    priceDisplay: 'a partir de R$ 19,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 19.50, volume: '500ml' },
+      { label: 'G', price: 21.00, volume: '700ml' },
+    ],
+    extras: EXTRA_MILKSHAKE
+  },
+  {
+    id: '23',
+    name: 'Melancia + Maracujá',
+    category: 'Milkshake',
+    description: 'Refrescante e levemente ácido.',
+    priceDisplay: 'a partir de R$ 19,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 19.50, volume: '500ml' },
+      { label: 'G', price: 21.00, volume: '700ml' },
+    ],
+    extras: EXTRA_MILKSHAKE
+  },
+  {
+    id: '24',
+    name: 'Abacaxi + Coco',
+    category: 'Milkshake',
+    description: 'Tropical e refrescante com toque de coco.',
+    priceDisplay: 'a partir de R$ 19,50',
+    points: 1,
+    sizes: [
+      { label: 'M', price: 19.50, volume: '500ml' },
+      { label: 'G', price: 21.00, volume: '700ml' },
+    ],
+    extras: EXTRA_MILKSHAKE
   },
 ];

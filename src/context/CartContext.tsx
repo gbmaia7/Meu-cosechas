@@ -23,6 +23,10 @@ interface CartContextType {
   updateQuantity: (id: string, delta: number) => void;
   removeFromCart: (id: string) => void;
   updateItem: (id: string, updates: Partial<CartItem>) => void;
+  userPoints: number;
+  setUserPoints: (points: number) => void;
+  isAuthenticated: boolean;
+  setIsAuthenticated: (val: boolean) => void;
   totalItems: number;
   totalPrice: number;
   clearCart: () => void;
@@ -32,6 +36,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [userPoints, setUserPoints] = useState(5); // Default points as seen in Home screen
+  const [isAuthenticated, setIsAuthenticated] = useState(true); // Default to true to not break current flow
 
   const addToCart = (newItem: Omit<CartItem, 'id' | 'quantity'> & { quantity?: number }) => {
     const { quantity = 1, ...itemData } = newItem;
@@ -81,7 +87,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, totalItems, totalPrice, clearCart }}>
+    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, totalItems, totalPrice, clearCart }}>
       {children}
     </CartContext.Provider>
   );

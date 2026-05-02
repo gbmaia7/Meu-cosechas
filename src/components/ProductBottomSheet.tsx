@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { X, Check, Minus, Plus, Zap, Flower2, Activity, PlusCircle, Apple, Wheat, Heart, Star } from 'lucide-react';
+import { X, Check, Minus, Plus, Zap, Flower2, Activity, PlusCircle, Apple, Wheat, Heart, Star, Leaf, Citrus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo } from 'react';
 import { Product, Extra } from '../data/products';
@@ -23,12 +23,20 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
     case 'nutrition': return <Apple className="w-5 h-5" />;
     case 'grain': return <Wheat className="w-5 h-5" />;
     case 'health_and_safety': return <Heart className="w-5 h-5" />;
+    case 'leaf': return <Leaf className="w-5 h-5" />;
+    case 'citrus': return <Citrus className="w-5 h-5" />;
     default: return <PlusCircle className="w-5 h-5" />;
   }
 };
 
 export default function ProductBottomSheet({ product, onClose, onAdd }: ProductBottomSheetProps) {
-  const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
+  const [selectedSizeIndex, setSelectedSizeIndex] = useState(() => {
+    if (product?.sizes) {
+      const gIndex = product.sizes.findIndex(s => s.label === 'G');
+      return gIndex !== -1 ? gIndex : 0;
+    }
+    return 0;
+  });
   const [selectedExtras, setSelectedExtras] = useState<Extra[]>([]);
   const [notes, setNotes] = useState('');
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
@@ -114,7 +122,12 @@ export default function ProductBottomSheet({ product, onClose, onAdd }: ProductB
                     <h1 className="font-display text-lg font-bold text-[#1c1b1b] leading-tight mb-1">
                       {product.name}
                     </h1>
-                    <p className="text-xs text-[#5d3f3e] leading-tight line-clamp-2">
+                    {!product.sizes && product.volume && (
+                      <p className="text-[10px] font-bold text-[#bd002a] uppercase tracking-wider mb-1">
+                        Tamanho único {product.volume}
+                      </p>
+                    )}
+                    <p className="text-xs text-[#5d3f3e] leading-relaxed">
                       {product.description}
                     </p>
                     <div className="flex flex-wrap gap-2 mt-2">
@@ -149,23 +162,31 @@ export default function ProductBottomSheet({ product, onClose, onAdd }: ProductB
             {/* Compact Size Selector */}
             {product.sizes && product.sizes.length > 0 && (
               <section>
-                <div className="flex items-center gap-3 mb-3">
-                  <h3 className="text-xs font-bold text-[#1c1b1b] flex-shrink-0">Tamanho:</h3>
-                  <div className="flex gap-2">
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold text-[#1c1b1b]">Selecione o tamanho:</h3>
+                  <div className="flex gap-3">
                     {product.sizes.map((size, index) => (
                       <button
                         key={size.label}
                         onClick={() => setSelectedSizeIndex(index)}
-                        className={`px-4 py-2 rounded-full border-2 transition-all flex items-center gap-2 ${
+                        className={`flex-1 px-3 py-2.5 rounded-xl border-2 transition-all flex flex-col items-center justify-center gap-0.5 ${
                           selectedSizeIndex === index
                             ? 'border-[#bd002a] bg-[#bd002a]/5 text-[#bd002a]'
-                            : 'border-[#e5e2e1] bg-white text-[#a8a29e]'
+                            : 'border-[#e5e2e1] bg-white text-[#5d3f3e]'
                         }`}
                       >
-                        <span className="font-black text-sm">{size.label}</span>
-                        <span className="font-bold text-[10px]">
-                          {size.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-black text-sm">{size.label}</span>
+                          <span className="opacity-40 text-xs font-light">|</span>
+                          <span className="font-bold text-xs">
+                            {size.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        </div>
+                        {size.volume && (
+                          <span className="text-[10px] font-medium opacity-60">
+                            {size.volume}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -174,56 +195,146 @@ export default function ProductBottomSheet({ product, onClose, onAdd }: ProductB
             )}
 
             {/* Extras Section */}
-            {product.extras && product.extras.length > 0 && (
-              <section className="space-y-4">
-                <h2 className="font-display font-bold text-[#1c1b1b] text-base">Turbine seu pedido 💪</h2>
-                <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 no-scrollbar">
-                  {product.extras.map((extra) => {
-                    const isSelected = selectedExtras.some(e => e.id === extra.id);
-                    return (
-                      <div 
-                        key={extra.id} 
-                        className="min-w-[160px] bg-white rounded-2xl p-4 border border-[#f0eded] shadow-sm flex flex-col justify-between"
-                      >
-                        <div className="flex flex-col items-center">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${
-                            extra.icon === 'bolt' ? 'bg-yellow-50 text-yellow-600' :
-                            extra.icon === 'local_florist' ? 'bg-pink-50 text-pink-600' :
-                            extra.icon === 'sync_alt' ? 'bg-blue-50 text-blue-600' :
-                            extra.icon === 'health_and_safety' ? 'bg-red-50 text-red-600' :
-                            extra.icon === 'nutrition' ? 'bg-green-50 text-green-600' :
-                            'bg-surface-container text-[#008388]'
-                          }`}>
-                            <ExtraIcon iconName={extra.icon} />
-                          </div>
-                          <h4 className="text-sm font-bold text-[#1c1b1b] text-center">{extra.name}</h4>
-                          <p className="text-[10px] text-[#5d3f3e] mt-1 leading-tight text-center">{extra.description}</p>
-                        </div>
-                        <div className="mt-4">
-                          <p className="text-sm font-bold text-[#1c1b1b] text-center mb-3">
-                            {extra.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                          </p>
-                          <button 
-                            onClick={() => toggleExtra(extra)}
-                            className={`w-full py-2 rounded-full text-[10px] font-bold transition-all flex items-center justify-center gap-1 border ${
-                              isSelected 
-                                ? 'bg-green-50 text-green-600 border-green-200' 
-                                : 'border-[#bd002a] text-[#bd002a] hover:bg-[#bd002a]/5'
-                            }`}
-                          >
-                            {isSelected ? (
-                              <><Check className="w-3 h-3" /> ✓ Adicionado</>
-                            ) : (
-                              '+ Adicionar'
-                            )}
-                          </button>
-                        </div>
+            {product.extras && product.extras.length > 0 && (() => {
+              const extrasOrder = ['Iogurte', 'Sorvete', 'Granola', 'Aveia', 'Mel de Abelha', 'Leite Desnatado', 'Leite de Soja'];
+              const fitOrder = ['Whey Protein', 'Colágeno', 'Creatina'];
+
+              const extrasGroup = product.extras
+                .filter(e => extrasOrder.includes(e.name))
+                .sort((a, b) => extrasOrder.indexOf(a.name) - extrasOrder.indexOf(b.name));
+
+              const fitGroup = product.extras
+                .filter(e => fitOrder.includes(e.name))
+                .sort((a, b) => fitOrder.indexOf(a.name) - fitOrder.indexOf(b.name));
+
+              if (extrasGroup.length === 0 && fitGroup.length === 0) return null;
+
+              return (
+                <section className="space-y-6">
+                  <h2 className="font-display font-bold text-[#1c1b1b] text-base">Turbine seu pedido 💪</h2>
+                  
+                  {extrasGroup.length > 0 && (
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-bold text-[#5d3f3e] uppercase tracking-wider">Extras</h3>
+                      <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 no-scrollbar">
+                        {extrasGroup.map((extra) => {
+                          const isSelected = selectedExtras.some(e => e.id === extra.id);
+                          return (
+                            <div 
+                              key={extra.id} 
+                              className="min-w-[160px] bg-white rounded-2xl p-4 border border-[#f0eded] shadow-sm flex flex-col justify-between"
+                            >
+                              <div className="flex flex-col items-center">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${
+                                  extra.icon === 'bolt' ? 'bg-yellow-50 text-yellow-600' :
+                                  extra.icon === 'local_florist' ? 'bg-pink-50 text-pink-600' :
+                                  extra.icon === 'sync_alt' ? 'bg-blue-50 text-blue-600' :
+                                  extra.icon === 'health_and_safety' ? 'bg-red-50 text-red-600' :
+                                  extra.icon === 'nutrition' ? 'bg-green-50 text-green-600' :
+                                  extra.icon === 'leaf' ? 'bg-green-50 text-[#16a34a]' :
+                                  extra.icon === 'citrus' ? 'bg-orange-50 text-[#ea580c]' :
+                                  'bg-surface-container text-[#008388]'
+                                }`}>
+                                  <ExtraIcon iconName={extra.icon} />
+                                </div>
+                                <h4 className="text-sm font-bold text-[#1c1b1b] text-center">{extra.name}</h4>
+                                <p className="text-[10px] text-[#5d3f3e] mt-1 leading-tight text-center">{extra.description}</p>
+                              </div>
+                              <div className="mt-4 flex flex-col items-center">
+                                <p className="text-sm font-bold text-[#1c1b1b] text-center">
+                                  {extra.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                </p>
+                                {extra.glutenFree === false && (
+                                  <span className="text-[9px] text-[#5d3f3e]/60 font-normal mt-0.5 mb-2">
+                                    contém glúten
+                                  </span>
+                                )}
+                                <button 
+                                  onClick={() => toggleExtra(extra)}
+                                  className={`w-full py-2 rounded-full text-[10px] font-bold transition-all flex items-center justify-center gap-1 border ${
+                                    isSelected 
+                                      ? 'bg-green-50 text-green-600 border-green-200' 
+                                      : 'mt-2 border-[#bd002a] text-[#bd002a] hover:bg-[#bd002a]/5'
+                                  }`}
+                                >
+                                  {isSelected ? (
+                                    <><Check className="w-3 h-3" /> ✓ Adicionado</>
+                                  ) : (
+                                    '+ Adicionar'
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
+                    </div>
+                  )}
+
+                  {extrasGroup.length > 0 && fitGroup.length > 0 && (
+                    <div className="border-t border-[#f0eded]" />
+                  )}
+
+                  {fitGroup.length > 0 && (
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-bold text-[#5d3f3e] uppercase tracking-wider">Linha Fit</h3>
+                      <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 no-scrollbar">
+                        {fitGroup.map((extra) => {
+                          const isSelected = selectedExtras.some(e => e.id === extra.id);
+                          return (
+                            <div 
+                              key={extra.id} 
+                              className="min-w-[160px] bg-white rounded-2xl p-4 border border-[#f0eded] shadow-sm flex flex-col justify-between"
+                            >
+                              <div className="flex flex-col items-center">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${
+                                  extra.icon === 'bolt' ? 'bg-yellow-50 text-yellow-600' :
+                                  extra.icon === 'local_florist' ? 'bg-pink-50 text-pink-600' :
+                                  extra.icon === 'sync_alt' ? 'bg-blue-50 text-blue-600' :
+                                  extra.icon === 'health_and_safety' ? 'bg-red-50 text-red-600' :
+                                  extra.icon === 'nutrition' ? 'bg-green-50 text-green-600' :
+                                  extra.icon === 'leaf' ? 'bg-green-50 text-[#16a34a]' :
+                                  extra.icon === 'citrus' ? 'bg-orange-50 text-[#ea580c]' :
+                                  'bg-surface-container text-[#008388]'
+                                }`}>
+                                  <ExtraIcon iconName={extra.icon} />
+                                </div>
+                                <h4 className="text-sm font-bold text-[#1c1b1b] text-center">{extra.name}</h4>
+                                <p className="text-[10px] text-[#5d3f3e] mt-1 leading-tight text-center">{extra.description}</p>
+                              </div>
+                              <div className="mt-4 flex flex-col items-center">
+                                <p className="text-sm font-bold text-[#1c1b1b] text-center">
+                                  {extra.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                </p>
+                                {extra.glutenFree === false && (
+                                  <span className="text-[9px] text-[#5d3f3e]/60 font-normal mt-0.5 mb-2">
+                                    contém glúten
+                                  </span>
+                                )}
+                                <button 
+                                  onClick={() => toggleExtra(extra)}
+                                  className={`w-full py-2 rounded-full text-[10px] font-bold transition-all flex items-center justify-center gap-1 border ${
+                                    isSelected 
+                                      ? 'bg-green-50 text-green-600 border-green-200' 
+                                      : 'mt-2 border-[#bd002a] text-[#bd002a] hover:bg-[#bd002a]/5'
+                                  }`}
+                                >
+                                  {isSelected ? (
+                                    <><Check className="w-3 h-3" /> ✓ Adicionado</>
+                                  ) : (
+                                    '+ Adicionar'
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </section>
+              );
+            })()}
 
             {/* Notes Section */}
             <section className="space-y-3">
