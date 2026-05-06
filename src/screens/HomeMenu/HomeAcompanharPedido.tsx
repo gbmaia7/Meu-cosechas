@@ -167,8 +167,8 @@ export default function HomeAcompanharPedido() {
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Mais Pedidos</h3>
               </div>
               <div className="space-y-4">
-                {PRODUCTS.filter(p => parseInt(p.id) >= 1 && parseInt(p.id) <= 10).map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                {PRODUCTS.filter(p => parseInt(p.id) >= 0 && parseInt(p.id) <= 10).map(prod => (
+                   <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>

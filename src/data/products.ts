@@ -240,13 +240,27 @@ export const EXTRA_MIX_FRUTAS: Extra[] = [
 
 export const PRODUCTS: Product[] = [
   {
+    id: '0',
+    name: 'Arroz Bowl Soltinho',
+    category: 'Bowl',
+    description: 'Arroz soltinho temperado com ervas finas, mix de vegetais frescos, salsinha e azeite extra virgem. Leve, nutritivo e equilibrado.',
+    priceDisplay: 'a partir de R$ 28,90',
+    points: 1,
+    image: 'https://i.imgur.com/Uk2YdwQ.png',
+    sizes: [
+      { label: 'Padrão', price: 28.90, volume: '400g' },
+      { label: 'Reforçado', price: 36.50, volume: '600g' },
+    ],
+    extras: EXTRA_ACAI
+  },
+  {
     id: '1',
     name: 'Colibri Roxo com Iogurte',
     category: 'Premium',
     description: 'Amora, blueberry, morango e cranberry batidos com iogurte.',
     priceDisplay: 'a partir de R$ 21,50',
     points: 1,
-    image: 'https://i.imgur.com/NTA4Y3s.png',
+    image: 'https://i.imgur.com/RVI2tmX.png',
     sizes: [
       { label: 'M', price: 21.50, volume: '500ml' },
       { label: 'G', price: 23.50, volume: '700ml' },
@@ -445,7 +459,7 @@ export const PRODUCTS: Product[] = [
     description: 'Amora, blueberry, morango e cranberry batidos com sorvete.',
     priceDisplay: 'a partir de R$ 21,50',
     points: 1,
-    image: 'https://i.imgur.com/NTA4Y3s.png',
+    image: 'https://i.imgur.com/RVI2tmX.png',
     sizes: [
       { label: 'M', price: 21.50, volume: '500ml' },
       { label: 'G', price: 23.50, volume: '700ml' },
