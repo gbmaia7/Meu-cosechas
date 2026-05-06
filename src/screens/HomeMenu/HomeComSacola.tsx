@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
-import { PRODUCTS, CATEGORY_COLORS, Product, Extra, LINHA_CARIBE } from '../../data/products';
+import { PRODUCTS, CATEGORY_COLORS, Product, Extra, LINHA_CARIBE, FUNCIONAL, COMECE_BEM } from '../../data/products';
 import { useCart } from '../../context/CartContext';
 import ProductBottomSheet from '../../components/ProductBottomSheet';
 import ImageLightbox from '../../components/ImageLightbox';
@@ -272,8 +272,36 @@ export default function HomeComSacola() {
             </>
           )}
 
+          {/* Funcional Section */}
+          {selectedCategory === 'Funcional' && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Funcional</h3>
+              </div>
+              <div className="space-y-4">
+                {FUNCIONAL.map(prod => (
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Comece Bem Seu Dia Section */}
+          {(selectedCategory === 'Comece bem seu dia' || selectedCategory === 'Comece Bem Seu Dia') && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Comece Bem Seu Dia</h3>
+              </div>
+              <div className="space-y-4">
+                {COMECE_BEM.map(prod => (
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                ))}
+              </div>
+            </>
+          )}
+
           {/* Placeholder for other categories */}
-          {selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && selectedCategory !== 'Linha Caribe' && (
+          {selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && selectedCategory !== 'Linha Caribe' && selectedCategory !== 'Funcional' && selectedCategory !== 'Comece bem seu dia' && selectedCategory !== 'Comece Bem Seu Dia' && (
             <div className="py-12 flex flex-col items-center justify-center text-center px-4">
               <div className="bg-[#f0eded] w-16 h-16 rounded-full flex items-center justify-center mb-4">
                 <Utensils className="text-[#a8a29e] w-8 h-8" />
@@ -376,6 +404,9 @@ function ProductCard({ prod, onImageClick, onPlusClick }: { prod: Product; onIma
           </div>
 
           <p className="text-[#5d3f3e] text-[10px] line-clamp-2 leading-tight">{prod.description}</p>
+          {prod.glutenWarning && (
+            <p className="text-[9px] text-[#5d3f3e]/60 font-normal mt-1">contém glúten</p>
+          )}
         </div>
         <div className="flex items-center justify-between mt-1">
           <span className="font-extrabold text-[#bd002a] text-sm">{prod.priceDisplay}</span>

@@ -9,10 +9,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE } from '../data/products';
+import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE, FUNCIONAL, COMECE_BEM } from '../data/products';
 import ProductBottomSheet from '../components/ProductBottomSheet';
 
-const ALL_PRODUCTS = [...PRODUCTS, ...LINHA_CARIBE];
+const ALL_PRODUCTS = [...PRODUCTS, ...LINHA_CARIBE, ...FUNCIONAL, ...COMECE_BEM];
 
 const ExtraIcon = ({ iconName }: { iconName: string }) => {
   switch (iconName) {

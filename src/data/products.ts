@@ -27,6 +27,7 @@ export interface Product {
     volume?: string;
   }[];
   extras?: Extra[];
+  glutenWarning?: boolean;
 }
 
 export type CategoryKey = 
@@ -37,7 +38,8 @@ export type CategoryKey =
   | 'Mix de Frutas' 
   | 'Funcional' 
   | 'Milkshake' 
-  | 'Especial';
+  | 'Especial'
+  | 'Comece Bem Seu Dia';
 
 export const CATEGORY_COLORS: Record<CategoryKey, string> = {
   'Premium': 'bg-purple-500 text-white',
@@ -48,6 +50,7 @@ export const CATEGORY_COLORS: Record<CategoryKey, string> = {
   'Funcional': 'bg-green-800 text-white',
   'Milkshake': 'bg-yellow-500 text-black',
   'Especial': 'bg-red-600 text-white',
+  'Comece Bem Seu Dia': 'bg-orange-500 text-white',
 };
 
 export const EXTRA_ACAI: Extra[] = [
@@ -73,6 +76,136 @@ export const EXTRA_FITNESS: Extra[] = [
   { id: 'extra-whey', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
   { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
+];
+
+export const FUNCIONAL_EXTRAS: Extra[] = [
+  { id: 'extra-whey-f', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
+  { id: 'extra-colageno-f', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
+  { id: 'extra-creatina-f', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
+];
+
+export const FUNCIONAL: Product[] = [
+  {
+    id: 'func-1',
+    name: 'Pura Energia',
+    category: 'Funcional',
+    description: 'Espinafre, beterraba, abacaxi e banana. Rico em energia natural.',
+    priceDisplay: 'a partir de R$ 16,50',
+    points: 1,
+    image: 'https://i.imgur.com/3NPHqbP.png',
+    sizes: [
+      { label: 'M', price: 16.50, volume: '500ml' },
+      { label: 'G', price: 18.50, volume: '700ml' },
+    ],
+    extras: FUNCIONAL_EXTRAS,
+    glutenWarning: true
+  },
+  {
+    id: 'func-2',
+    name: 'Protéico',
+    category: 'Funcional',
+    description: 'Laranja, banana e proteína de soja. Ideal para ganho muscular.',
+    priceDisplay: 'a partir de R$ 16,50',
+    points: 1,
+    image: 'https://i.imgur.com/ZlQLfwq.png',
+    sizes: [
+      { label: 'M', price: 16.50, volume: '500ml' },
+      { label: 'G', price: 18.50, volume: '700ml' },
+    ],
+    extras: FUNCIONAL_EXTRAS,
+    glutenWarning: true
+  },
+  {
+    id: 'func-3',
+    name: 'Controle de Peso',
+    category: 'Funcional',
+    description: 'Abacaxi, aipo, pepino e salsa. Leve e detox.',
+    priceDisplay: 'a partir de R$ 16,50',
+    points: 1,
+    image: 'https://i.imgur.com/FzF10xj.png',
+    sizes: [
+      { label: 'M', price: 16.50, volume: '500ml' },
+      { label: 'G', price: 18.50, volume: '700ml' },
+    ],
+    extras: FUNCIONAL_EXTRAS,
+    glutenWarning: true
+  },
+  {
+    id: 'func-4',
+    name: 'Pouco Colesterol',
+    category: 'Funcional',
+    description: 'Aipo, abacaxi, cenoura e gengibre. Cuida do seu coração.',
+    priceDisplay: 'a partir de R$ 16,50',
+    points: 1,
+    image: 'https://i.imgur.com/Ne7eXU3.png',
+    sizes: [
+      { label: 'M', price: 16.50, volume: '500ml' },
+      { label: 'G', price: 18.50, volume: '700ml' },
+    ],
+    extras: FUNCIONAL_EXTRAS,
+    glutenWarning: true
+  },
+  {
+    id: 'func-5',
+    name: 'Cardio Frutas',
+    category: 'Funcional',
+    description: 'Banana, abacaxi, manga e abacate. Para um coração saudável.',
+    priceDisplay: 'a partir de R$ 16,50',
+    points: 1,
+    image: 'https://i.imgur.com/Wibobu5.png',
+    sizes: [
+      { label: 'M', price: 16.50, volume: '500ml' },
+      { label: 'G', price: 18.50, volume: '700ml' },
+    ],
+    extras: FUNCIONAL_EXTRAS,
+    glutenWarning: true
+  },
+  {
+    id: 'func-6',
+    name: 'Max Fibra',
+    category: 'Funcional',
+    description: 'Mamão, gérmen de trigo, aipo e laranja. Rico em fibras.',
+    priceDisplay: 'a partir de R$ 16,50',
+    points: 1,
+    image: 'https://i.imgur.com/57Sxl3N.png',
+    sizes: [
+      { label: 'M', price: 16.50, volume: '500ml' },
+      { label: 'G', price: 18.50, volume: '700ml' },
+    ],
+    extras: FUNCIONAL_EXTRAS,
+    glutenWarning: true
+  },
+];
+
+export const COMECE_BEM: Product[] = [
+  {
+    id: 'comece-1',
+    name: 'Banana + Pasta de Amendoim + Aveia + Leite',
+    category: 'Comece Bem Seu Dia',
+    description: 'Fonte de energia, disposição e proteínas. Ideal para começar o dia com força.',
+    priceDisplay: 'a partir de R$ 18,50',
+    points: 1,
+    image: 'https://i.imgur.com/4flsEjI.png',
+    sizes: [
+      { label: 'M', price: 18.50, volume: '500ml' },
+      { label: 'G', price: 19.90, volume: '700ml' },
+    ],
+    extras: FUNCIONAL_EXTRAS,
+  },
+  {
+    id: 'comece-2',
+    name: 'Morango + Banana + Chia + Granola + Leite',
+    category: 'Comece Bem Seu Dia',
+    description: 'Nutritivo e saboroso, perfeito para começar o dia com energia.',
+    priceDisplay: 'a partir de R$ 18,50',
+    points: 1,
+    image: 'https://i.imgur.com/Es6Xt2S.png',
+    sizes: [
+      { label: 'M', price: 18.50, volume: '500ml' },
+      { label: 'G', price: 19.90, volume: '700ml' },
+    ],
+    extras: FUNCIONAL_EXTRAS,
+  }
 ];
 
 export const EXTRA_CARIBE: Extra[] = [
@@ -151,8 +284,8 @@ export const PRODUCTS: Product[] = [
     points: 1,
     image: 'https://i.imgur.com/WmTLF3W.png',
     sizes: [
-      { label: 'M', price: 20.50, volume: '500ml' },
-      { label: 'G', price: 24.50, volume: '700ml' },
+      { label: 'M', price: 20.50, volume: '350ml' },
+      { label: 'G', price: 24.50, volume: '500ml' },
     ],
     extras: EXTRA_ACAI
   },
@@ -215,7 +348,7 @@ export const PRODUCTS: Product[] = [
   {
     id: '9',
     name: 'Banana + Pasta de Amendoim + Aveia + Leite',
-    category: 'Funcional',
+    category: 'Comece Bem Seu Dia',
     description: 'Energético e nutritivo, ideal para antes ou depois do treino.',
     priceDisplay: 'a partir de R$ 16,50',
     points: 1,
