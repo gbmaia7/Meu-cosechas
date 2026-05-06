@@ -185,7 +185,7 @@ export const COMECE_BEM: Product[] = [
     description: 'Fonte de energia, disposição e proteínas. Ideal para começar o dia com força.',
     priceDisplay: 'a partir de R$ 18,50',
     points: 1,
-    image: 'https://i.imgur.com/4flsEjI.png',
+    image: 'https://i.imgur.com/hDlcDOD.png',
     sizes: [
       { label: 'M', price: 18.50, volume: '500ml' },
       { label: 'G', price: 19.90, volume: '700ml' },
@@ -221,7 +221,7 @@ export const LINHA_CARIBE: Product[] = [
     description: 'Limão, creme de coco e coco ralado. Cremosa e refrescante.',
     priceDisplay: 'a partir de R$ 20,00',
     points: 1,
-    image: 'https://i.imgur.com/oe8Cfvb.png',
+    image: 'https://i.imgur.com/O87fzXw.png',
     sizes: [
       { label: 'M', price: 20.00, volume: '500ml' },
       { label: 'G', price: 22.00, volume: '700ml' },
@@ -240,27 +240,13 @@ export const EXTRA_MIX_FRUTAS: Extra[] = [
 
 export const PRODUCTS: Product[] = [
   {
-    id: '0',
-    name: 'Arroz Bowl Soltinho',
-    category: 'Bowl',
-    description: 'Arroz soltinho temperado com ervas finas, mix de vegetais frescos, salsinha e azeite extra virgem. Leve, nutritivo e equilibrado.',
-    priceDisplay: 'a partir de R$ 28,90',
-    points: 1,
-    image: 'https://i.imgur.com/Uk2YdwQ.png',
-    sizes: [
-      { label: 'Padrão', price: 28.90, volume: '400g' },
-      { label: 'Reforçado', price: 36.50, volume: '600g' },
-    ],
-    extras: EXTRA_ACAI
-  },
-  {
     id: '1',
     name: 'Colibri Roxo com Iogurte',
     category: 'Premium',
     description: 'Amora, blueberry, morango e cranberry batidos com iogurte.',
     priceDisplay: 'a partir de R$ 21,50',
     points: 1,
-    image: 'https://i.imgur.com/RVI2tmX.png',
+    image: 'https://i.imgur.com/snuE7CH.png',
     sizes: [
       { label: 'M', price: 21.50, volume: '500ml' },
       { label: 'G', price: 23.50, volume: '700ml' },
@@ -269,24 +255,24 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: '2',
-    name: 'Trio Açaí',
+    name: 'Trio Açaí (Açaí de 700ml)',
     category: 'Açaí',
-    description: 'Açaí cremoso com banana, morango, 3 bolas de sorvete e granola.',
+    description: 'Açaí batido com banana, morango, granola e leite em pó.',
     priceDisplay: 'R$ 24,90',
     points: 1,
     volume: '700ml',
-    image: 'https://i.imgur.com/VkTJsar.png',
+    image: 'https://i.imgur.com/Y1YLUiG.png',
     extras: EXTRA_ACAI
   },
   {
     id: '3',
-    name: 'Açaí Médio',
+    name: 'Açaí Médio (Açaí de 500ml)',
     category: 'Açaí',
-    description: 'Açaí batido com banana ou morango, granola e leite em pó.',
+    description: 'Açaí batido com banana, morango, granola e leite em pó.',
     priceDisplay: 'R$ 22,90',
     points: 1,
     volume: '500ml',
-    image: 'https://i.imgur.com/vuCVqBo.png',
+    image: 'https://i.imgur.com/Y1YLUiG.png',
     extras: EXTRA_ACAI
   },
   {
@@ -296,7 +282,7 @@ export const PRODUCTS: Product[] = [
     description: 'Morango picado, rodelas de banana e granola premium.',
     priceDisplay: 'a partir de R$ 20,50',
     points: 1,
-    image: 'https://i.imgur.com/WmTLF3W.png',
+    image: 'https://i.imgur.com/m3o810O.png',
     sizes: [
       { label: 'M', price: 20.50, volume: '350ml' },
       { label: 'G', price: 24.50, volume: '500ml' },
@@ -310,7 +296,7 @@ export const PRODUCTS: Product[] = [
     description: 'Limão, creme de coco e coco ralado. Cremosa e refrescante.',
     priceDisplay: 'a partir de R$ 20,00',
     points: 1,
-    image: 'https://i.imgur.com/oe8Cfvb.png',
+    image: 'https://i.imgur.com/O87fzXw.png',
     sizes: [
       { label: 'M', price: 20.00, volume: '500ml' },
       { label: 'G', price: 22.00, volume: '700ml' },
@@ -324,7 +310,7 @@ export const PRODUCTS: Product[] = [
     description: 'Trio tropical batido na hora, sem adição de açúcar.',
     priceDisplay: 'a partir de R$ 15,50',
     points: 1,
-    image: 'https://i.imgur.com/CJAF9uZ.png',
+    image: 'https://i.imgur.com/3I72MuT.png',
     sizes: [
       { label: 'M', price: 15.50, volume: '500ml' },
       { label: 'G', price: 17.50, volume: '700ml' },
@@ -338,7 +324,7 @@ export const PRODUCTS: Product[] = [
     description: 'Refrescante e levinho, perfeito para o calor.',
     priceDisplay: 'a partir de R$ 15,50',
     points: 1,
-    image: 'https://i.imgur.com/vB3X9EN.png',
+    image: 'https://i.imgur.com/wuKBZej.png',
     sizes: [
       { label: 'M', price: 15.50, volume: '500ml' },
       { label: 'G', price: 17.50, volume: '700ml' },
@@ -352,7 +338,7 @@ export const PRODUCTS: Product[] = [
     description: 'Rico em vitamina C, doce e cítrico na medida certa.',
     priceDisplay: 'a partir de R$ 15,50',
     points: 1,
-    image: 'https://i.imgur.com/elWE6s9.png',
+    image: 'https://i.imgur.com/RD9y72q.png',
     sizes: [
       { label: 'M', price: 15.50, volume: '500ml' },
       { label: 'G', price: 19.50, volume: '700ml' },
@@ -366,7 +352,7 @@ export const PRODUCTS: Product[] = [
     description: 'Energético e nutritivo, ideal para antes ou depois do treino.',
     priceDisplay: 'a partir de R$ 16,50',
     points: 1,
-    image: 'https://i.imgur.com/4flsEjI.png',
+    image: 'https://i.imgur.com/hDlcDOD.png',
     sizes: [
       { label: 'M', price: 16.50, volume: '500ml' },
       { label: 'G', price: 21.50, volume: '700ml' },
@@ -380,7 +366,7 @@ export const PRODUCTS: Product[] = [
     description: 'Leve, hidratante e com toque de hortelã.',
     priceDisplay: 'a partir de R$ 15,50',
     points: 1,
-    image: 'https://i.imgur.com/dHyfW4u.png',
+    image: 'https://i.imgur.com/GZFVTjI.png',
     sizes: [
       { label: 'M', price: 15.50, volume: '500ml' },
       { label: 'G', price: 19.50, volume: '700ml' },
@@ -459,7 +445,7 @@ export const PRODUCTS: Product[] = [
     description: 'Amora, blueberry, morango e cranberry batidos com sorvete.',
     priceDisplay: 'a partir de R$ 21,50',
     points: 1,
-    image: 'https://i.imgur.com/RVI2tmX.png',
+    image: 'https://i.imgur.com/snuE7CH.png',
     sizes: [
       { label: 'M', price: 21.50, volume: '500ml' },
       { label: 'G', price: 23.50, volume: '700ml' },
