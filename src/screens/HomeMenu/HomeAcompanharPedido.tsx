@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   MapPin, 
   Search, 
@@ -20,13 +20,14 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
-import { PRODUCTS, CATEGORY_COLORS, Product, Extra, LINHA_CARIBE, FUNCIONAL, COMECE_BEM } from '../../data/products';
+import { PRODUCTS, CATEGORY_COLORS, Product, Extra, LINHA_CARIBE, FUNCIONAL, COMECE_BEM, ESPECIAIS } from '../../data/products';
 import { useCart } from '../../context/CartContext';
 import ProductBottomSheet from '../../components/ProductBottomSheet';
 import ImageLightbox from '../../components/ImageLightbox';
 
 export default function HomeAcompanharPedido() {
-  const { addToCart, totalItems, userPoints } = useCart();
+  const navigate = useNavigate();
+  const { addToCart, totalItems, userPoints, isAuthenticated, setIsAuthenticated } = useCart();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState('');
@@ -90,6 +91,22 @@ export default function HomeAcompanharPedido() {
       </header>
 
       <main className="mt-48 px-4 space-y-6">
+        {/* Simulator Toggle (Preview Only) */}
+        <div className="flex justify-center gap-2 mb-2">
+          <button 
+            onClick={() => setIsAuthenticated(true)}
+            className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all ${isAuthenticated ? 'bg-[#bd002a] text-white shadow-sm' : 'border border-[#e5e2e1] text-[#5d3f3e]/60'}`}
+          >
+            Logado
+          </button>
+          <button 
+            onClick={() => setIsAuthenticated(false)}
+            className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all ${!isAuthenticated ? 'bg-[#bd002a] text-white shadow-sm' : 'border border-[#e5e2e1] text-[#5d3f3e]/60'}`}
+          >
+            Não logado
+          </button>
+        </div>
+
         {/* Engagement Cards (Bento Style) */}
         <section className="grid grid-cols-2 gap-3">
           <div className="bg-[#FDECEA] p-4 rounded-2xl border border-[#F3E0C1]/50 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
@@ -99,19 +116,39 @@ export default function HomeAcompanharPedido() {
             <h3 className="font-bold text-[13px] leading-tight mb-1">Clube Cosechas</h3>
             <p className="text-[10px] text-[#5d3f3e] leading-snug mb-3 flex-grow">Ganhe pontos em cada compra e troque por prêmios</p>
             <div className="mt-auto">
-              <p className="font-extrabold text-[#bd002a] mb-2 tracking-wide text-[11px]">SEUS PONTOS: {userPoints}</p>
-              <button className="w-full text-center bg-[#bd002a] text-white text-[9px] font-bold py-2 rounded-lg uppercase tracking-tight">VER COMO FUNCIONA</button>
+              {isAuthenticated && (
+                <p className="font-extrabold text-[#bd002a] mb-2 tracking-wide text-[11px]">SEUS PONTOS: {userPoints}</p>
+              )}
+              <button 
+                onClick={() => navigate(isAuthenticated ? '/clube/logado' : '/clube/nao-logado')}
+                className={`w-full text-center ${isAuthenticated ? 'bg-[#bd002a]' : 'bg-[#e8173a] shadow-lg shadow-[#e8173a]/20'} text-white text-[9px] font-bold py-2 rounded-full uppercase tracking-tight`}
+              >
+                {isAuthenticated ? 'VER COMO FUNCIONA' : 'ATIVAR'}
+              </button>
             </div>
           </div>
-          <div className="bg-[#E6F7F5] p-4 rounded-2xl border border-[#D1EAE7]/50 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
+          <div 
+            onClick={() => navigate(isAuthenticated ? '/indique-ganhe/logado' : '/indique-ganhe')}
+            className="bg-[#E6F7F5] p-4 rounded-2xl border border-[#D1EAE7]/50 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col h-full"
+          >
             <div className="bg-white w-9 h-9 rounded-xl flex items-center justify-center mb-3 shadow-sm">
               <UserPlus className="text-[#00686c] w-5 h-5" />
             </div>
             <h3 className="font-bold text-[13px] leading-tight mb-1">Indique e Ganhe</h3>
             <p className="text-[10px] text-[#5d3f3e] leading-snug mb-3 flex-grow">Indique um amigo e ganhe os dois R$5 off</p>
             <div className="mt-auto">
-              <p className="font-extrabold text-[#00686c] mb-2 tracking-wide text-[11px]">SEUS CRÉDITOS: R$5</p>
-              <button className="w-full text-center bg-[#008388] text-white text-[9px] font-bold py-2 rounded-lg uppercase tracking-tight">VER MEU CÓDIGO</button>
+              {isAuthenticated && (
+                <p className="font-extrabold text-[#00686c] mb-2 tracking-wide text-[11px]">SEUS CRÉDITOS: R$5</p>
+              )}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(isAuthenticated ? '/indique-ganhe/logado' : '/indique-ganhe');
+                }}
+                className={`w-full text-center ${isAuthenticated ? 'bg-[#008388]' : 'bg-[#e8173a] shadow-lg shadow-[#e8173a]/20'} text-white text-[9px] font-bold py-2 rounded-full uppercase tracking-tight`}
+              >
+                {isAuthenticated ? 'VER MEU CÓDIGO' : 'ATIVAR'}
+              </button>
             </div>
           </div>
         </section>
@@ -299,8 +336,22 @@ export default function HomeAcompanharPedido() {
             </>
           )}
 
+          {/* Especiais Section */}
+          {selectedCategory === 'Especiais' && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Especiais</h3>
+              </div>
+              <div className="space-y-4">
+                {ESPECIAIS.map(prod => (
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                ))}
+              </div>
+            </>
+          )}
+
           {/* Placeholder for other categories */}
-          {selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && selectedCategory !== 'Linha Caribe' && selectedCategory !== 'Funcional' && selectedCategory !== 'Comece bem seu dia' && selectedCategory !== 'Comece Bem Seu Dia' && (
+          {selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && selectedCategory !== 'Linha Caribe' && selectedCategory !== 'Funcional' && selectedCategory !== 'Comece bem seu dia' && selectedCategory !== 'Comece Bem Seu Dia' && selectedCategory !== 'Especiais' && (
             <div className="py-12 flex flex-col items-center justify-center text-center px-4">
               <div className="bg-[#f0eded] w-16 h-16 rounded-full flex items-center justify-center mb-4">
                 <Utensils className="text-[#a8a29e] w-8 h-8" />
@@ -332,9 +383,9 @@ export default function HomeAcompanharPedido() {
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
         {[
           { icon: Utensils, label: 'Menu', active: true, path: '/HomeComSacola' },
-          { icon: CreditCard, label: 'Assinatura', active: false, path: '#' },
-          { icon: Star, label: 'Clube', active: false, path: '#' },
-          { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
+          { icon: CreditCard, label: 'Assinatura', active: false, path: isAuthenticated ? '/assinatura/ativa' : '/assinatura' },
+          { icon: Star, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
+          { icon: UserPlus, label: 'Indique', active: false, path: isAuthenticated ? '/indique-ganhe/logado' : '/indique-ganhe' },
           { icon: User, label: 'Perfil', active: false, path: '#' },
         ].map(item => (
           <Link 
@@ -344,11 +395,6 @@ export default function HomeAcompanharPedido() {
           >
             <div className="relative">
               <item.icon className="w-6 h-6" />
-              {typeof item.badge === 'number' && item.badge > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#E8173A] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
-                  {item.badge}
-                </span>
-              )}
             </div>
             <span className="font-display text-[10px] font-semibold mt-1">{item.label}</span>
           </Link>

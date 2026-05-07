@@ -483,7 +483,15 @@ export default function Sacola() {
             <div className="flex gap-3 items-center mb-1">
               <span className="material-symbols-outlined text-[#E8173A] text-2xl shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>nutrition</span>
               <div className="flex-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#5d3f3e]">Clube Cosechas</span>
+                <div className="flex items-center justify-between mb-0.5 w-full gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#5d3f3e]">Clube Cosechas</span>
+                  <button 
+                    onClick={() => navigate('/clube/nao-logado')}
+                    className="text-[10px] font-bold text-[#E8173A] px-3 py-1 rounded-full border border-[#E8173A] hover:bg-[#E8173A] hover:text-white transition-colors flex items-center gap-1 whitespace-nowrap"
+                  >
+                    Ver detalhes <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
                 <p className="text-sm font-bold text-[#E8173A]">Acumule pontos e ganhe prêmios</p>
                 <p className="text-xs text-[#5d3f3e]/80">Faça login ou cadastre-se para participar do Clube Cosechas</p>
               </div>
@@ -501,7 +509,10 @@ export default function Sacola() {
             <div className="flex-1">
               <div className="flex items-center justify-between mb-0.5 w-full gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#5d3f3e]">Clube Cosechas</span>
-                <button className="text-[10px] font-bold text-[#E8173A] px-3 py-1 rounded-full border border-[#E8173A] hover:bg-[#E8173A] hover:text-white transition-colors flex items-center gap-1 whitespace-nowrap">
+                <button 
+                  onClick={() => navigate('/clube/logado')}
+                  className="text-[10px] font-bold text-[#E8173A] px-3 py-1 rounded-full border border-[#E8173A] hover:bg-[#E8173A] hover:text-white transition-colors flex items-center gap-1 whitespace-nowrap"
+                >
                   Ver detalhes <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
@@ -515,7 +526,10 @@ export default function Sacola() {
             <div className="flex-1">
               <div className="flex items-center justify-between mb-0.5 w-full">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-[#5d3f3e]">Clube Cosechas</span>
-                <button className="text-[9px] font-bold text-[#E8173A] px-3 py-1 rounded-full border border-[#E8173A] hover:bg-[#E8173A] hover:text-white transition-colors flex items-center gap-1">
+                <button 
+                  onClick={() => navigate('/clube/logado')}
+                  className="text-[9px] font-bold text-[#E8173A] px-3 py-1 rounded-full border border-[#E8173A] hover:bg-[#E8173A] hover:text-white transition-colors flex items-center gap-1"
+                >
                   Ver prêmios <ArrowRight className="w-3 h-3" />
                 </button>
               </div>

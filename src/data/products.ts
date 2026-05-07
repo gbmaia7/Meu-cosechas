@@ -238,6 +238,29 @@ export const EXTRA_MIX_FRUTAS: Extra[] = [
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
+export const EXTRA_ESPECIAIS: Extra[] = [
+  { id: 'extra-whey-e', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
+  { id: 'extra-colageno-e', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
+  { id: 'extra-creatina-e', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
+];
+
+export const ESPECIAIS: Product[] = [
+  {
+    id: 'shake-special-1',
+    name: 'Shaketive',
+    category: 'Especial',
+    description: 'Framboesa, morango e banana batidos com sorvete, iogurte grego e toque de hortelã. Único e irresistível.',
+    priceDisplay: 'a partir de R$ 21,90',
+    points: 1,
+    image: 'https://i.imgur.com/0YbDnPU.png',
+    sizes: [
+      { label: 'M', price: 21.90, volume: '500ml' },
+      { label: 'G', price: 24.50, volume: '700ml' },
+    ],
+    extras: EXTRA_ESPECIAIS
+  }
+];
+
 export const PRODUCTS: Product[] = [
   {
     id: '1',
