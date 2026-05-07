@@ -92,7 +92,7 @@ export const FUNCIONAL: Product[] = [
     description: 'Espinafre, beterraba, abacaxi e banana. Rico em energia natural.',
     priceDisplay: 'a partir de R$ 16,50',
     points: 1,
-    image: 'https://i.imgur.com/3NPHqbP.png',
+    image: 'https://i.imgur.com/RbwNnzm.png',
     sizes: [
       { label: 'M', price: 16.50, volume: '500ml' },
       { label: 'G', price: 18.50, volume: '700ml' },
@@ -107,7 +107,7 @@ export const FUNCIONAL: Product[] = [
     description: 'Laranja, banana e proteína de soja. Ideal para ganho muscular.',
     priceDisplay: 'a partir de R$ 16,50',
     points: 1,
-    image: 'https://i.imgur.com/ZlQLfwq.png',
+    image: 'https://i.imgur.com/45JiPk2.png',
     sizes: [
       { label: 'M', price: 16.50, volume: '500ml' },
       { label: 'G', price: 18.50, volume: '700ml' },
@@ -122,7 +122,7 @@ export const FUNCIONAL: Product[] = [
     description: 'Abacaxi, aipo, pepino e salsa. Leve e detox.',
     priceDisplay: 'a partir de R$ 16,50',
     points: 1,
-    image: 'https://i.imgur.com/FzF10xj.png',
+    image: 'https://i.imgur.com/7HX7lxK.png',
     sizes: [
       { label: 'M', price: 16.50, volume: '500ml' },
       { label: 'G', price: 18.50, volume: '700ml' },
@@ -137,7 +137,7 @@ export const FUNCIONAL: Product[] = [
     description: 'Aipo, abacaxi, cenoura e gengibre. Cuida do seu coração.',
     priceDisplay: 'a partir de R$ 16,50',
     points: 1,
-    image: 'https://i.imgur.com/Ne7eXU3.png',
+    image: 'https://i.imgur.com/vFvCxyP.png',
     sizes: [
       { label: 'M', price: 16.50, volume: '500ml' },
       { label: 'G', price: 18.50, volume: '700ml' },
@@ -152,7 +152,7 @@ export const FUNCIONAL: Product[] = [
     description: 'Banana, abacaxi, manga e abacate. Para um coração saudável.',
     priceDisplay: 'a partir de R$ 16,50',
     points: 1,
-    image: 'https://i.imgur.com/Wibobu5.png',
+    image: 'https://i.imgur.com/PpfaARD.png',
     sizes: [
       { label: 'M', price: 16.50, volume: '500ml' },
       { label: 'G', price: 18.50, volume: '700ml' },
@@ -167,7 +167,7 @@ export const FUNCIONAL: Product[] = [
     description: 'Mamão, gérmen de trigo, aipo e laranja. Rico em fibras.',
     priceDisplay: 'a partir de R$ 16,50',
     points: 1,
-    image: 'https://i.imgur.com/57Sxl3N.png',
+    image: 'https://i.imgur.com/CjDFB4f.png',
     sizes: [
       { label: 'M', price: 16.50, volume: '500ml' },
       { label: 'G', price: 18.50, volume: '700ml' },
@@ -380,6 +380,7 @@ export const PRODUCTS: Product[] = [
     description: 'Tropical e cheio de vitamina C.',
     priceDisplay: 'a partir de R$ 15,50',
     points: 1,
+    image: 'https://i.imgur.com/YAE0nt6.png',
     sizes: [
       { label: 'M', price: 15.50, volume: '500ml' },
       { label: 'G', price: 17.50, volume: '700ml' },
@@ -393,6 +394,7 @@ export const PRODUCTS: Product[] = [
     description: 'Cremoso, doce e rico em potássio.',
     priceDisplay: 'a partir de R$ 15,50',
     points: 1,
+    image: 'https://i.imgur.com/1MIAWns.png',
     sizes: [
       { label: 'M', price: 15.50, volume: '500ml' },
       { label: 'G', price: 17.50, volume: '700ml' },
@@ -406,6 +408,7 @@ export const PRODUCTS: Product[] = [
     description: 'Leve e equilibrado, para qualquer hora do dia.',
     priceDisplay: 'a partir de R$ 15,50',
     points: 1,
+    image: 'https://i.imgur.com/qrdatQR.png',
     sizes: [
       { label: 'M', price: 15.50, volume: '500ml' },
       { label: 'G', price: 17.50, volume: '700ml' },
@@ -419,6 +422,7 @@ export const PRODUCTS: Product[] = [
     description: 'Morango, banana e amora batidos com iogurte.',
     priceDisplay: 'a partir de R$ 21,50',
     points: 1,
+    image: 'https://i.imgur.com/vx5gjRR.png',
     sizes: [
       { label: 'M', price: 21.50, volume: '500ml' },
       { label: 'G', price: 23.50, volume: '700ml' },
@@ -432,6 +436,7 @@ export const PRODUCTS: Product[] = [
     description: 'Laranja, manga e pêssego batidos com iogurte.',
     priceDisplay: 'a partir de R$ 21,50',
     points: 1,
+    image: 'https://i.imgur.com/22fcwYg.png',
     sizes: [
       { label: 'M', price: 21.50, volume: '500ml' },
       { label: 'G', price: 23.50, volume: '700ml' },
@@ -459,6 +464,7 @@ export const PRODUCTS: Product[] = [
     description: 'Morango, banana e amora batidos com sorvete.',
     priceDisplay: 'a partir de R$ 21,50',
     points: 1,
+    image: 'https://i.imgur.com/vx5gjRR.png',
     sizes: [
       { label: 'M', price: 21.50, volume: '500ml' },
       { label: 'G', price: 23.50, volume: '700ml' },
@@ -472,6 +478,7 @@ export const PRODUCTS: Product[] = [
     description: 'Kiwi, uvas e melancia. Leve e refrescante.',
     priceDisplay: 'a partir de R$ 19,50',
     points: 1,
+    image: 'https://i.imgur.com/yaUSVPU.png',
     sizes: [
       { label: 'M', price: 19.50, volume: '500ml' },
       { label: 'G', price: 20.90, volume: '700ml' },
@@ -485,6 +492,7 @@ export const PRODUCTS: Product[] = [
     description: 'Kiwi, uvas verdes e abacaxi. Leve e hidratante.',
     priceDisplay: 'a partir de R$ 19,50',
     points: 1,
+    image: 'https://i.imgur.com/PIqTjLl.png',
     sizes: [
       { label: 'M', price: 19.50, volume: '500ml' },
       { label: 'G', price: 20.90, volume: '700ml' },
@@ -498,6 +506,7 @@ export const PRODUCTS: Product[] = [
     description: 'Refrescante e cremoso com toque tropical.',
     priceDisplay: 'a partir de R$ 19,50',
     points: 1,
+    image: 'https://i.imgur.com/R6v8Yyg.png',
     sizes: [
       { label: 'M', price: 19.50, volume: '500ml' },
       { label: 'G', price: 21.00, volume: '700ml' },
@@ -511,6 +520,7 @@ export const PRODUCTS: Product[] = [
     description: 'Tropical e cremoso, cheio de vitaminas.',
     priceDisplay: 'a partir de R$ 19,50',
     points: 1,
+    image: 'https://i.imgur.com/xHTQpB4.png',
     sizes: [
       { label: 'M', price: 19.50, volume: '500ml' },
       { label: 'G', price: 21.00, volume: '700ml' },
@@ -524,6 +534,7 @@ export const PRODUCTS: Product[] = [
     description: 'Agridoce e cremoso, combinação surpreendente.',
     priceDisplay: 'a partir de R$ 19,50',
     points: 1,
+    image: 'https://i.imgur.com/BEXJZCK.png',
     sizes: [
       { label: 'M', price: 19.50, volume: '500ml' },
       { label: 'G', price: 21.00, volume: '700ml' },
@@ -537,6 +548,7 @@ export const PRODUCTS: Product[] = [
     description: 'Refrescante e levemente ácido.',
     priceDisplay: 'a partir de R$ 19,50',
     points: 1,
+    image: 'https://i.imgur.com/VTRLGza.png',
     sizes: [
       { label: 'M', price: 19.50, volume: '500ml' },
       { label: 'G', price: 21.00, volume: '700ml' },
@@ -550,6 +562,7 @@ export const PRODUCTS: Product[] = [
     description: 'Tropical e refrescante com toque de coco.',
     priceDisplay: 'a partir de R$ 19,50',
     points: 1,
+    image: 'https://i.imgur.com/vF4a3JZ.png',
     sizes: [
       { label: 'M', price: 19.50, volume: '500ml' },
       { label: 'G', price: 21.00, volume: '700ml' },
