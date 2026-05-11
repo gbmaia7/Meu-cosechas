@@ -28,6 +28,7 @@ export interface Product {
   }[];
   extras?: Extra[];
   glutenWarning?: boolean;
+  baseOptions?: { label: string }[];
 }
 
 export type CategoryKey = 
@@ -41,7 +42,9 @@ export type CategoryKey =
   | 'Especial'
   | 'Comece Bem Seu Dia'
   | 'Boa de Hoje'
-  | 'Promoção Seu Cosechas';
+  | 'Promoção Seu Cosechas'
+  | 'Salada de Frutas'
+  | 'Coffee';
 
 export const CATEGORY_COLORS: Record<CategoryKey, string> = {
   'Premium': 'bg-purple-500 text-white',
@@ -55,6 +58,8 @@ export const CATEGORY_COLORS: Record<CategoryKey, string> = {
   'Comece Bem Seu Dia': 'bg-orange-500 text-white',
   'Boa de Hoje': 'bg-red-500 text-white',
   'Promoção Seu Cosechas': 'bg-orange-600 text-white',
+  'Salada de Frutas': 'bg-emerald-500 text-white',
+  'Coffee': 'bg-amber-800 text-white',
 };
 
 export const EXTRA_ACAI: Extra[] = [
@@ -231,6 +236,48 @@ export const LINHA_CARIBE: Product[] = [
       { label: 'G', price: 22.00, volume: '700ml' },
     ],
     extras: EXTRA_CARIBE
+  },
+  {
+    id: 'caribe-2',
+    name: 'Piña Colada',
+    category: 'Linha Caribe',
+    description: 'Cremoso, tropical e refrescante como uma tarde na praia.',
+    priceDisplay: 'a partir de R$ 20,00',
+    points: 1,
+    image: 'https://i.imgur.com/jONmSIP.png',
+    sizes: [
+      { label: 'M', price: 20.00, volume: '500ml' },
+      { label: 'G', price: 22.00, volume: '700ml' },
+    ],
+    extras: EXTRA_CARIBE
+  },
+  {
+    id: 'caribe-3',
+    name: 'Mamão + Manga + Coco',
+    category: 'Linha Caribe',
+    description: 'Suave, tropical e aveludado do primeiro ao último gole.',
+    priceDisplay: 'a partir de R$ 20,00',
+    points: 1,
+    image: 'https://i.imgur.com/s7eG7qO.png',
+    sizes: [
+      { label: 'M', price: 20.00, volume: '500ml' },
+      { label: 'G', price: 22.00, volume: '700ml' },
+    ],
+    extras: EXTRA_CARIBE
+  },
+  {
+    id: 'caribe-4',
+    name: 'Melancia + Banana + Coco',
+    category: 'Linha Caribe',
+    description: 'Refrescante, cremoso e cheio de energia tropical.',
+    priceDisplay: 'a partir de R$ 20,00',
+    points: 1,
+    image: 'https://i.imgur.com/NRlAhu3.png',
+    sizes: [
+      { label: 'M', price: 20.00, volume: '500ml' },
+      { label: 'G', price: 22.00, volume: '700ml' },
+    ],
+    extras: EXTRA_CARIBE
   }
 ];
 
@@ -357,7 +404,101 @@ export const PROMOCAO_SEU_COSECHAS: Product[] = [
   }
 ];
 
+export const EXTRA_SALADA: Extra[] = [
+  { id: 'extra-iogurte-s', name: 'Iogurte Natural', description: 'Cremoso e leve', price: 3.00, icon: 'milk' },
+  { id: 'extra-sorvete-s', name: 'Sorvete', description: 'Gelado e saboroso', price: 3.00, icon: 'icecream' },
+  { id: 'extra-granola-s', name: 'Granola', description: 'Crocante e nutritiva', price: 3.00, icon: 'nutrition', glutenFree: false },
+  { id: 'extra-aveia-s', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
+  { id: 'extra-mel-s', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
+];
+
+export const SALADA_DE_FRUTAS: Product[] = [
+  {
+    id: 'salada-1',
+    name: 'Salada de Frutas',
+    category: 'Salada de Frutas',
+    description: 'Mamão, abacaxi, uva roxa sem caroço e morango.',
+    priceDisplay: 'R$ 19,00',
+    points: 1,
+    image: '',
+    extras: EXTRA_SALADA
+  },
+  {
+    id: 'salada-2',
+    name: 'Salada de Frutas Premium',
+    category: 'Salada de Frutas',
+    description: 'Nossa salada premium leva mamão, abacaxi, uva roxa sem caroço, morango, blueberry e cranberries, servida com iogurte natural ou sorvete à sua escolha.',
+    priceDisplay: 'R$ 21,50',
+    points: 1,
+    image: '',
+    baseOptions: [
+      { label: 'Iogurte Natural' },
+      { label: 'Sorvete' }
+    ],
+    extras: [
+      { id: 'extra-iogurte-p', name: 'Iogurte Natural extra', description: 'Cremoso e leve', price: 3.00, icon: 'milk' },
+      { id: 'extra-sorvete-p', name: 'Sorvete extra', description: 'Gelado e saboroso', price: 3.00, icon: 'icecream' },
+      { id: 'extra-granola-p', name: 'Granola', description: 'Crocante e nutritiva', price: 3.00, icon: 'nutrition', glutenFree: false },
+      { id: 'extra-aveia-p', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
+      { id: 'extra-mel-p', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
+    ]
+  }
+];
+
+export const EXTRA_COFFEE: Extra[] = [
+  { id: 'extra-creatina-c', name: 'Creatina', description: 'Performance e força', price: 5.00, icon: 'fitness' },
+  { id: 'extra-colageno-c', name: 'Colágeno', description: 'Elasticidade e saúde', price: 5.00, icon: 'health_and_safety' },
+];
+
+export const COFFEE: Product[] = [
+  {
+    id: 'coffee-1',
+    name: 'Tropical Coffee',
+    category: 'Coffee',
+    description: 'Café vibrante com toque cítrico e tropical.',
+    priceDisplay: 'a partir de R$ 20,00',
+    points: 1,
+    image: 'https://i.imgur.com/oAxxPOb.png',
+    sizes: [
+      { label: 'M', price: 20.00, volume: '400ml' },
+      { label: 'G', price: 21.50, volume: '500ml' },
+    ],
+    extras: EXTRA_COFFEE
+  },
+  {
+    id: 'coffee-2',
+    name: 'Spicy Coffee',
+    category: 'Coffee',
+    description: 'Café intenso com aquecimento suave de especiarias.',
+    priceDisplay: 'a partir de R$ 20,00',
+    points: 1,
+    image: 'https://i.imgur.com/4PksjfQ.png',
+    sizes: [
+      { label: 'M', price: 20.00, volume: '400ml' },
+      { label: 'G', price: 21.50, volume: '500ml' },
+    ],
+    extras: EXTRA_COFFEE
+  },
+  {
+    id: 'coffee-3',
+    name: 'Rose Coffee',
+    category: 'Coffee',
+    description: 'Café delicado com acidez frutada e aroma floral.',
+    priceDisplay: 'a partir de R$ 20,00',
+    points: 1,
+    image: 'https://i.imgur.com/JKBtyeb.png',
+    sizes: [
+      { label: 'M', price: 20.00, volume: '400ml' },
+      { label: 'G', price: 21.50, volume: '500ml' },
+    ],
+    extras: EXTRA_COFFEE
+  }
+];
+
 export const PRODUCTS: Product[] = [
+  ...SALADA_DE_FRUTAS,
+  ...COFFEE,
+  ...LINHA_CARIBE,
   {
     id: '1',
     name: 'Colibri Roxo com Iogurte',
@@ -407,20 +548,6 @@ export const PRODUCTS: Product[] = [
       { label: 'G', price: 24.50, volume: '500ml' },
     ],
     extras: EXTRA_ACAI
-  },
-  {
-    id: '5',
-    name: 'Limonada de Coco',
-    category: 'Linha Caribe',
-    description: 'Limão, creme de coco e coco ralado. Cremosa e refrescante.',
-    priceDisplay: 'a partir de R$ 20,00',
-    points: 1,
-    image: 'https://i.imgur.com/O87fzXw.png',
-    sizes: [
-      { label: 'M', price: 20.00, volume: '500ml' },
-      { label: 'G', price: 22.00, volume: '700ml' },
-    ],
-    extras: EXTRA_CARIBE
   },
   {
     id: '6',

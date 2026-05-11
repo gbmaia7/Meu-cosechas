@@ -12,6 +12,7 @@ interface CartItem {
   name: string;
   price: number;
   size?: string;
+  base?: string;
   extras?: Extra[];
   notes?: string;
   quantity: number;
@@ -45,9 +46,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const existingIndex = prev.findIndex((i) => {
         const sameProduct = i.productId === itemData.productId;
         const sameSize = i.size === itemData.size;
+        const sameBase = i.base === itemData.base;
         const sameNotes = i.notes === itemData.notes;
         const sameExtras = JSON.stringify(i.extras) === JSON.stringify(itemData.extras);
-        return sameProduct && sameSize && sameNotes && sameExtras;
+        return sameProduct && sameSize && sameBase && sameNotes && sameExtras;
       });
 
       if (existingIndex !== -1) {

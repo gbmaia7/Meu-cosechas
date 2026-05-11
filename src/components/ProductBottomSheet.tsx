@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { X, Check, Minus, Plus, Zap, Flower2, Activity, PlusCircle, Apple, Wheat, Heart, Star, Leaf, Citrus } from 'lucide-react';
+import { X, Check, Minus, Plus, Zap, Flower2, Activity, PlusCircle, Apple, Wheat, Heart, Star, Leaf, Citrus, IceCream, Milk } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo, useEffect } from 'react';
 import { Product, Extra } from '../data/products';
@@ -12,7 +12,7 @@ import ImageLightbox from './ImageLightbox';
 interface ProductBottomSheetProps {
   product: Product | null;
   onClose: () => void;
-  onAdd: (options: { sizeLabel?: string; price: number; extras: Extra[]; notes: string; quantity: number }) => void;
+  onAdd: (options: { sizeLabel?: string; price: number; extras: Extra[]; notes: string; quantity: number; base?: string }) => void;
 }
 
 const ExtraIcon = ({ iconName }: { iconName: string }) => {
@@ -25,6 +25,8 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
     case 'health_and_safety': return <Heart className="w-5 h-5" />;
     case 'leaf': return <Leaf className="w-5 h-5" />;
     case 'citrus': return <Citrus className="w-5 h-5" />;
+    case 'icecream': return <IceCream className="w-5 h-5" />;
+    case 'milk': return <Milk className="w-5 h-5" />;
     default: return <PlusCircle className="w-5 h-5" />;
   }
 };
@@ -32,6 +34,7 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
 export default function ProductBottomSheet({ product, onClose, onAdd }: ProductBottomSheetProps) {
   const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
   const [selectedExtras, setSelectedExtras] = useState<Extra[]>([]);
+  const [selectedBase, setSelectedBase] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
@@ -44,6 +47,7 @@ export default function ProductBottomSheet({ product, onClose, onAdd }: ProductB
         setSelectedSizeIndex(0);
       }
       setSelectedExtras([]);
+      setSelectedBase('');
       setNotes('');
     }
   }, [product?.id]);
@@ -77,7 +81,8 @@ export default function ProductBottomSheet({ product, onClose, onAdd }: ProductB
       price: baseUnitPrice,
       extras: selectedExtras,
       notes,
-      quantity: 1
+      quantity: 1,
+      base: selectedBase || undefined
     });
   };
 
@@ -201,9 +206,43 @@ export default function ProductBottomSheet({ product, onClose, onAdd }: ProductB
               </section>
             )}
 
+            {/* Base Options Section */}
+            {product.baseOptions && product.baseOptions.length > 0 && (
+              <section className="space-y-3">
+                <h3 className="text-xs font-bold text-[#1c1b1b]">
+                  {product.id === 'salada-2' ? 'Escolhe seu acompanhamento (obrigatório):' : 'Escolha sua base (obrigatório):'}
+                </h3>
+                <div className="flex gap-3">
+                  {product.baseOptions.map((option) => (
+                    <button
+                      key={option.label}
+                      onClick={() => setSelectedBase(option.label)}
+                      className={`flex-1 px-4 py-3 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                        selectedBase === option.label
+                          ? 'border-[#bd002a] bg-[#bd002a]/5 text-[#bd002a]'
+                          : 'border-[#e5e2e1] bg-white text-[#5d3f3e]'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                        selectedBase === option.label ? 'border-[#bd002a]' : 'border-[#e5e2e1]'
+                      }`}>
+                        {selectedBase === option.label && <div className="w-2.5 h-2.5 rounded-full bg-[#bd002a]" />}
+                      </div>
+                      <span className="font-bold text-sm">{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Extras Section */}
             {product.extras && product.extras.length > 0 && (() => {
-              const extrasOrder = ['Iogurte', 'Sorvete', 'Granola', 'Aveia', 'Mel de Abelha', 'Leite Desnatado', 'Leite de Soja'];
+              const extrasOrder = [
+                'Iogurte', 'Iogurte Natural', 'Iogurte Natural extra', 
+                'Sorvete', 'Sorvete extra', 
+                'Granola', 'Aveia', 'Mel de Abelha', 
+                'Leite Desnatado', 'Leite de Soja'
+              ];
               const fitOrder = ['Whey Protein', 'Colágeno', 'Creatina'];
 
               const extrasGroup = product.extras
@@ -361,7 +400,12 @@ export default function ProductBottomSheet({ product, onClose, onAdd }: ProductB
           <div className="absolute bottom-0 left-0 w-full bg-white px-6 pt-4 pb-8 shadow-[0_-8px_30px_rgb(0,0,0,0.06)] z-20">
             <button 
               onClick={handleAdd}
-              className="w-full bg-[#e8173a] text-white py-4 rounded-full font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-lg"
+              disabled={!!(product.baseOptions && product.baseOptions.length > 0 && !selectedBase)}
+              className={`w-full py-4 rounded-full font-bold flex items-center justify-center gap-2 transition-all shadow-lg ${
+                product.baseOptions && product.baseOptions.length > 0 && !selectedBase
+                  ? 'bg-[#e5e2e1] text-[#a8a29e] cursor-not-allowed'
+                  : 'bg-[#e8173a] text-white hover:opacity-90 active:scale-95'
+              }`}
             >
               <span>Adicionar à sacola</span>
               <span className="w-1.5 h-1.5 rounded-full bg-white/30" />

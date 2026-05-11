@@ -29,7 +29,9 @@ import {
   COMECE_BEM, 
   ESPECIAIS,
   BOA_DE_DIA,
-  PROMOCAO_SEU_COSECHAS
+  PROMOCAO_SEU_COSECHAS,
+  SALADA_DE_FRUTAS,
+  COFFEE
 } from '../../data/products';
 import { useCart } from '../../context/CartContext';
 import ProductBottomSheet from '../../components/ProductBottomSheet';
@@ -67,7 +69,7 @@ export default function HomeComSacola() {
   };
 
   const handlePlusClick = (prod: Product) => {
-    if ((prod.sizes && prod.sizes.length > 0) || (prod.extras && prod.extras.length > 0)) {
+    if ((prod.sizes && prod.sizes.length > 0) || (prod.extras && prod.extras.length > 0) || (prod.baseOptions && prod.baseOptions.length > 0)) {
       setSelectedProduct(prod);
     } else {
       const price = parseFloat(prod.priceDisplay.replace(/[^\d,]/g, '').replace(',', '.'));
@@ -79,16 +81,18 @@ export default function HomeComSacola() {
     }
   };
 
-  const handleAddFromSheet = (options: { sizeLabel?: string; price: number; extras: Extra[]; notes: string; quantity: number }) => {
+  const handleAddFromSheet = (options: { sizeLabel?: string; price: number; extras: Extra[]; notes: string; quantity: number; base?: string }) => {
     if (selectedProduct) {
       let displayName = selectedProduct.name;
       if (options.sizeLabel) displayName += ` (${options.sizeLabel})`;
+      if (options.base) displayName += ` - ${options.base}`;
       
       addToCart({
         productId: selectedProduct.id,
         name: displayName,
         price: options.price,
         size: options.sizeLabel,
+        base: options.base,
         extras: options.extras,
         notes: options.notes,
         quantity: options.quantity
@@ -113,7 +117,7 @@ export default function HomeComSacola() {
             <p className="text-[10px] opacity-80 mt-1 font-medium">Programa exclusivo desta unidade, não se aplica a outras.</p>
             <div className="mt-3 inline-flex items-center gap-2 bg-[#008388] px-4 py-1.5 rounded-full shadow-lg">
               <motion.div animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} className="w-2 h-2 rounded-full bg-white" />
-              <span className="text-white text-[10px] font-bold uppercase tracking-wider">ABERTO • ATÉ AS 19H</span>
+              <span className="text-white text-[10px] font-bold uppercase tracking-wider">ABERTO • 8H ATÉ AS 20H</span>
             </div>
           </div>
         </div>
@@ -262,10 +266,11 @@ export default function HomeComSacola() {
             'Mix de frutas',
             'Açaís',
             'Milkshakes',
+            'Coffee',
             'Linha Caribe',
             'Funcional',
             'Boa de hoje',
-            'Salada de frutas',
+            'Salada de Frutas',
             'Comece bem seu dia',
             'Especiais',
             'Promoção Seu Cosechas'
@@ -500,8 +505,36 @@ export default function HomeComSacola() {
             </>
           )}
 
+          {/* Salada de Frutas Section */}
+          {selectedCategory === 'Salada de Frutas' && (
+            <>
+              <div className="flex items-center justify-between px-2 mb-4">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Salada de Frutas</h3>
+              </div>
+              <div className="space-y-4">
+                {SALADA_DE_FRUTAS.map(prod => (
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Coffee Section */}
+          {selectedCategory === 'Coffee' && (
+            <>
+              <div className="flex items-center justify-between px-2 mb-4">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Tropical & Spicy Coffee</h3>
+              </div>
+              <div className="space-y-4">
+                {COFFEE.map(prod => (
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                ))}
+              </div>
+            </>
+          )}
+
           {/* Placeholder for other categories */}
-          {selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && selectedCategory !== 'Linha Caribe' && selectedCategory !== 'Funcional' && selectedCategory !== 'Comece bem seu dia' && selectedCategory !== 'Comece Bem Seu Dia' && selectedCategory !== 'Especiais' && selectedCategory !== 'Boa de hoje' && selectedCategory !== 'Promoção Seu Cosechas' && (
+          {selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && selectedCategory !== 'Coffee' && selectedCategory !== 'Linha Caribe' && selectedCategory !== 'Funcional' && selectedCategory !== 'Comece bem seu dia' && selectedCategory !== 'Comece Bem Seu Dia' && selectedCategory !== 'Especiais' && selectedCategory !== 'Boa de hoje' && selectedCategory !== 'Promoção Seu Cosechas' && selectedCategory !== 'Salada de Frutas' && (
             <div className="py-12 flex flex-col items-center justify-center text-center px-4">
               <div className="bg-[#f0eded] w-16 h-16 rounded-full flex items-center justify-center mb-4">
                 <Utensils className="text-[#a8a29e] w-8 h-8" />
@@ -594,7 +627,7 @@ function ProductCard({
       {!isAvailable && (
         <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center pointer-events-none">
           <div className="bg-black/80 text-white text-[10px] font-black px-3 py-1 rounded-full mb-1">ENCERRADO</div>
-          {availabilityMsg && <p className="text-[9px] font-bold text-black/60">{availabilityMsg}</p>}
+          {availabilityMsg && <p className="text-[9px] font-bold text-black/60 text-center px-4 break-words leading-snug">{availabilityMsg}</p>}
         </div>
       )}
 
