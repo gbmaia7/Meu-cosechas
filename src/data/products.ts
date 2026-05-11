@@ -39,7 +39,9 @@ export type CategoryKey =
   | 'Funcional' 
   | 'Milkshake' 
   | 'Especial'
-  | 'Comece Bem Seu Dia';
+  | 'Comece Bem Seu Dia'
+  | 'Boa de Hoje'
+  | 'Promoção Seu Cosechas';
 
 export const CATEGORY_COLORS: Record<CategoryKey, string> = {
   'Premium': 'bg-purple-500 text-white',
@@ -51,6 +53,8 @@ export const CATEGORY_COLORS: Record<CategoryKey, string> = {
   'Milkshake': 'bg-yellow-500 text-black',
   'Especial': 'bg-red-600 text-white',
   'Comece Bem Seu Dia': 'bg-orange-500 text-white',
+  'Boa de Hoje': 'bg-red-500 text-white',
+  'Promoção Seu Cosechas': 'bg-orange-600 text-white',
 };
 
 export const EXTRA_ACAI: Extra[] = [
@@ -258,6 +262,98 @@ export const ESPECIAIS: Product[] = [
       { label: 'G', price: 24.50, volume: '700ml' },
     ],
     extras: EXTRA_ESPECIAIS
+  }
+];
+
+export const BOA_DE_DIA: Record<number, Product> = {
+  1: {
+    id: 'boa-seg',
+    name: 'Caju com Morango',
+    category: 'Boa de Hoje',
+    description: 'Refrescante união do sabor tropical do caju com a doçura do morango.',
+    priceDisplay: 'R$ 13,00',
+    points: 1,
+    image: 'https://i.imgur.com/m4efUQm.png',
+    extras: EXTRA_MIX_FRUTAS
+  },
+  2: {
+    id: 'boa-ter',
+    name: 'Melancia + Abacaxi + Hortelã',
+    category: 'Boa de Hoje',
+    description: 'Leve, hidratante e com o frescor inconfundível da hortelã.',
+    priceDisplay: 'R$ 13,00',
+    points: 1,
+    image: 'https://i.imgur.com/GZFVTjI.png',
+    extras: EXTRA_MIX_FRUTAS
+  },
+  4: {
+    id: 'boa-qui',
+    name: 'Maçã + Banana + Laranja',
+    category: 'Boa de Hoje',
+    description: 'Energia equilibrada e sabor familiar para sua tarde.',
+    priceDisplay: 'R$ 13,00',
+    points: 1,
+    image: 'https://i.imgur.com/qrdatQR.png',
+    extras: EXTRA_MIX_FRUTAS
+  }
+};
+
+export const PROMOCAO_SEU_COSECHAS: Product[] = [
+  {
+    id: 'promo-1',
+    name: 'Melancia + Limão',
+    category: 'Promoção Seu Cosechas',
+    description: 'O cítrico do limão encontra a doçura da melancia.',
+    priceDisplay: 'a partir de R$ 12,50',
+    points: 1,
+    image: 'https://i.imgur.com/wuKBZej.png',
+    sizes: [
+      { label: 'M', price: 12.50, volume: '500ml' },
+      { label: 'G', price: 14.00, volume: '700ml' },
+    ],
+    extras: EXTRA_MIX_FRUTAS
+  },
+  {
+    id: 'promo-2',
+    name: 'Abacaxi + Hortelã',
+    category: 'Promoção Seu Cosechas',
+    description: 'Um clássico refrescante para qualquer momento.',
+    priceDisplay: 'a partir de R$ 12,50',
+    points: 1,
+    image: 'https://i.imgur.com/GZFVTjI.png',
+    sizes: [
+      { label: 'M', price: 12.50, volume: '500ml' },
+      { label: 'G', price: 14.00, volume: '700ml' },
+    ],
+    extras: EXTRA_MIX_FRUTAS
+  },
+  {
+    id: 'promo-3',
+    name: 'Manga + Abacaxi',
+    category: 'Promoção Seu Cosechas',
+    description: 'Combinação tropical intensa e nutritiva.',
+    priceDisplay: 'a partir de R$ 12,50',
+    points: 1,
+    image: 'https://i.imgur.com/3I72MuT.png',
+    sizes: [
+      { label: 'M', price: 12.50, volume: '500ml' },
+      { label: 'G', price: 14.00, volume: '700ml' },
+    ],
+    extras: EXTRA_MIX_FRUTAS
+  },
+  {
+    id: 'promo-4',
+    name: 'Laranja + Acerola',
+    category: 'Promoção Seu Cosechas',
+    description: 'Explosão de Vitamina C e refrescância.',
+    priceDisplay: 'a partir de R$ 12,50',
+    points: 1,
+    image: 'https://i.imgur.com/RD9y72q.png',
+    sizes: [
+      { label: 'M', price: 12.50, volume: '500ml' },
+      { label: 'G', price: 14.00, volume: '700ml' },
+    ],
+    extras: EXTRA_MIX_FRUTAS
   }
 ];
 
