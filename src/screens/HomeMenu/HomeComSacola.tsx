@@ -646,9 +646,9 @@ export default function HomeComSacola() {
           { icon: Utensils, label: 'Menu', active: true, path: '/HomeComSacola' },
           { icon: CreditCard, label: 'Assinatura', active: false, path: isAuthenticated ? '/assinatura/ativa' : '/assinatura' },
           { icon: Star, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
-          { icon: UserPlus, label: 'Indique', active: false, path: isAuthenticated ? '/indique-ganhe/logado' : '/indique-ganhe' },
-          { icon: User, label: 'Perfil', active: false, path: '#' },
-        ].map(item => (
+          { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
+          { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
+        ].map((item: any) => (
           <Link 
             key={item.label} 
             to={item.path} 
@@ -656,6 +656,11 @@ export default function HomeComSacola() {
           >
             <div className="relative">
               <item.icon className="w-6 h-6" />
+              {item.badge ? (item.badge > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-[#E8173A] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
+                  {item.badge}
+                </span>
+              )) : null}
             </div>
             <span className="font-display text-[10px] font-semibold mt-1">{item.label}</span>
           </Link>

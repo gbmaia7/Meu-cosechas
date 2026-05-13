@@ -18,6 +18,15 @@ interface CartItem {
   quantity: number;
 }
 
+export interface ActiveOrder {
+  id: string;
+  items: CartItem[];
+  totalPrice: number;
+  status: 'preparing' | 'ready';
+  modality?: 'counter' | 'delivery';
+  address?: { block: string; room: string; complement?: string };
+}
+
 interface CartContextType {
   items: CartItem[];
   addToCart: (item: Omit<CartItem, 'id' | 'quantity'> & { quantity?: number }) => void;
@@ -31,6 +40,10 @@ interface CartContextType {
   totalItems: number;
   totalPrice: number;
   clearCart: () => void;
+  activeOrders: ActiveOrder[];
+  addActiveOrder: (order: Omit<ActiveOrder, 'id'>) => void;
+  updateActiveOrderStatus: (id: string, status: 'preparing' | 'ready') => void;
+  removeActiveOrder: (id: string) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -39,6 +52,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [userPoints, setUserPoints] = useState(5); // Default points as seen in Home screen
   const [isAuthenticated, setIsAuthenticated] = useState(true); // Default to true to not break current flow
+  const [activeOrders, setActiveOrders] = useState<ActiveOrder[]>([]);
+
+  const addActiveOrder = (order: Omit<ActiveOrder, 'id'>) => {
+    setActiveOrders((prev) => [...prev, { ...order, id: Math.random().toString(36).substr(2, 9) }]);
+  };
+
+  const updateActiveOrderStatus = (id: string, status: 'preparing' | 'ready') => {
+    setActiveOrders((prev) => prev.map(order => order.id === id ? { ...order, status } : order));
+  };
+
+  const removeActiveOrder = (id: string) => {
+    setActiveOrders((prev) => prev.filter(order => order.id !== id));
+  };
 
   const addToCart = (newItem: Omit<CartItem, 'id' | 'quantity'> & { quantity?: number }) => {
     const { quantity = 1, ...itemData } = newItem;
@@ -89,7 +115,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, totalItems, totalPrice, clearCart }}>
+    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, updateActiveOrderStatus, removeActiveOrder }}>
       {children}
     </CartContext.Provider>
   );

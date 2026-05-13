@@ -331,7 +331,7 @@ export default function ClubeCosechasLogado() {
           { icon: CreditCard, label: 'Assinatura', active: false, path: '/assinatura' },
           { icon: Star, label: 'Clube', active: true, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
-          { icon: User, label: 'Perfil', active: false, path: '#' },
+          { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
         ].map(item => (
           <Link 
             key={item.label} 

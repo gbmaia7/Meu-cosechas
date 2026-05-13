@@ -40,7 +40,8 @@ import ImageLightbox from '../../components/ImageLightbox';
 
 export default function HomeAcompanharPedido() {
   const navigate = useNavigate();
-  const { addToCart, totalItems, userPoints, isAuthenticated, setIsAuthenticated } = useCart();
+  const { addToCart, totalItems, userPoints, isAuthenticated, setIsAuthenticated, activeOrders } = useCart();
+  const activeOrder = activeOrders[0];
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState('');
@@ -617,31 +618,15 @@ export default function HomeAcompanharPedido() {
         </section>
       </main>
 
-      {/* Floating Order Tracker */}
-      <div className="fixed bottom-[96px] left-4 right-4 z-40">
-        <div className="bg-[#E8173A] text-white px-5 py-4 rounded-3xl flex items-center justify-between shadow-[0_12px_40px_rgba(232,23,58,0.3)] transition-all active:scale-95 cursor-pointer">
-          <div className="flex items-center gap-4">
-            <div className="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center">
-              <Bike className="text-white w-6 h-6" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-bold tracking-tight">Acompanhar pedido</span>
-              <span className="text-xs text-white/90">Em preparação...</span>
-            </div>
-          </div>
-          <button className="bg-white/10 border border-white/30 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider">Detalhes</button>
-        </div>
-      </div>
-
       {/* BottomNavBar */}
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
         {[
           { icon: Utensils, label: 'Menu', active: true, path: '/HomeComSacola' },
           { icon: CreditCard, label: 'Assinatura', active: false, path: isAuthenticated ? '/assinatura/ativa' : '/assinatura' },
           { icon: Star, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
-          { icon: UserPlus, label: 'Indique', active: false, path: isAuthenticated ? '/indique-ganhe/logado' : '/indique-ganhe' },
-          { icon: User, label: 'Perfil', active: false, path: '#' },
-        ].map(item => (
+          { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
+          { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
+        ].map((item: any) => (
           <Link 
             key={item.label} 
             to={item.path} 
@@ -649,6 +634,11 @@ export default function HomeAcompanharPedido() {
           >
             <div className="relative">
               <item.icon className="w-6 h-6" />
+              {item.badge ? (item.badge > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-[#E8173A] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
+                  {item.badge}
+                </span>
+              )) : null}
             </div>
             <span className="font-display text-[10px] font-semibold mt-1">{item.label}</span>
           </Link>

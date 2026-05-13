@@ -37,13 +37,37 @@ export default function Sacola() {
   const [selectedProductForEdit, setSelectedProductForEdit] = useState<{ product: any, itemId: string } | null>(null);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
 
+  const SAVED_ADDRESSES = [
+    { id: '1', name: 'Trabalho', block: 'Bloco 2', room: 'Sala 301', complement: '' },
+    { id: '2', name: 'Recepção', block: 'Bloco 1', room: 'Recepção', complement: 'Deixar na portaria' }
+  ];
+
+  const [useSavedAddress, setUseSavedAddress] = useState<string | 'new'>('1');
+
   // Address State
   const [address, setAddress] = useState({
-    block: '',
-    room: '',
-    complement: ''
+    block: SAVED_ADDRESSES[0].block,
+    room: SAVED_ADDRESSES[0].room,
+    complement: SAVED_ADDRESSES[0].complement
   });
   const [showAddressErrors, setShowAddressErrors] = useState(false);
+
+  // Update address when a saved one is selected
+  const handleAddressSelect = (id: string | 'new') => {
+    setUseSavedAddress(id);
+    if (id !== 'new') {
+      const selected = SAVED_ADDRESSES.find(a => a.id === id);
+      if (selected) {
+        setAddress({
+          block: selected.block,
+          room: selected.room,
+          complement: selected.complement
+        });
+      }
+    } else {
+      setAddress({ block: '', room: '', complement: '' });
+    }
+  };
 
   const deliveryFee = modality === 'counter' ? 0 : 5.00;
   const subtotal = totalPrice;
@@ -231,43 +255,70 @@ export default function Sacola() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-[#5d3f3e] uppercase flex items-center gap-0.5">
-                    Bloco/Prédio <span className="text-[#E8173A]">*</span>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-[#5d3f3e] uppercase block">Endereço</label>
+                <div className="flex flex-col gap-2">
+                  {SAVED_ADDRESSES.map((saved) => (
+                    <label key={saved.id} onClick={() => handleAddressSelect(saved.id)} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${useSavedAddress === saved.id ? 'bg-white border-[#bd002a]' : 'bg-white/50 border-[#e5e2e1] hover:bg-white'}`}>
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${useSavedAddress === saved.id ? 'border-[#bd002a]' : 'border-[#a8a29e]'}`}>
+                        {useSavedAddress === saved.id && <div className="w-2 h-2 rounded-full bg-[#bd002a]"></div>}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-[#1c1b1b]">{saved.name}</p>
+                        <p className="text-[10px] text-[#5d3f3e]">{saved.block}, {saved.room}</p>
+                      </div>
+                    </label>
+                  ))}
+                  <label onClick={() => handleAddressSelect('new')} className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${useSavedAddress === 'new' ? 'bg-white border-[#bd002a]' : 'bg-white/50 border-[#e5e2e1] hover:bg-white'}`}>
+                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${useSavedAddress === 'new' ? 'border-[#bd002a]' : 'border-[#a8a29e]'}`}>
+                      {useSavedAddress === 'new' && <div className="w-2 h-2 rounded-full bg-[#bd002a]"></div>}
+                    </div>
+                    <p className="text-xs font-bold text-[#1c1b1b]">Novo Endereço</p>
                   </label>
-                  <input 
-                    type="text"
-                    value={address.block}
-                    onChange={(e) => setAddress({ ...address, block: e.target.value })}
-                    placeholder="Ex: Bloco 2"
-                    className={`w-full bg-white border ${showAddressErrors && !address.block ? 'border-[#bd002a]' : 'border-[#e5e2e1]'} rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-[#bd002a] outline-none transition-all placeholder:text-[#a8a29e]`}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-[#5d3f3e] uppercase flex items-center gap-0.5">
-                    Sala/Apto <span className="text-[#E8173A]">*</span>
-                  </label>
-                  <input 
-                    type="text"
-                    value={address.room}
-                    onChange={(e) => setAddress({ ...address, room: e.target.value })}
-                    placeholder="Ex: Sala 301"
-                    className={`w-full bg-white border ${showAddressErrors && !address.room ? 'border-[#bd002a]' : 'border-[#e5e2e1]'} rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-[#bd002a] outline-none transition-all placeholder:text-[#a8a29e]`}
-                  />
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-[#5d3f3e] uppercase">Complemento</label>
-                <input 
-                  type="text"
-                  value={address.complement}
-                  onChange={(e) => setAddress({ ...address, complement: e.target.value })}
-                  placeholder="Informações adicionais"
-                  className="w-full bg-white border border-[#e5e2e1] rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-[#bd002a] outline-none transition-all placeholder:text-[#a8a29e]"
-                />
-              </div>
+              {useSavedAddress === 'new' && (
+                <div className="space-y-4 pt-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[#5d3f3e] uppercase flex items-center gap-0.5">
+                        Bloco/Prédio <span className="text-[#E8173A]">*</span>
+                      </label>
+                      <input 
+                        type="text"
+                        value={address.block}
+                        onChange={(e) => setAddress({ ...address, block: e.target.value })}
+                        placeholder="Ex: Bloco 2"
+                        className={`w-full bg-white border ${showAddressErrors && !address.block ? 'border-[#bd002a]' : 'border-[#e5e2e1]'} rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-[#bd002a] outline-none transition-all placeholder:text-[#a8a29e]`}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[#5d3f3e] uppercase flex items-center gap-0.5">
+                        Sala/Apto <span className="text-[#E8173A]">*</span>
+                      </label>
+                      <input 
+                        type="text"
+                        value={address.room}
+                        onChange={(e) => setAddress({ ...address, room: e.target.value })}
+                        placeholder="Ex: Sala 301"
+                        className={`w-full bg-white border ${showAddressErrors && !address.room ? 'border-[#bd002a]' : 'border-[#e5e2e1]'} rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-[#bd002a] outline-none transition-all placeholder:text-[#a8a29e]`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-[#5d3f3e] uppercase">Complemento</label>
+                    <input 
+                      type="text"
+                      value={address.complement}
+                      onChange={(e) => setAddress({ ...address, complement: e.target.value })}
+                      placeholder="Informações adicionais"
+                      className="w-full bg-white border border-[#e5e2e1] rounded-xl px-3 py-2.5 text-sm focus:ring-1 focus:ring-[#bd002a] outline-none transition-all placeholder:text-[#a8a29e]"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#B45309] text-lg shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>info</span>
@@ -595,7 +646,7 @@ export default function Sacola() {
             if (!isFormValid) {
               setShowAddressErrors(true);
             } else {
-              // Proceed to payment
+              navigate('/pagamento', { state: { modality, address } });
             }
           }}
           disabled={!isFormValid && false} // Keep enabled to show errors if clicked, OR follow prompt: "desabilitado (opacidade reduzida) enquanto estiverem vazios"

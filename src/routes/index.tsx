@@ -10,6 +10,24 @@ import AssinaturaDuo from '../screens/AssinaturaDuo';
 import AssinaturaDaily from '../screens/AssinaturaDaily';
 import IndiqueGanhe from '../screens/IndiqueGanhe';
 import IndiqueGanheLogado from '../screens/IndiqueGanheLogado';
+import PerfilLogado from '../screens/PerfilLogado';
+import PerfilNaoLogado from '../screens/PerfilNaoLogado';
+import VerificarTelefone from '../screens/VerificarTelefone';
+import Login from '../screens/Login';
+import Cadastro from '../screens/Cadastro';
+import EsqueceuSenha from '../screens/EsqueceuSenha';
+import Pagamento from '../screens/Pagamento';
+import PagamentoPix from '../screens/PagamentoPix';
+import NovoCartao from '../screens/NovoCartao';
+import GerenciarCartoes from '../screens/GerenciarCartoes';
+import PagamentoVR from '../screens/PagamentoVR';
+import ValidandoPagamento from '../screens/ValidandoPagamento';
+import PagamentoConfirmado from '../screens/PagamentoConfirmado';
+import AcompanharPedido from '../screens/AcompanharPedido';
+
+import AssinaturaCheckout from '../screens/AssinaturaCheckout';
+import AssinaturaValidandoPagamento from '../screens/AssinaturaValidandoPagamento';
+import AssinaturaPagamentoConfirmado from '../screens/AssinaturaPagamentoConfirmado';
 
 export function AppRoutes() {
   return (
@@ -21,11 +39,28 @@ export function AppRoutes() {
       <Route path="/clube/logado" element={<ClubeCosechasLogado />} />
       <Route path="/clube/nao-logado" element={<ClubeCosechasNaoLogado />} />
       <Route path="/assinatura" element={<AssinaturaCosechas />} />
+      <Route path="/assinatura/checkout" element={<AssinaturaCheckout />} />
+      <Route path="/assinatura/validando-pagamento" element={<AssinaturaValidandoPagamento />} />
+      <Route path="/assinatura/pagamento-confirmado" element={<AssinaturaPagamentoConfirmado />} />
       <Route path="/assinatura/ativa" element={<AssinaturaAtiva />} />
       <Route path="/assinatura/duo" element={<AssinaturaDuo />} />
       <Route path="/assinatura/daily" element={<AssinaturaDaily />} />
       <Route path="/indique-ganhe" element={<IndiqueGanhe />} />
       <Route path="/indique-ganhe/logado" element={<IndiqueGanheLogado />} />
+      <Route path="/perfil/logado" element={<PerfilLogado />} />
+      <Route path="/perfil/nao-logado" element={<PerfilNaoLogado />} />
+      <Route path="/perfil/verificar-telefone" element={<VerificarTelefone />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/cadastro" element={<Cadastro />} />
+      <Route path="/esqueceu-senha" element={<EsqueceuSenha />} />
+      <Route path="/pagamento" element={<Pagamento />} />
+      <Route path="/pagamento/pix" element={<PagamentoPix />} />
+      <Route path="/pagamento/cartao" element={<NovoCartao />} />
+      <Route path="/pagamento/vr" element={<PagamentoVR />} />
+      <Route path="/gerenciar-cartoes" element={<GerenciarCartoes />} />
+      <Route path="/validando-pagamento" element={<ValidandoPagamento />} />
+      <Route path="/pagamento-confirmado" element={<PagamentoConfirmado />} />
+      <Route path="/acompanhar-pedido" element={<AcompanharPedido />} />
     </Routes>
   );
 }

@@ -99,12 +99,11 @@ export default function AssinaturaCosechas() {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
-  const handleSubscribe = () => {
+  const handleSubscribe = (plan: typeof plans[0]) => {
     if (!isAuthenticated) {
       navigate('/clube/nao-logado');
     } else {
-      // payment flow placeholder
-      console.log('Open payment flow');
+      navigate('/assinatura/checkout', { state: { plan } });
     }
   };
 
@@ -232,7 +231,7 @@ export default function AssinaturaCosechas() {
                   </p>
                 </div>
                 <button 
-                  onClick={handleSubscribe}
+                  onClick={() => handleSubscribe(plan)}
                   className={`px-8 py-3 rounded-full font-display font-bold text-sm transition-all active:scale-95 shadow-lg ${
                     plan.featured 
                       ? 'bg-white text-[#bd002a] font-black' 
@@ -326,7 +325,7 @@ export default function AssinaturaCosechas() {
           { icon: CreditCard, label: 'Assinatura', active: true, path: '/assinatura' },
           { icon: Star, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
-          { icon: User, label: 'Perfil', active: false, path: '#' },
+          { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
         ].map(item => (
           <Link 
             key={item.label} 
