@@ -137,7 +137,7 @@ export default function Pagamento() {
                       Crédito
                     </span>
                   </div>
-                  <p className="text-xs font-medium text-[#5d3f3e]">Mastercard **** 4242</p>
+                  <p className="text-xs font-medium text-[#5d3f3e]">Mastercard **** {localStorage.getItem('savedCardLast4') || '4242'}</p>
                 </div>
               </div>
               {selectedMethod === 'credit_card_saved' ? (

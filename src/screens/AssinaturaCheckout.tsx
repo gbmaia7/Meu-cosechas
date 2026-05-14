@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { ArrowLeft, CreditCard, ChevronRight, ShieldCheck, Wallet } from 'lucide-react';
 
@@ -7,18 +7,18 @@ export default function AssinaturaCheckout() {
   const location = useLocation();
   const plan = location.state?.plan;
   const [selectedMethod, setSelectedMethod] = useState<string>('credit_card_saved');
+  const [savedCardName, setSavedCardName] = useState(() => localStorage.getItem('savedCardName') || 'Cartão Principal');
+  const [savedCardLast4, setSavedCardLast4] = useState(() => localStorage.getItem('savedCardLast4') || '4912');
+
+  useEffect(() => {
+    setSavedCardName(localStorage.getItem('savedCardName') || 'Cartão Principal');
+    setSavedCardLast4(localStorage.getItem('savedCardLast4') || '4912');
+  }, [location]);
 
   if (!plan) return <Navigate to="/assinatura" />;
 
   const handleFinalize = () => {
-    switch (selectedMethod) {
-      case 'pix':
-        navigate('/assinatura/validando-pagamento', { state: { plan, method: 'pix' } });
-        break;
-      case 'credit_card_saved':
-      default:
-        navigate('/assinatura/validando-pagamento', { state: { plan, method: 'cartao' } });
-    }
+    navigate('/assinatura/validando-pagamento', { state: { plan, method: 'cartao' } });
   };
 
   return (
@@ -70,8 +70,8 @@ export default function AssinaturaCheckout() {
                 <CreditCard className="w-5 h-5 text-[#bd002a]" />
               </div>
               <div>
-                <p className="font-bold text-sm text-[#1c1b1b]">Mastercard final 4912</p>
-                <p className="text-[10px] text-[#5d3f3e]">Crédito</p>
+                <p className="font-bold text-sm text-[#1c1b1b]">{savedCardName}</p>
+                <p className="text-[10px] text-[#5d3f3e]">Mastercard **** {savedCardLast4}</p>
               </div>
             </div>
             <input 
@@ -84,28 +84,8 @@ export default function AssinaturaCheckout() {
             />
           </label>
 
-          <label className={`flex items-center justify-between p-4 rounded-xl border-2 transition-all cursor-pointer ${selectedMethod === 'pix' ? 'border-[#bd002a] bg-[#bd002a]/5' : 'border-[#e5e2e1] bg-white'}`}>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#f6f3f2] rounded-full flex items-center justify-center">
-                 <Wallet className="w-5 h-5 text-[#00686c]" />
-              </div>
-              <div>
-                <p className="font-bold text-sm text-[#1c1b1b]">Pix</p>
-                <p className="text-[10px] text-[#5d3f3e]">Aprovação imediata</p>
-              </div>
-            </div>
-            <input 
-              type="radio" 
-              name="payment" 
-              value="pix" 
-              checked={selectedMethod === 'pix'}
-              onChange={() => setSelectedMethod('pix')}
-              className="w-5 h-5 accent-[#bd002a]" 
-            />
-          </label>
-
           <button 
-            onClick={() => navigate('/pagamento/cartao')}
+            onClick={() => navigate('/pagamento/cartao', { state: { returnToAssinatura: true } })}
             className="flex items-center justify-between p-4 rounded-xl border border-dashed border-[#a8a29e] hover:bg-[#f6f3f2] transition-colors"
           >
             <div className="flex items-center gap-3">

@@ -15,6 +15,7 @@ export default function GerenciarCartoes() {
   const [removed, setRemoved] = useState(() => {
     return localStorage.getItem('savedCardRemoved') === 'true';
   });
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -51,7 +52,7 @@ export default function GerenciarCartoes() {
         <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[40%] bg-[#e8173a]/5 blur-[120px] rounded-full"></div>
       </div>
 
-      <header className="fixed top-0 w-full z-50 bg-[#fcf9f8]/70 backdrop-blur-xl flex items-center px-6 h-16">
+      <header className="fixed top-0 w-full z-50 bg-[#fcf9f8]/70 backdrop-blur-xl flex items-center justify-between px-6 h-16">
         <button 
           onClick={() => navigate(-1)}
           className="text-[#E8173A] hover:bg-zinc-100 transition-colors p-2 rounded-full scale-95 active:scale-90 transition-transform -ml-2 mr-2"
@@ -61,6 +62,12 @@ export default function GerenciarCartoes() {
         <h1 className="font-display font-bold text-lg text-[#1c1b1b]">
           {selecting ? 'Selecione um cartão' : 'Cartões Salvos'}
         </h1>
+        <button 
+          onClick={() => setShowHistory(!showHistory)}
+          className="text-[10px] font-bold uppercase tracking-wider bg-[#f6f3f2] text-[#5d3f3e] px-2 py-1 rounded-lg"
+        >
+          {showHistory ? 'Ocultar Histórico' : 'Ver Histórico'}
+        </button>
       </header>
 
       <main className="pt-24 px-6 max-w-md mx-auto space-y-4">
@@ -125,7 +132,7 @@ export default function GerenciarCartoes() {
                   <img className="w-full h-full object-cover" alt="Mastercard" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1Uh-sXIL0YnH-y9H2GIPEpcGbkD0iPt3xodcycyU5vl0pQ4okQmnERSPEzehlmW9o7oWlz2pt8DAMk6pyxNmvLl4Dj0bsnXy8jsMi2eiToMS4k2odViHclQPmKrDucTrw41EEnGupoaxy0TfmoULr1sKeGcxBbS8Uo5V8nPsora-XYDXEUc4TzK3hdQ3exd5yYtO5pgTepJzLMLu-Lt3w-i7JkmInjpcTnDvwXYrOcO5f2NQgcw1baHoRPw5nLCyvEixykKs_rxI" />
                 </div>
                 <div>
-                  <p className="font-medium text-sm text-[#1c1b1b]">Mastercard **** 4242</p>
+                  <p className="font-medium text-sm text-[#1c1b1b]">Mastercard **** {localStorage.getItem('savedCardLast4') || '4242'}</p>
                   <p className="text-xs text-[#5d3f3e]">Expira em 12/28</p>
                 </div>
               </div>
@@ -135,19 +142,51 @@ export default function GerenciarCartoes() {
             </div>
           </div>
         ) : (
-          <div className="text-center text-[#5d3f3e] py-8 border border-dashed border-[#e5e2e1] rounded-xl">
+          <div className="text-center text-[#5d3f3e] py-8 border border-dashed border-[#e5e2e1] rounded-xl mb-4">
             Nenhum cartão salvo.
           </div>
         )}
 
-        {selecting && (
-          <button 
-            onClick={() => navigate('/pagamento/cartao', { state: { type: type || 'credit_card' }})}
-            className="w-full mt-6 flex items-center justify-center gap-2 py-4 rounded-xl border border-dashed border-[#a8a29e] text-[#5d3f3e] font-bold text-sm bg-white hover:bg-gray-50 transition-colors"
-          >
-            <CreditCard className="w-5 h-5" />
-            Adicionar novo cartão
-          </button>
+        <button 
+          onClick={() => navigate('/pagamento/cartao', { state: { type: type || 'credit_card', selecting }})}
+          className="w-full mb-6 flex items-center justify-center gap-2 py-4 rounded-xl border border-dashed border-[#a8a29e] text-[#5d3f3e] font-bold text-sm bg-white hover:bg-gray-50 transition-colors"
+        >
+          <CreditCard className="w-5 h-5" />
+          Adicionar novo cartão
+        </button>
+        
+        {showHistory && !removed && (
+          <section className="mt-8 bg-white border border-[#e5e2e1] rounded-xl p-5 shadow-sm space-y-4">
+            <h3 className="font-display font-bold text-[#1c1b1b] text-base">Histórico do {cardName}</h3>
+            
+            <div className="space-y-4 border-t border-[#e5e2e1] pt-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#f6f3f2] rounded-full flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[#5d3f3e] text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-[#1c1b1b] text-sm leading-tight">2x Suco Detox, 1x Açaí</p>
+                  <p className="text-xs text-[#5d3f3e]">Hoje, 14:32</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-[#bd002a] text-sm">R$ 54,90</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#f6f3f2] rounded-full flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[#5d3f3e] text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>
+                </div>
+                <div className="flex-1">
+                  <p className="font-bold text-[#1c1b1b] text-sm leading-tight">1x Wrap de Frango</p>
+                  <p className="text-xs text-[#5d3f3e]">Ontem, 19:15</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-[#bd002a] text-sm">R$ 29,90</p>
+                </div>
+              </div>
+            </div>
+          </section>
         )}
 
       </main>

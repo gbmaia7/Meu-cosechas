@@ -101,6 +101,13 @@ export default function AcompanharPedido() {
             <p className="text-[#5d3f3e] text-sm">
                 {orderStatus === 'preparing' ? 'Você será notificado quando estiver pronto.' : (activeOrder?.modality === 'delivery' ? 'Aguarde no endereço selecionado.' : 'Retire no balcão da loja.')}
             </p>
+            {activeOrder?.modality === 'delivery' && (
+              <div className="mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                <p className="text-xs text-[#5d3f3e] font-medium leading-relaxed">
+                   <span className="font-bold text-yellow-800">Atenção:</span> Fique atento ao seu WhatsApp, nosso colaborador entrará em contato por lá para finalizar a entrega.
+                </p>
+              </div>
+            )}
           </div>
           
           {/* Horizontal Progress Bar */}

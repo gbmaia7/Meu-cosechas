@@ -102,7 +102,10 @@ export default function PerfilLogado() {
         {/* Menu Items */}
         <section className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#e5e2e1]/50">
           <div className="divide-y divide-[#f0eded]">
-            <button className="w-full flex items-center justify-between p-5 hover:bg-[#fcf9f8] transition-colors">
+            <button 
+              onClick={() => navigate('/perfil/enderecos')}
+              className="w-full flex items-center justify-between p-5 hover:bg-[#fcf9f8] transition-colors"
+            >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-[#f6f3f2] flex items-center justify-center shrink-0">
                   <MapPin className="w-5 h-5 text-[#5d3f3e]" />
@@ -115,7 +118,10 @@ export default function PerfilLogado() {
               <ChevronRight className="w-5 h-5 text-[#a8a29e]" />
             </button>
 
-            <button className="w-full flex items-center justify-between p-5 hover:bg-[#fcf9f8] transition-colors">
+            <button 
+              onClick={() => navigate('/gerenciar-cartoes')}
+              className="w-full flex items-center justify-between p-5 hover:bg-[#fcf9f8] transition-colors"
+            >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-[#f6f3f2] flex items-center justify-center shrink-0">
                   <Wallet className="w-5 h-5 text-[#5d3f3e]" />
@@ -128,7 +134,10 @@ export default function PerfilLogado() {
               <ChevronRight className="w-5 h-5 text-[#a8a29e]" />
             </button>
 
-            <button className="w-full flex items-center justify-between p-5 hover:bg-[#fcf9f8] transition-colors">
+            <button 
+              onClick={() => navigate('/perfil/favoritos')}
+              className="w-full flex items-center justify-between p-5 hover:bg-[#fcf9f8] transition-colors"
+            >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-[#f6f3f2] flex items-center justify-center shrink-0">
                   <Heart className="w-5 h-5 text-[#bd002a]" />

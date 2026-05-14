@@ -6,25 +6,84 @@ export default function NovoCartao() {
   const navigate = useNavigate();
   const location = useLocation();
   const type = location.state?.type || 'credit_card'; // 'credit_card' or 'debit_card'
+  
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardHolder, setCardHolder] = useState('');
   const [expiry, setExpiry] = useState('');
+  const [cvv, setCvv] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    const formatted = value.match(/.{1,4}/g)?.join(' ') || value;
+    setCardNumber(formatted.slice(0, 19));
+    if (errors.cardNumber) setErrors({ ...errors, cardNumber: '' });
+  };
+
   const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '');
+    const value = e.target.value.replace(/\D/g, '');
     let formattedValue = value;
     if (value.length >= 3) {
       formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}`;
     }
     setExpiry(formattedValue);
+    if (errors.expiry) setErrors({ ...errors, expiry: '' });
+  };
+
+  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, '');
+    setCvv(value.slice(0, 4));
+    if (errors.cvv) setErrors({ ...errors, cvv: '' });
+  };
+
+  const handleCardHolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCardHolder(e.target.value);
+    if (errors.cardHolder) setErrors({ ...errors, cardHolder: '' });
   };
 
   const handleSave = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!cardNumber || cardNumber.replace(/\D/g, '').length < 13) {
+      newErrors.cardNumber = 'Número de cartão inválido';
+    }
+    
+    if (!cardHolder || cardHolder.trim().split(' ').length < 2) {
+      newErrors.cardHolder = 'Insira o nome completo';
+    }
+
+    if (!expiry || expiry.length < 5) {
+      newErrors.expiry = 'Data inválida';
+    } else {
+      const [month] = expiry.split('/');
+      const monthNum = parseInt(month, 10);
+      if (monthNum < 1 || monthNum > 12) {
+        newErrors.expiry = 'Mês inválido';
+      }
+    }
+
+    if (!cvv || cvv.length < 3) {
+      newErrors.cvv = 'CVV inválido';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     localStorage.removeItem('savedCardRemoved');
-    localStorage.setItem('savedCardName', 'Novo Cartão');
-    navigate('/pagamento', { state: { preSelectedMethod: 'credit_card_saved' } });
+    const last4 = cardNumber.replace(/\D/g, '').slice(-4) || '0000';
+    localStorage.setItem('savedCardName', cardHolder || 'Cartão Principal');
+    localStorage.setItem('savedCardLast4', last4);
+    if (location.state?.returnToAssinatura || location.state?.selecting === false || location.state?.selecting === undefined) {
+      navigate(-1);
+    } else {
+      navigate('/pagamento', { state: { preSelectedMethod: 'credit_card_saved' } });
+    }
   };
 
   return (
@@ -53,20 +112,26 @@ export default function NovoCartao() {
             <div className="relative">
               <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a8a29e]" />
               <input 
-                type="text" 
+                type="text"
+                value={cardNumber}
+                onChange={handleCardNumberChange} 
                 placeholder="0000 0000 0000 0000" 
-                className="w-full bg-white border border-[#e5e2e1] rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all"
+                className={`w-full bg-white border ${errors.cardNumber ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
               />
             </div>
+            {errors.cardNumber && <p className="text-[#e8173a] text-[10px] font-bold px-1">{errors.cardNumber}</p>}
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">Nome do titular</label>
             <input 
-              type="text" 
+              type="text"
+              value={cardHolder}
+              onChange={handleCardHolderChange} 
               placeholder="Como está impresso no cartão" 
-              className="w-full bg-white border border-[#e5e2e1] rounded-xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all"
+              className={`w-full bg-white border ${errors.cardHolder ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
             />
+            {errors.cardHolder && <p className="text-[#e8173a] text-[10px] font-bold px-1">{errors.cardHolder}</p>}
           </div>
 
           <div className="flex gap-4">
@@ -80,20 +145,24 @@ export default function NovoCartao() {
                   value={expiry}
                   onChange={handleExpiryChange}
                   maxLength={5}
-                  className="w-full bg-white border border-[#e5e2e1] rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all"
+                  className={`w-full bg-white border ${errors.expiry ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
                 />
               </div>
+              {errors.expiry && <p className="text-[#e8173a] text-[10px] font-bold px-1">{errors.expiry}</p>}
             </div>
             <div className="space-y-1 flex-1">
               <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">CVV</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a8a29e]" />
                 <input 
-                  type="text" 
+                  type="text"
+                  value={cvv}
+                  onChange={handleCvvChange} 
                   placeholder="123" 
-                  className="w-full bg-white border border-[#e5e2e1] rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all"
+                  className={`w-full bg-white border ${errors.cvv ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
                 />
               </div>
+              {errors.cvv && <p className="text-[#e8173a] text-[10px] font-bold px-1">{errors.cvv}</p>}
             </div>
           </div>
 

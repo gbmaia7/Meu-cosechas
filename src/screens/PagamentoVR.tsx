@@ -65,7 +65,7 @@ export default function PagamentoVR() {
         </div>
 
         <button 
-          onClick={() => navigate('/validando-pagamento', { state: location.state })}
+          onClick={() => navigate('/pagamento-confirmado-vr', { state: location.state })}
           className="w-full mt-8 flex items-center justify-center gap-2 py-4 bg-[#bd002a] text-white rounded-full font-display font-bold shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-all"
         >
           <CheckCircle2 className="w-5 h-5" />

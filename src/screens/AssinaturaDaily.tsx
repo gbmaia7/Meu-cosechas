@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { 
   ArrowLeft, 
@@ -12,15 +12,19 @@ import {
   CreditCard, 
   Star, 
   User,
-  Apple
+  Apple,
+  AlertCircle
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import ImageLightbox from '../components/ImageLightbox';
 
 export default function AssinaturaDaily() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { totalItems, isAuthenticated } = useCart();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const isCanceled = location.state?.canceled === true;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -102,6 +106,16 @@ export default function AssinaturaDaily() {
             Daily
           </button>
         </div>
+
+        {isCanceled && (
+          <div className="bg-[#fff0f0] border border-[#e8173a] rounded-xl p-4 flex gap-3 items-start animate-fade-in shadow-sm">
+            <AlertCircle className="text-[#e8173a] w-5 h-5 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-[#bd002a] text-sm">Cancelamento Agendado</p>
+              <p className="text-xs text-[#5d3f3e] mt-1 leading-relaxed">Sua assinatura foi cancelada, mas você pode usar seus benefícios até o dia <span className="font-bold">30 deste mês</span>.</p>
+            </div>
+          </div>
+        )}
 
         {/* Active Plan Card */}
         <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#bd002a] to-[#e8173a] p-8 text-white shadow-xl">
@@ -232,19 +246,27 @@ export default function AssinaturaDaily() {
         </section>
 
         {/* Actions */}
-        <section className="space-y-6 pt-4 pb-12">
-          <div className="space-y-3 text-center">
-            <button className="w-full py-4 border-2 border-[#bd002a] text-[#bd002a] font-display font-bold rounded-full transition-all active:scale-95 hover:bg-[#bd002a]/5 shadow-sm">
-              Trocar de plano
+        {!isCanceled && (
+          <section className="space-y-6 pt-4 pb-12">
+            <div className="space-y-3 text-center">
+              <button 
+                onClick={() => navigate('/assinatura/trocar', { state: { currentPlan: 'Daily' } })}
+                className="w-full py-4 border-2 border-[#bd002a] text-[#bd002a] font-display font-bold rounded-full transition-all active:scale-95 hover:bg-[#bd002a]/5 shadow-sm"
+              >
+                Trocar de plano
+              </button>
+              <p className="text-xs text-[#5d3f3e] font-medium opacity-60">
+                A troca entra em vigor no próximo ciclo.
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate('/assinatura/cancelar', { state: { currentPlan: 'Daily' } })}
+              className="w-full py-4 border-2 border-[#e5e2e1] text-[#bd002a] font-display font-bold rounded-full transition-all active:scale-95 hover:bg-red-50/50 shadow-sm"
+            >
+              Cancelar plano
             </button>
-            <p className="text-xs text-[#5d3f3e] font-medium opacity-60">
-              A troca entra em vigor no próximo ciclo.
-            </p>
-          </div>
-          <button className="w-full py-4 border-2 border-[#e5e2e1] text-[#bd002a] font-display font-bold rounded-full transition-all active:scale-95 hover:bg-red-50/50 shadow-sm">
-            Cancelar plano
-          </button>
-        </section>
+          </section>
+        )}
       </main>
 
       {/* BottomNavBar */}

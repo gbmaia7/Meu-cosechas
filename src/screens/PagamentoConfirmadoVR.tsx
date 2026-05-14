@@ -1,9 +1,9 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useEffect } from 'react';
-import { MoreVertical, Store, ArrowRight, Bike, MapPin } from 'lucide-react';
+import { MoreVertical, Store, ArrowRight, Bike, MapPin, Wallet } from 'lucide-react';
 
-export default function PagamentoConfirmado() {
+export default function PagamentoConfirmadoVR() {
   const navigate = useNavigate();
   const location = useLocation();
   const { items, totalPrice, clearCart, addActiveOrder } = useCart();
@@ -34,8 +34,8 @@ export default function PagamentoConfirmado() {
                 check_circle
             </span>
           </div>
-          <h2 className="text-[#00686c] font-display font-extrabold text-3xl mb-2 tracking-tight">Pagamento confirmado!</h2>
-          <p className="text-[#5d3f3e] font-medium">Seu pedido já está sendo preparado com ingredientes frescos.</p>
+          <h2 className="text-[#00686c] font-display font-extrabold text-3xl mb-2 tracking-tight">Pedido Recebido!</h2>
+          <p className="text-[#5d3f3e] font-medium">Você pagará {modality === 'counter' ? 'no balcão' : 'na entrega'} com Vale Refeição/Alimentação.</p>
         </div>
         
         {/* Order Summary Card */}
@@ -117,7 +117,7 @@ export default function PagamentoConfirmado() {
           <div className="text-left">
             {modality === 'counter' ? (
               <p className="text-[#1c1b1b] text-sm leading-relaxed">
-                Retire seu pedido no balcão da unidade <span className="font-bold">Dimension Park — Barra</span>.
+                Retire e pague no balcão da unidade <span className="font-bold">Dimension Park — Barra</span>.
               </p>
             ) : (
               <div className="text-[#1c1b1b] text-sm leading-relaxed">
@@ -148,8 +148,6 @@ export default function PagamentoConfirmado() {
         <button 
           onClick={() => {
             if (items.length > 0) {
-              // Create the order, it doesn't give us the ID back linearly because addActiveOrder is a void state dispatcher, 
-              // but we can just redirect to default list if not using specific ID
               addActiveOrder({
                 items: [...items],
                 totalPrice: totalPrice,
@@ -159,7 +157,6 @@ export default function PagamentoConfirmado() {
               });
             }
             clearCart();
-            // Just go to acompanhar-pedido, it will show the newest or all orders
             navigate('/acompanhar-pedido');
           }}
           className="w-full bg-gradient-to-r from-[#bd002a] to-[#e8173a] text-white font-bold py-5 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
