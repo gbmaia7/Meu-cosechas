@@ -6,6 +6,7 @@ export default function VerificarTelefone() {
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2>(1);
   const [resendStatus, setResendStatus] = useState<'idle' | 'sent'>('idle');
+  const [phone, setPhone] = useState(localStorage.getItem('savedPhone') || '');
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -14,6 +15,12 @@ export default function VerificarTelefone() {
   const handleResend = () => {
     setResendStatus('sent');
     setTimeout(() => setResendStatus('idle'), 3000);
+  };
+
+  const handleVerify = () => {
+    localStorage.setItem('isPhoneVerified', 'true');
+    localStorage.setItem('savedPhone', phone || '(21) 99999-9999');
+    navigate(-1); // Go back to the previous screen (can be PerfilLogado or Sacola)
   };
 
   return (
@@ -35,23 +42,36 @@ export default function VerificarTelefone() {
             <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-6">
               <Phone className="w-10 h-10 text-amber-600" />
             </div>
-            <h2 className="font-display font-extrabold text-2xl text-center mb-2">Qual o seu WhatsApp?</h2>
+            <h2 className="font-display font-extrabold text-2xl text-center mb-2">Qual o seu número?</h2>
             <p className="text-center text-[#5d3f3e] text-sm mb-8">
-              Enviaremos um código via SMS ou WhatsApp para verificar seu número.
+              Ter um telefone verificado é necessário para fazer pedidos com entrega, resgatar prêmios e pontuar no Clube Cosechas. Enviaremos um código para confirmar seu número.
             </p>
             
             <input 
               type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               placeholder="(00) 00000-0000"
               className="w-full text-center text-2xl font-bold bg-white border border-[#e5e2e1] rounded-xl py-4 px-4 focus:outline-none focus:border-[#bd002a] focus:ring-1 focus:ring-[#bd002a] transition-all mb-8 shadow-sm"
             />
 
-            <button 
-              onClick={() => setStep(2)}
-              className="w-full bg-[#bd002a] text-white py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-transform"
-            >
-              Enviar Código
-            </button>
+            <div className="flex flex-col gap-3 w-full">
+              <button 
+                onClick={() => setStep(2)}
+                disabled={phone.length < 10}
+                className={`w-full py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2 ${phone.length >= 10 ? 'bg-[#25D366] text-white shadow-[#25D366]/20' : 'bg-[#f0eded] text-[#a8a29e] shadow-none'}`}
+              >
+                Enviar via WhatsApp
+              </button>
+              
+              <button 
+                onClick={() => setStep(2)}
+                disabled={phone.length < 10}
+                className={`w-full py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2 ${phone.length >= 10 ? 'bg-[#bd002a]/10 text-[#bd002a]' : 'bg-[#f0eded] text-[#a8a29e]'}`}
+              >
+                Enviar via SMS
+              </button>
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center">
@@ -60,7 +80,7 @@ export default function VerificarTelefone() {
             </div>
             <h2 className="font-display font-extrabold text-2xl text-center mb-2">Código de Verificação</h2>
             <p className="text-center text-[#5d3f3e] text-sm mb-8">
-              Digite o código de 4 dígitos que acabamos de enviar para você.
+              Digite o código de 4 dígitos que acabamos de enviar para {phone}.
             </p>
 
             <div className="flex gap-4 justify-center mb-8">
@@ -75,7 +95,7 @@ export default function VerificarTelefone() {
             </div>
 
             <button 
-              onClick={() => navigate('/perfil/logado')}
+              onClick={handleVerify}
               className="w-full bg-[#bd002a] text-white py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-transform"
             >
               Verificar

@@ -34,9 +34,40 @@ export default function Pagamento() {
     }
   };
 
+  const [savedCards, setSavedCards] = useState<any[]>([]);
+  const [activeCard, setActiveCard] = useState<any>(null);
+
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    const cardsStr = localStorage.getItem('savedCards');
+    let cards = [];
+    if (cardsStr) {
+      cards = JSON.parse(cardsStr);
+    } else {
+      const oldName = localStorage.getItem('savedCardName');
+      const removed = localStorage.getItem('savedCardRemoved') === 'true';
+      if (oldName && !removed) {
+        cards = [{
+          id: 'old-1',
+          name: oldName,
+          last4: localStorage.getItem('savedCardLast4') || '4242',
+          type: 'Crédito'
+        }];
+        localStorage.setItem('savedCards', JSON.stringify(cards));
+      }
+    }
+    setSavedCards(cards);
+    
+    if (cards.length > 0) {
+      const selectedId = localStorage.getItem('selectedCardId');
+      const card = cards.find(c => c.id === selectedId) || cards[0];
+      setActiveCard(card);
+    } else {
+      if (selectedMethod === 'credit_card_saved') {
+        setSelectedMethod('pix');
+      }
+    }
+  }, [selectedMethod]);
 
   const handleFinalize = () => {
     switch (selectedMethod) {
@@ -108,15 +139,15 @@ export default function Pagamento() {
         </section>
 
         {/* Saved Cards Section */}
-        {hasSavedCards && (
+        {savedCards.length > 0 && activeCard && (
           <section className="mb-10">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display text-xl font-bold">Cartões salvos</h3>
+              <h3 className="font-display text-xl font-bold">Cartão Principal</h3>
               <span 
-                onClick={() => navigate('/gerenciar-cartoes')}
+                onClick={() => navigate('/gerenciar-cartoes', { state: { selecting: true } })}
                 className="text-xs font-bold uppercase tracking-wider text-[#bd002a] cursor-pointer hover:underline"
               >
-                Gerenciar
+                Trocar / Gerenciar
               </span>
             </div>
             
@@ -131,13 +162,13 @@ export default function Pagamento() {
                 <div>
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="font-display font-bold text-[#1c1b1b]">
-                      {localStorage.getItem('savedCardName') || 'Cartão Principal'}
+                      {activeCard.name}
                     </p>
                     <span className="bg-[#fd6c70]/10 text-[#ac3139] px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                      Crédito
+                      {activeCard.type}
                     </span>
                   </div>
-                  <p className="text-xs font-medium text-[#5d3f3e]">Mastercard **** {localStorage.getItem('savedCardLast4') || '4242'}</p>
+                  <p className="text-xs font-medium text-[#5d3f3e]">Mastercard **** {activeCard.last4}</p>
                 </div>
               </div>
               {selectedMethod === 'credit_card_saved' ? (
@@ -153,12 +184,6 @@ export default function Pagamento() {
         <section className="space-y-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-xl font-bold">Outras formas de pagamento</h3>
-            <button 
-              onClick={toggleSavedCardsState}
-              className="text-[10px] font-bold uppercase tracking-wider bg-gray-200 text-gray-600 px-2 py-1 rounded"
-            >
-              Dev: Toggle Cartão
-            </button>
           </div>
           
           {/* Pix Card */}

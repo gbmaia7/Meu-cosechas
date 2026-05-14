@@ -8,41 +8,62 @@ export default function GerenciarCartoes() {
   const selecting = location.state?.selecting;
   const type = location.state?.type; // 'credit_card' or 'debit_card'
 
-  const [cardName, setCardName] = useState(() => {
-    return localStorage.getItem('savedCardName') || 'Cartão Principal';
-  });
-  const [isEditing, setIsEditing] = useState(false);
-  const [removed, setRemoved] = useState(() => {
-    return localStorage.getItem('savedCardRemoved') === 'true';
-  });
+  const [savedCards, setSavedCards] = useState<any[]>([]);
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [editingCardName, setEditingCardName] = useState('');
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    const loadCards = () => {
+      const cardsStr = localStorage.getItem('savedCards');
+      if (cardsStr) {
+        setSavedCards(JSON.parse(cardsStr));
+      } else {
+        const oldName = localStorage.getItem('savedCardName');
+        const removed = localStorage.getItem('savedCardRemoved') === 'true';
+        if (oldName && !removed) {
+          const legacyCard = {
+            id: 'old-1',
+            name: oldName,
+            last4: localStorage.getItem('savedCardLast4') || '4242',
+            type: 'Crédito'
+          };
+          setSavedCards([legacyCard]);
+          localStorage.setItem('savedCards', JSON.stringify([legacyCard]));
+        }
+      }
+    };
+    loadCards();
   }, []);
 
-  const handleSave = (e?: React.FocusEvent | React.MouseEvent) => {
+  const handleSave = (id: string, e?: React.FocusEvent | React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setIsEditing(false);
-    localStorage.setItem('savedCardName', cardName);
+    setEditingCardId(null);
+    const newCards = savedCards.map(c => c.id === id ? { ...c, name: editingCardName } : c);
+    setSavedCards(newCards);
+    localStorage.setItem('savedCards', JSON.stringify(newCards));
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (id: string, e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSave();
+      handleSave(id);
     }
   };
 
-  const handleCardClick = () => {
-    if (selecting && !isEditing) {
+  const handleCardClick = (card: any) => {
+    if (selecting && editingCardId !== card.id) {
+      localStorage.setItem('selectedCardId', card.id);
       navigate('/pagamento', { state: { preSelectedMethod: 'credit_card_saved' } });
     }
   };
 
-  const handleRemove = (e: React.MouseEvent) => {
+  const handleRemove = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setRemoved(true);
-    localStorage.setItem('savedCardRemoved', 'true');
+    const newCards = savedCards.filter(c => c.id !== id);
+    setSavedCards(newCards);
+    localStorage.setItem('savedCards', JSON.stringify(newCards));
+    localStorage.setItem('savedCardRemoved', 'true'); // legacy sync
   };
 
   return (
@@ -82,65 +103,68 @@ export default function GerenciarCartoes() {
           </p>
         )}
 
-        {/* Existing Card */}
-        {!removed ? (
-          <div 
-            onClick={handleCardClick}
-            className={`bg-white rounded-xl p-5 shadow-sm border border-[#e5e2e1] space-y-4 ${selecting ? 'cursor-pointer hover:bg-gray-50' : ''}`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {isEditing ? (
-                  <div className="flex items-center gap-2 border-b border-[#e8173a] pb-1">
-                    <input
-                      type="text"
-                      value={cardName}
-                      onChange={(e) => setCardName(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      onBlur={handleSave}
-                      className="bg-transparent font-display font-bold text-[#1c1b1b] outline-none w-32"
-                      autoFocus
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <button onClick={handleSave} className="text-[#e8173a]">
-                      <Check className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="font-display font-bold text-[#1c1b1b]">{cardName}</span>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setIsEditing(true); }} 
-                      className="text-[#a8a29e] hover:text-[#1c1b1b]"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <button 
-                onClick={handleRemove}
-                className="text-[#a8a29e] hover:text-[#e8173a] transition-colors p-1"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="flex items-center justify-between bg-[#f0eded]/50 p-3 rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-7 bg-white rounded flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
-                  <img className="w-full h-full object-cover" alt="Mastercard" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1Uh-sXIL0YnH-y9H2GIPEpcGbkD0iPt3xodcycyU5vl0pQ4okQmnERSPEzehlmW9o7oWlz2pt8DAMk6pyxNmvLl4Dj0bsnXy8jsMi2eiToMS4k2odViHclQPmKrDucTrw41EEnGupoaxy0TfmoULr1sKeGcxBbS8Uo5V8nPsora-XYDXEUc4TzK3hdQ3exd5yYtO5pgTepJzLMLu-Lt3w-i7JkmInjpcTnDvwXYrOcO5f2NQgcw1baHoRPw5nLCyvEixykKs_rxI" />
+        {/* Existing Cards */}
+        {savedCards.length > 0 ? (
+          savedCards.map(card => (
+            <div 
+              key={card.id}
+              onClick={() => handleCardClick(card)}
+              className={`bg-white rounded-xl p-5 shadow-sm border border-[#e5e2e1] space-y-4 mb-4 ${selecting ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {editingCardId === card.id ? (
+                    <div className="flex items-center gap-2 border-b border-[#e8173a] pb-1">
+                      <input
+                        type="text"
+                        value={editingCardName}
+                        onChange={(e) => setEditingCardName(e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(card.id, e)}
+                        onBlur={() => handleSave(card.id)}
+                        className="bg-transparent font-display font-bold text-[#1c1b1b] outline-none w-32"
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <button onClick={(e) => handleSave(card.id, e)} className="text-[#e8173a]">
+                        <Check className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="font-display font-bold text-[#1c1b1b]">{card.name}</span>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setEditingCardId(card.id); setEditingCardName(card.name); }} 
+                        className="text-[#a8a29e] hover:text-[#1c1b1b]"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <p className="font-medium text-sm text-[#1c1b1b]">Mastercard **** {localStorage.getItem('savedCardLast4') || '4242'}</p>
-                  <p className="text-xs text-[#5d3f3e]">Expira em 12/28</p>
+                <button 
+                  onClick={(e) => handleRemove(card.id, e)}
+                  className="text-[#a8a29e] hover:text-[#e8173a] transition-colors p-1"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="flex items-center justify-between bg-[#f0eded]/50 p-3 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-7 bg-white rounded flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                    <img className="w-full h-full object-cover" alt="Mastercard" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1Uh-sXIL0YnH-y9H2GIPEpcGbkD0iPt3xodcycyU5vl0pQ4okQmnERSPEzehlmW9o7oWlz2pt8DAMk6pyxNmvLl4Dj0bsnXy8jsMi2eiToMS4k2odViHclQPmKrDucTrw41EEnGupoaxy0TfmoULr1sKeGcxBbS8Uo5V8nPsora-XYDXEUc4TzK3hdQ3exd5yYtO5pgTepJzLMLu-Lt3w-i7JkmInjpcTnDvwXYrOcO5f2NQgcw1baHoRPw5nLCyvEixykKs_rxI" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-[#1c1b1b]">Mastercard **** {card.last4}</p>
+                    <p className="text-xs text-[#5d3f3e]">Expira em 12/28</p>
+                  </div>
+                </div>
+                <div className="bg-[#fd6c70]/10 text-[#ac3139] px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
+                  {card.type}
                 </div>
               </div>
-              <div className="bg-[#fd6c70]/10 text-[#ac3139] px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
-                Crédito
-              </div>
             </div>
-          </div>
+          ))
         ) : (
           <div className="text-center text-[#5d3f3e] py-8 border border-dashed border-[#e5e2e1] rounded-xl mb-4">
             Nenhum cartão salvo.
@@ -155,9 +179,9 @@ export default function GerenciarCartoes() {
           Adicionar novo cartão
         </button>
         
-        {showHistory && !removed && (
+        {showHistory && savedCards.length > 0 && (
           <section className="mt-8 bg-white border border-[#e5e2e1] rounded-xl p-5 shadow-sm space-y-4">
-            <h3 className="font-display font-bold text-[#1c1b1b] text-base">Histórico do {cardName}</h3>
+            <h3 className="font-display font-bold text-[#1c1b1b] text-base">Histórico de compras ({savedCards[0]?.name})</h3>
             
             <div className="space-y-4 border-t border-[#e5e2e1] pt-4">
               <div className="flex items-center gap-3">

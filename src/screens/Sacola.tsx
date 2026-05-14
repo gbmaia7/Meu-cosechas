@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus } from 'lucide-react';
+import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE, FUNCIONAL, COMECE_BEM } from '../data/products';
@@ -37,12 +37,20 @@ export default function Sacola() {
   const [selectedProductForEdit, setSelectedProductForEdit] = useState<{ product: any, itemId: string } | null>(null);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
 
+  useEffect(() => {
+    setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }, 0);
+  }, []);
+
   const SAVED_ADDRESSES = [
     { id: '1', name: 'Trabalho', block: 'Bloco 2', room: 'Sala 301', complement: '' },
     { id: '2', name: 'Recepção', block: 'Bloco 1', room: 'Recepção', complement: 'Deixar na portaria' }
   ];
 
   const [useSavedAddress, setUseSavedAddress] = useState<string | 'new'>('1');
+  const isPhoneVerified = localStorage.getItem('isPhoneVerified') === 'true';
+  const [showPhoneAlert, setShowPhoneAlert] = useState(false);
 
   // Address State
   const [address, setAddress] = useState({
@@ -645,6 +653,8 @@ export default function Sacola() {
           onClick={() => {
             if (!isFormValid) {
               setShowAddressErrors(true);
+            } else if (modality === 'delivery' && !isPhoneVerified) {
+              setShowPhoneAlert(true);
             } else {
               navigate('/pagamento', { state: { modality, address } });
             }
@@ -697,6 +707,49 @@ export default function Sacola() {
                   className="flex-1 py-3 rounded-xl font-bold text-sm bg-[#bd002a] text-white"
                 >
                   Remover
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showPhoneAlert && (
+          <div className="fixed inset-0 z-[100] flex items-end justify-center px-4 pb-12 sm:items-center sm:pb-0">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setShowPhoneAlert(false)}
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              className="relative bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl pb-12 sm:pb-6"
+            >
+              <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4">
+                <AlertCircle className="w-6 h-6" />
+              </div>
+              <h3 className="font-display font-bold text-xl text-[#1c1b1b] mb-2 leading-tight">
+                Verifique seu telefone
+              </h3>
+              <p className="text-sm text-[#5d3f3e] mb-8 leading-relaxed">
+                Para realizar pedidos com entrega, precisamos que seu telefone esteja verificado. Ele é necessário para a nossa equipe entrar em contato na hora da entrega, além de trazer benefícios pro Clube Cosechas!
+              </p>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => navigate('/perfil/verificar-telefone')}
+                  className="w-full py-4 rounded-xl font-bold text-sm bg-[#bd002a] text-white hover:opacity-95 active:scale-[0.98] transition-all"
+                >
+                  Verificar Telefone
+                </button>
+                <button 
+                  onClick={() => setShowPhoneAlert(false)}
+                  className="w-full py-3 rounded-xl font-bold text-sm bg-[#f6f3f2] text-[#5d3f3e] hover:bg-[#f0eded] active:scale-[0.98] transition-all"
+                >
+                  Voltar para sacola
                 </button>
               </div>
             </motion.div>

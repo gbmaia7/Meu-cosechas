@@ -77,8 +77,36 @@ export default function NovoCartao() {
 
     localStorage.removeItem('savedCardRemoved');
     const last4 = cardNumber.replace(/\D/g, '').slice(-4) || '0000';
-    localStorage.setItem('savedCardName', cardHolder || 'Cartão Principal');
-    localStorage.setItem('savedCardLast4', last4);
+    
+    const newCard = {
+      id: Date.now().toString(),
+      name: cardHolder || 'Cartão Principal',
+      last4: last4,
+      type: 'Crédito'
+    };
+    
+    const existingCardsStr = localStorage.getItem('savedCards');
+    let existingCards = [];
+    if (existingCardsStr) {
+      existingCards = JSON.parse(existingCardsStr);
+    } else {
+      // Migrate old format if exists
+      const oldName = localStorage.getItem('savedCardName');
+      const removed = localStorage.getItem('savedCardRemoved') === 'true';
+      if (oldName && !removed) {
+        existingCards.push({
+          id: 'old-1',
+          name: oldName,
+          last4: localStorage.getItem('savedCardLast4') || '4242',
+          type: 'Crédito'
+        });
+      }
+    }
+    
+    existingCards.push(newCard);
+    localStorage.setItem('savedCards', JSON.stringify(existingCards));
+    localStorage.removeItem('savedCardRemoved'); // clear legacy
+    
     if (location.state?.returnToAssinatura || location.state?.selecting === false || location.state?.selecting === undefined) {
       navigate(-1);
     } else {

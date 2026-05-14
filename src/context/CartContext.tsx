@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Extra } from '../data/products';
 
 interface CartItem {
@@ -44,6 +44,7 @@ interface CartContextType {
   addActiveOrder: (order: Omit<ActiveOrder, 'id'>) => void;
   updateActiveOrderStatus: (id: string, status: 'preparing' | 'ready') => void;
   removeActiveOrder: (id: string) => void;
+  productFrequency: Record<string, number>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -53,9 +54,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [userPoints, setUserPoints] = useState(5); // Default points as seen in Home screen
   const [isAuthenticated, setIsAuthenticated] = useState(true); // Default to true to not break current flow
   const [activeOrders, setActiveOrders] = useState<ActiveOrder[]>([]);
+  const [productFrequency, setProductFrequency] = useState<Record<string, number>>(() => {
+    const saved = localStorage.getItem('productFrequency');
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  useEffect(() => {
+    localStorage.setItem('productFrequency', JSON.stringify(productFrequency));
+  }, [productFrequency]);
 
   const addActiveOrder = (order: Omit<ActiveOrder, 'id'>) => {
     setActiveOrders((prev) => [...prev, { ...order, id: Math.random().toString(36).substr(2, 9) }]);
+    
+    // Update product tracking for CRM/Ranking
+    setProductFrequency(prev => {
+       const next = { ...prev };
+       order.items.forEach(item => {
+          next[item.productId] = (next[item.productId] || 0) + item.quantity;
+       });
+       return next;
+    });
   };
 
   const updateActiveOrderStatus = (id: string, status: 'preparing' | 'ready') => {
@@ -115,7 +133,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, updateActiveOrderStatus, removeActiveOrder }}>
+    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, updateActiveOrderStatus, removeActiveOrder, productFrequency }}>
       {children}
     </CartContext.Provider>
   );

@@ -420,7 +420,7 @@ export const SALADA_DE_FRUTAS: Product[] = [
     description: 'Mamão, abacaxi, uva roxa sem caroço e morango.',
     priceDisplay: 'R$ 19,00',
     points: 1,
-    image: '',
+    image: 'https://images.unsplash.com/photo-1518635017498-87f514b751ba?q=80&w=260&auto=format&fit=crop',
     extras: EXTRA_SALADA
   },
   {
@@ -430,7 +430,7 @@ export const SALADA_DE_FRUTAS: Product[] = [
     description: 'Nossa salada premium leva mamão, abacaxi, uva roxa sem caroço, morango, blueberry e cranberries, servida com iogurte natural ou sorvete à sua escolha.',
     priceDisplay: 'R$ 21,50',
     points: 1,
-    image: '',
+    image: 'https://images.unsplash.com/photo-1518635017498-87f514b751ba?q=80&w=260&auto=format&fit=crop',
     baseOptions: [
       { label: 'Iogurte Natural' },
       { label: 'Sorvete' }
@@ -499,6 +499,10 @@ export const PRODUCTS: Product[] = [
   ...SALADA_DE_FRUTAS,
   ...COFFEE,
   ...LINHA_CARIBE,
+  ...FUNCIONAL,
+  ...COMECE_BEM,
+  ...ESPECIAIS,
+  ...PROMOCAO_SEU_COSECHAS,
   {
     id: '1',
     name: 'Colibri Roxo com Iogurte',

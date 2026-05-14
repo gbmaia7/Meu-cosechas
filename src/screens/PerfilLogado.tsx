@@ -6,7 +6,15 @@ import { useCart } from '../context/CartContext';
 export default function PerfilLogado() {
   const navigate = useNavigate();
   const { isAuthenticated, setIsAuthenticated, totalItems } = useCart();
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(() => {
+    return localStorage.getItem('isPhoneVerified') === 'true';
+  });
+
+  const togglePhoneVerified = () => {
+    const newState = !isPhoneVerified;
+    setIsPhoneVerified(newState);
+    localStorage.setItem('isPhoneVerified', String(newState));
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -37,7 +45,7 @@ export default function PerfilLogado() {
         {/* Simulator Toggle */}
         <div className="flex justify-end gap-2 px-1">
           <button 
-            onClick={() => setIsPhoneVerified(!isPhoneVerified)}
+            onClick={togglePhoneVerified}
             className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
           >
             Simular: {isPhoneVerified ? 'Não Verificado' : 'Verificado'}
@@ -71,20 +79,28 @@ export default function PerfilLogado() {
               <Phone className={`w-5 h-5 ${isPhoneVerified ? 'text-emerald-600' : 'text-amber-600'}`} />
             </div>
             <div className="flex-grow">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className={`font-display font-bold text-sm ${isPhoneVerified ? 'text-emerald-800' : 'text-amber-800'}`}>
-                  (21) 99999-9999
-                </h3>
-                {isPhoneVerified ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 text-amber-500" />
-                )}
+              <div className="flex items-center gap-2 mb-1 justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className={`font-display font-bold text-sm ${isPhoneVerified ? 'text-emerald-800' : 'text-amber-800'}`}>
+                    {localStorage.getItem('savedPhone') || '(21) 99999-9999'}
+                  </h3>
+                  {isPhoneVerified ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-amber-500" />
+                  )}
+                </div>
+                <button 
+                  onClick={() => navigate('/perfil/verificar-telefone')} 
+                  className={`text-[10px] font-bold uppercase underline ${isPhoneVerified ? 'text-emerald-700' : 'text-amber-700'}`}
+                >
+                  Alterar
+                </button>
               </div>
               <p className={`text-xs ${isPhoneVerified ? 'text-emerald-700/80' : 'text-amber-800/80 mb-3'}`}>
                 {isPhoneVerified 
-                  ? 'Número de telefone verificado. Suas compras no caixa pontuam automaticamente!'
-                  : 'Seu telefone não está verificado. Você não acumulará pontos ao comprar no balcão.'}
+                  ? 'Número de telefone verificado! Com isso você acumula pontos, pode resgatar prêmios e tem acesso a promoções exclusivas no Clube Cosechas!'
+                  : 'Sem o telefone verificado, você não poderá realizar pedidos para entrega, nem acumular pontos e resgatar prêmios no Clube Cosechas.'}
               </p>
               
               {!isPhoneVerified && (
