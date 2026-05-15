@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { motion } from 'motion/react';
 import { ArrowLeft, X, Home, Utensils, Star, ShoppingBag, User, CreditCard, PartyPopper, Info, CupSoda } from 'lucide-react';
+import VitrinePremios from '../components/VitrinePremios';
 
 export default function ClubeCosechasLogado() {
   const navigate = useNavigate();
   const { userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, totalItems } = useCart();
+  const [selectedRewardTier, setSelectedRewardTier] = useState<7 | 10 | 12 | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -191,6 +193,7 @@ export default function ClubeCosechasLogado() {
                 <div className="w-24 shrink-0 text-right">
                   <button 
                     disabled={userPoints < reward.points}
+                    onClick={() => setSelectedRewardTier(reward.points as 7 | 10 | 12)}
                     className={`w-full font-display font-bold text-[10px] py-2.5 rounded-full uppercase transition-all shadow-sm ${
                       userPoints >= reward.points 
                         ? 'bg-[#bd002a] text-white active:scale-95 shadow-[#bd002a]/20' 
@@ -350,6 +353,8 @@ export default function ClubeCosechasLogado() {
           </Link>
         ))}
       </nav>
+      
+      <VitrinePremios tier={selectedRewardTier} onClose={() => setSelectedRewardTier(null)} />
     </div>
   );
 }

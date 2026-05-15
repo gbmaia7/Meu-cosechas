@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus, AlertCircle } from 'lucide-react';
+import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus, AlertCircle, Crown, CupSoda } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE, FUNCIONAL, COMECE_BEM } from '../data/products';
+import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE, FUNCIONAL, COMECE_BEM, BOA_DE_DIA } from '../data/products';
 import ProductBottomSheet from '../components/ProductBottomSheet';
 
-const ALL_PRODUCTS = [...PRODUCTS, ...LINHA_CARIBE, ...FUNCIONAL, ...COMECE_BEM];
+const ALL_PRODUCTS = [...PRODUCTS, ...Object.values(BOA_DE_DIA)];
 
 const ExtraIcon = ({ iconName }: { iconName: string }) => {
   switch (iconName) {
@@ -30,7 +30,7 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
 
 export default function Sacola() {
   const navigate = useNavigate();
-  const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated } = useCart();
+  const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, subsQuota, setSubsQuota, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated } = useCart();
   const [modality, setModality] = useState<'counter' | 'delivery'>('counter');
   const [coupon, setCoupon] = useState('');
   const [couponError, setCouponError] = useState(false);
@@ -51,6 +51,7 @@ export default function Sacola() {
   const [useSavedAddress, setUseSavedAddress] = useState<string | 'new'>('1');
   const isPhoneVerified = localStorage.getItem('isPhoneVerified') === 'true';
   const [showPhoneAlert, setShowPhoneAlert] = useState(false);
+  const [showFreeCheckoutConfirm, setShowFreeCheckoutConfirm] = useState(false);
 
   // Address State
   const [address, setAddress] = useState({
@@ -94,11 +95,8 @@ export default function Sacola() {
       if (!product) return;
 
       const productExtras = product.extras || [];
-      const availableExtras = productExtras.filter(extra => 
-        !item.extras?.some(e => e.id === extra.id)
-      );
 
-      if (availableExtras.length > 0) {
+      if (productExtras.length > 0) {
         // Iterate over quantity to create one section per unit
         for (let i = 0; i < item.quantity; i++) {
           sections.push({
@@ -106,7 +104,7 @@ export default function Sacola() {
             itemId: item.id,
             productId: item.productId,
             productName: product.name,
-            availableOnly: availableExtras,
+            availableOnly: productExtras,
             unitIndex: i + 1,
             totalInGroup: item.quantity,
             originalItem: item
@@ -152,37 +150,58 @@ export default function Sacola() {
     }
   };
 
-  const handleQuickAddExtra = (itemId: string, extra: Extra) => {
+  const handleQuickToggleExtra = (itemId: string, extra: Extra) => {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
+
+    const hasExtra = item.extras?.some(e => e.id === extra.id);
 
     if (item.quantity > 1) {
       // Split the item: decrease quantity of grouped items
       updateQuantity(itemId, -1);
       
-      // Add a single unit with the new extra (addToCart handles merging with existing matching items)
+      const newExtras = hasExtra 
+        ? (item.extras || []).filter(e => e.id !== extra.id)
+        : [...(item.extras || []), extra];
+
+      const priceDiff = hasExtra ? -extra.price : extra.price;
+
+      // Add a single unit with the toggled extra
       addToCart({
         productId: item.productId,
         name: item.name,
-        price: item.price + extra.price,
+        price: item.price + priceDiff,
         size: item.size,
-        extras: [...(item.extras || []), extra],
+        extras: newExtras,
         notes: item.notes,
-        quantity: 1
+        quantity: 1,
+        pointsCost: item.pointsCost
       });
     } else {
       // Single item: just update in place
-      const newExtras = [...(item.extras || []), extra];
+      const newExtras = hasExtra 
+        ? (item.extras || []).filter(e => e.id !== extra.id)
+        : [...(item.extras || []), extra];
+      
+      const priceDiff = hasExtra ? -extra.price : extra.price;
+
       updateItem(itemId, { 
         extras: newExtras,
-        price: item.price + extra.price
+        price: item.price + priceDiff
       });
     }
   };
 
   const handleUpdateFromSheet = (options: { sizeLabel?: string; price: number; extras: Extra[]; notes: string; quantity: number }) => {
     if (selectedProductForEdit) {
+      const originalItem = items.find(i => i.id === selectedProductForEdit.itemId);
+      const isClube = originalItem?.name.startsWith('[CLUBE]');
+      const isAssinatura = originalItem?.name.startsWith('[ASSINATURA]');
+      
       let displayName = selectedProductForEdit.product.name;
+      if (isClube) displayName = `[CLUBE] ${displayName}`;
+      if (isAssinatura) displayName = `[ASSINATURA] ${displayName}`;
+      
       if (options.sizeLabel) displayName += ` (${options.sizeLabel})`;
       
       updateItem(selectedProductForEdit.itemId, {
@@ -382,26 +401,42 @@ export default function Sacola() {
                           )}
                         </div>
                         
-                        <div className="inline-flex items-center gap-1 bg-[#FDECEA] px-2 py-0.5 rounded-full mt-2">
-                           <span className="material-symbols-outlined shrink-0" style={{ fontVariationSettings: "'FILL' 1", color: '#E8173A', fontSize: '12px' }}>nutrition</span>
-                           <span className="text-[9px] font-bold text-[#E8173A] leading-none">+1 ponto no Clube Cosechas</span>
-                        </div>
+                        {!item.name.startsWith('[CLUBE]') && !item.name.startsWith('[ASSINATURA]') && (
+                          <div className="inline-flex items-center gap-1 bg-[#FDECEA] px-2 py-0.5 rounded-full mt-2">
+                             <span className="material-symbols-outlined shrink-0" style={{ fontVariationSettings: "'FILL' 1", color: '#E8173A', fontSize: '12px' }}>nutrition</span>
+                             <span className="text-[9px] font-bold text-[#E8173A] leading-none">+1 ponto no Clube Cosechas</span>
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center justify-between mt-2">
-                        <span className="text-[#bd002a] font-black text-base">
-                          {(item.price * item.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </span>
+                        <div className="flex flex-col items-start gap-1">
+                          {(item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) && (
+                            <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${item.name.startsWith('[CLUBE]') ? 'bg-amber-50 text-amber-600 border border-amber-200/50' : 'bg-[#e8173a]/10 text-[#e8173a] border border-[#e8173a]/20'}`}>
+                               {item.name.startsWith('[CLUBE]') 
+                                 ? <Crown className="w-3 h-3" /> 
+                                 : <CupSoda className="w-3 h-3" />}
+                               <span className="text-[9px] font-bold uppercase tracking-wider">{item.name.startsWith('[CLUBE]') ? 'Clube' : 'Assinatura'}</span>
+                            </div>
+                          )}
+                          {(item.price > 0 || (!item.name.startsWith('[CLUBE]') && !item.name.startsWith('[ASSINATURA]'))) && (
+                            <span className={`text-[#bd002a] font-black ${item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]') ? 'text-xs' : 'text-base'}`}>
+                              {(item.price * item.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center bg-[#f6f3f2] rounded-full px-2 py-1">
                           <button 
                             onClick={() => updateQuantity(item.id, -1)}
                             className="w-6 h-6 flex items-center justify-center text-[#e8173a]"
+                            disabled={item.quantity === 1}
                           >
-                            <Minus className="w-3.5 h-3.5" />
+                            <Minus className={`w-3.5 h-3.5 ${item.quantity === 1 ? 'opacity-30' : ''}`} />
                           </button>
                           <span className="px-3 font-bold text-xs">{item.quantity}</span>
                           <button 
                             onClick={() => updateQuantity(item.id, 1)}
-                            className="w-6 h-6 flex items-center justify-center text-[#e8173a]"
+                            className={`w-6 h-6 flex items-center justify-center text-[#e8173a] ${(item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) ? 'opacity-30 cursor-not-allowed' : ''}`}
+                            disabled={item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')}
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -502,12 +537,25 @@ export default function Sacola() {
                               contém glúten
                             </span>
                           )}
-                          <button 
-                            onClick={() => handleQuickAddExtra(section.itemId, extra)}
-                            className="w-full border border-[#bd002a] text-[#bd002a] py-2 rounded-full text-[10px] font-bold hover:bg-[#bd002a]/5 active:bg-green-50 active:text-green-600 active:border-green-200 transition-all flex items-center justify-center gap-1 mt-auto"
-                          >
-                            + Adicionar
-                          </button>
+                          {(() => {
+                            const isSelected = section.originalItem.extras?.some((e: Extra) => e.id === extra.id);
+                            return (
+                              <button 
+                                onClick={() => handleQuickToggleExtra(section.itemId, extra)}
+                                className={`w-full py-2 rounded-full text-[10px] font-bold transition-all flex items-center justify-center gap-1 border ${
+                                  isSelected 
+                                    ? 'bg-green-50 text-green-600 border-green-200 mt-2' 
+                                    : 'mt-auto border-[#bd002a] text-[#bd002a] hover:bg-[#bd002a]/5 active:bg-green-50 active:text-green-600 active:border-green-200'
+                                }`}
+                              >
+                                {isSelected ? (
+                                  <><Check className="w-3 h-3" /> Adicionado</>
+                                ) : (
+                                  '+ Adicionar'
+                                )}
+                              </button>
+                            );
+                          })()}
                         </div>
                       </div>
                     ))}
@@ -655,6 +703,8 @@ export default function Sacola() {
               setShowAddressErrors(true);
             } else if (modality === 'delivery' && !isPhoneVerified) {
               setShowPhoneAlert(true);
+            } else if (totalPrice === 0) {
+              setShowFreeCheckoutConfirm(true);
             } else {
               navigate('/pagamento', { state: { modality, address } });
             }
@@ -671,6 +721,24 @@ export default function Sacola() {
         product={selectedProductForEdit?.product}
         onClose={() => setSelectedProductForEdit(null)}
         onAdd={handleUpdateFromSheet}
+        isReward={
+          selectedProductForEdit ? 
+            (() => {
+              const item = items.find(i => i.id === selectedProductForEdit.itemId);
+              return item?.name.startsWith('[CLUBE]') || item?.name.startsWith('[ASSINATURA]');
+            })() 
+          : false
+        }
+        rewardType={
+          selectedProductForEdit ? 
+            (() => {
+              const item = items.find(i => i.id === selectedProductForEdit.itemId);
+              if (item?.name.startsWith('[CLUBE]')) return 'clube';
+              if (item?.name.startsWith('[ASSINATURA]')) return 'assinatura';
+              return undefined;
+            })() 
+          : undefined
+        }
       />
 
       {/* Removal Confirmation Overlay */}
@@ -701,12 +769,66 @@ export default function Sacola() {
                 </button>
                 <button 
                   onClick={() => {
+                    const itemRemoved = items.find(i => i.id === itemToRemove);
+                    if (itemRemoved?.pointsCost) {
+                      setUserPoints(userPoints + (itemRemoved.pointsCost * itemRemoved.quantity));
+                    }
+                    if (itemRemoved?.name.startsWith('[ASSINATURA]')) {
+                      setSubsQuota(subsQuota + itemRemoved.quantity);
+                    }
                     removeFromCart(itemToRemove);
                     setItemToRemove(null);
                   }}
                   className="flex-1 py-3 rounded-xl font-bold text-sm bg-[#bd002a] text-white"
                 >
                   Remover
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showFreeCheckoutConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-end justify-center px-4 pb-12 sm:items-center sm:pb-0">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setShowFreeCheckoutConfirm(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ y: '100%', opacity: 0 }} 
+              animate={{ y: 0, opacity: 1 }} 
+              exit={{ y: '100%', opacity: 0 }} 
+              className="relative w-full max-w-sm bg-[#fcf9f8] rounded-[2rem] p-6 shadow-2xl"
+            >
+              <div className="mx-auto w-12 h-1.5 bg-[#e5e2e1] rounded-full mb-6" />
+              
+              <div className="w-16 h-16 bg-[#FDECEA] rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="material-symbols-outlined text-[#E8173A] text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              </div>
+              
+              <h3 className="font-display text-xl font-bold text-center text-[#1c1b1b] mb-2">Confirmar resgate grátis?</h3>
+              <p className="text-center text-[#5d3f3e] text-sm mb-6">
+                Este pedido não terá custos e utilizará seus benefícios (clube/assinatura). <strong>Esta ação não poderá ser desfeita</strong>. Confirma o resgate?
+              </p>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={() => {
+                    setShowFreeCheckoutConfirm(false);
+                    navigate('/validando-pagamento', { state: { isFree: true, modality, address } });
+                  }}
+                  className="w-full py-4 rounded-xl font-bold text-sm bg-[#bd002a] text-white hover:opacity-95 active:scale-[0.98] transition-all"
+                >
+                  Confirmar Resgate
+                </button>
+                <button 
+                  onClick={() => setShowFreeCheckoutConfirm(false)}
+                  className="w-full py-4 rounded-xl font-bold text-sm bg-[#e5e2e1] text-[#5d3f3e] hover:bg-[#d8d4d3] active:scale-[0.98] transition-all"
+                >
+                  Cancelar
                 </button>
               </div>
             </motion.div>

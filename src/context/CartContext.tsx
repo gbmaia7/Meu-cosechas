@@ -16,6 +16,7 @@ interface CartItem {
   extras?: Extra[];
   notes?: string;
   quantity: number;
+  pointsCost?: number;
 }
 
 export interface ActiveOrder {
@@ -35,6 +36,8 @@ interface CartContextType {
   updateItem: (id: string, updates: Partial<CartItem>) => void;
   userPoints: number;
   setUserPoints: (points: number) => void;
+  subsQuota: number;
+  setSubsQuota: (quota: number) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (val: boolean) => void;
   totalItems: number;
@@ -51,7 +54,24 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
-  const [userPoints, setUserPoints] = useState(5); // Default points as seen in Home screen
+  const [userPoints, setUserPoints] = useState(() => {
+    const saved = localStorage.getItem('userPoints');
+    return saved ? parseInt(saved, 10) : 5;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('userPoints', userPoints.toString());
+  }, [userPoints]);
+
+  const [subsQuota, setSubsQuota] = useState(() => {
+    const saved = localStorage.getItem('subsQuota');
+    return saved ? parseInt(saved, 10) : 12; // default to Trio 12
+  });
+
+  useEffect(() => {
+    localStorage.setItem('subsQuota', subsQuota.toString());
+  }, [subsQuota]);
+
   const [isAuthenticated, setIsAuthenticated] = useState(true); // Default to true to not break current flow
   const [activeOrders, setActiveOrders] = useState<ActiveOrder[]>([]);
   const [productFrequency, setProductFrequency] = useState<Record<string, number>>(() => {
@@ -133,7 +153,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, updateActiveOrderStatus, removeActiveOrder, productFrequency }}>
+    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, subsQuota, setSubsQuota, isAuthenticated, setIsAuthenticated, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, updateActiveOrderStatus, removeActiveOrder, productFrequency }}>
       {children}
     </CartContext.Provider>
   );

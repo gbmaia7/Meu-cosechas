@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { X, Check, Minus, Plus, Zap, Flower2, Activity, PlusCircle, Apple, Wheat, Heart, Star, Leaf, Citrus, IceCream, Milk } from 'lucide-react';
+import { X, Check, Minus, Plus, Zap, Flower2, Activity, PlusCircle, Apple, Wheat, Heart, Star, Leaf, Citrus, IceCream, Milk, Crown, CupSoda } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo, useEffect } from 'react';
 import { Product, Extra } from '../data/products';
@@ -13,6 +13,8 @@ interface ProductBottomSheetProps {
   product: Product | null;
   onClose: () => void;
   onAdd: (options: { sizeLabel?: string; price: number; extras: Extra[]; notes: string; quantity: number; base?: string }) => void;
+  isReward?: boolean;
+  rewardType?: 'clube' | 'assinatura';
 }
 
 const ExtraIcon = ({ iconName }: { iconName: string }) => {
@@ -31,7 +33,7 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
   }
 };
 
-export default function ProductBottomSheet({ product, onClose, onAdd }: ProductBottomSheetProps) {
+export default function ProductBottomSheet({ product, onClose, onAdd, isReward, rewardType }: ProductBottomSheetProps) {
   const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
   const [selectedExtras, setSelectedExtras] = useState<Extra[]>([]);
   const [selectedBase, setSelectedBase] = useState<string>('');
@@ -52,15 +54,24 @@ export default function ProductBottomSheet({ product, onClose, onAdd }: ProductB
     }
   }, [product?.id]);
 
-  const baseUnitPrice = useMemo(() => {
+  const originalProductPrice = useMemo(() => {
     if (!product) return 0;
-    const basePrice = product.sizes 
+    return product.sizes 
       ? product.sizes[selectedSizeIndex].price 
       : parseFloat(product.priceDisplay.replace(/[^\d,]/g, '').replace(',', '.'));
-    
+  }, [product, selectedSizeIndex]);
+
+  const baseUnitPrice = useMemo(() => {
+    if (!product) return 0;
+    const basePrice = isReward ? 0 : originalProductPrice;
     const extrasPrice = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
     return basePrice + extrasPrice;
-  }, [product, selectedSizeIndex, selectedExtras]);
+  }, [product, isReward, originalProductPrice, selectedExtras]);
+
+  const originalTotalPrice = useMemo(() => {
+    const extrasPrice = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
+    return originalProductPrice + extrasPrice;
+  }, [originalProductPrice, selectedExtras]);
 
   const totalPrice = useMemo(() => baseUnitPrice, [baseUnitPrice]);
 
@@ -142,22 +153,45 @@ export default function ProductBottomSheet({ product, onClose, onAdd }: ProductB
                     <p className="text-xs text-[#5d3f3e] leading-relaxed">
                       {product.description}
                     </p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <div className="inline-flex items-center gap-1.5 bg-[#FDECEA] px-3 py-1 rounded-full">
-                        <span 
-                          className="material-symbols-outlined shrink-0" 
-                          style={{ fontVariationSettings: "'FILL' 1", color: '#E8173A', fontSize: '14px' }}
-                        >
-                          nutrition
-                        </span>
-                        <span className="text-[10px] font-bold text-[#E8173A] leading-none">+1 ponto no Clube Cosechas</span>
+                    {!isReward && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <div className="inline-flex items-center gap-1.5 bg-[#FDECEA] px-3 py-1 rounded-full">
+                          <span 
+                            className="material-symbols-outlined shrink-0" 
+                            style={{ fontVariationSettings: "'FILL' 1", color: '#E8173A', fontSize: '14px' }}
+                          >
+                            nutrition
+                          </span>
+                          <span className="text-[10px] font-bold text-[#E8173A] leading-none">+1 ponto no Clube Cosechas</span>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-[#e8173a] font-extrabold text-lg">
-                      {baseUnitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </span>
+                    {isReward ? (
+                      <div className="flex flex-col items-start gap-1">
+                        <span className="text-[#a8a29e] line-through text-xs font-bold leading-tight">
+                          {originalTotalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </span>
+                        {(rewardType === 'clube' || rewardType === 'assinatura') && (
+                          <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${rewardType === 'clube' ? 'bg-amber-50 text-amber-600 border border-amber-200/50' : 'bg-[#e8173a]/10 text-[#e8173a] border border-[#e8173a]/20'}`}>
+                             {rewardType === 'clube' 
+                               ? <Crown className="w-3 h-3" /> 
+                               : <CupSoda className="w-3 h-3" />}
+                             <span className="text-[9px] font-bold uppercase tracking-wider">{rewardType === 'clube' ? 'Clube' : 'Assinatura'}</span>
+                          </div>
+                        )}
+                        {(totalPrice > 0 || (!rewardType)) && (
+                          <span className={`text-[#13612f] font-extrabold ${rewardType ? 'text-sm mt-0.5' : 'text-lg leading-none mt-1'}`}>
+                            {totalPrice === 0 ? 'GRÁTIS' : totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-[#e8173a] font-extrabold text-lg">
+                        {baseUnitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -409,7 +443,19 @@ export default function ProductBottomSheet({ product, onClose, onAdd }: ProductB
             >
               <span>Adicionar à sacola</span>
               <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
-              <span>{totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+              <div className="flex items-center gap-1">
+                {(isReward && (rewardType === 'clube' || rewardType === 'assinatura')) && (
+                  <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/20 mr-1`}>
+                     {rewardType === 'clube' 
+                       ? <Crown className="w-3 h-3" /> 
+                       : <CupSoda className="w-3 h-3" />}
+                     <span className="text-[9px] font-bold uppercase tracking-wider">{rewardType === 'clube' ? 'Clube' : 'Assinatura'}</span>
+                  </div>
+                )}
+                <span>
+                  {(isReward && totalPrice === 0) ? 'GRÁTIS' : totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </span>
+              </div>
             </button>
           </div>
         </motion.div>

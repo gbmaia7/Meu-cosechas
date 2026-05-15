@@ -288,8 +288,12 @@ export default function AcompanharPedido() {
              <button 
                 onClick={() => {
                     removeActiveOrder(activeOrder.id);
-                    // Add some points upon order completion!
-                    setUserPoints(userPoints + 1);
+                    // Add points only for valid (non-reward) items in the order
+                    const validItemsCount = activeOrder.items.reduce((sum, item) => sum + ((item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) ? 0 : item.quantity), 0);
+                    if (validItemsCount > 0) {
+                      // Original code used 1 point per checkout, but logically matching UI with "+1 ponto" per item means we should add validItemsCount
+                      setUserPoints(userPoints + validItemsCount);
+                    }
                     navigate('/');
                 }}
                 className="w-full py-4 rounded-full bg-[#bd002a] text-white font-bold text-base hover:bg-[#a00021] shadow-lg shadow-[#bd002a]/20 transition-all active:scale-95 duration-200"

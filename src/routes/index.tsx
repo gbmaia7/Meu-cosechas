@@ -8,6 +8,7 @@ import AssinaturaCosechas from '../screens/AssinaturaCosechas';
 import AssinaturaAtiva from '../screens/AssinaturaAtiva';
 import AssinaturaDuo from '../screens/AssinaturaDuo';
 import AssinaturaDaily from '../screens/AssinaturaDaily';
+import MenuAssinatura from '../screens/MenuAssinatura';
 import IndiqueGanhe from '../screens/IndiqueGanhe';
 import IndiqueGanheLogado from '../screens/IndiqueGanheLogado';
 import PerfilLogado from '../screens/PerfilLogado';
@@ -52,6 +53,7 @@ export function AppRoutes() {
       <Route path="/assinatura/ativa" element={<AssinaturaAtiva />} />
       <Route path="/assinatura/duo" element={<AssinaturaDuo />} />
       <Route path="/assinatura/daily" element={<AssinaturaDaily />} />
+      <Route path="/assinatura/menu" element={<MenuAssinatura />} />
       <Route path="/indique-ganhe" element={<IndiqueGanhe />} />
       <Route path="/indique-ganhe/logado" element={<IndiqueGanheLogado />} />
       <Route path="/perfil/logado" element={<PerfilLogado />} />

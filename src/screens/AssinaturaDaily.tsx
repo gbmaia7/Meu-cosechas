@@ -17,14 +17,19 @@ import {
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import ImageLightbox from '../components/ImageLightbox';
+import { CupSoda } from 'lucide-react';
 
 export default function AssinaturaDaily() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { totalItems, isAuthenticated } = useCart();
+  const { totalItems, isAuthenticated, subsQuota } = useCart();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isVitrineOpen, setIsVitrineOpen] = useState(false);
 
   const isCanceled = location.state?.canceled === true;
+  const maxQuota = 16;
+  const usedQuota = Math.max(0, maxQuota - subsQuota);
+  const progressPercent = (usedQuota / maxQuota) * 100;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -168,18 +173,27 @@ export default function AssinaturaDaily() {
           <div className="flex justify-between items-end mb-4">
             <h3 className="text-lg font-display font-bold text-[#1c1b1b]">Uso este mês</h3>
             <span className="text-[#bd002a] font-display font-bold text-lg">
-              4 <span className="text-[#5d3f3e] font-medium text-sm">/ 16</span>
+              {usedQuota} <span className="text-[#5d3f3e] font-medium text-sm">/ {maxQuota}</span>
             </span>
           </div>
-          <div className="w-full bg-[#f0eded] h-4 rounded-full overflow-hidden">
+          <div className="w-full bg-[#f0eded] h-4 rounded-full overflow-hidden mb-5">
             <motion.div 
               initial={{ width: 0 }}
-              animate={{ width: '25%' }}
+              animate={{ width: `${progressPercent}%` }}
               transition={{ duration: 1, ease: 'easeOut' }}
               className="bg-[#bd002a] h-full rounded-full"
             ></motion.div>
           </div>
-          <p className="mt-3 text-right text-sm font-medium text-[#5d3f3e]">12 unidades restantes</p>
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-sm font-medium text-[#5d3f3e]">{subsQuota} unidades restantes</p>
+            <button 
+              onClick={() => navigate('/assinatura/menu')}
+              className="bg-[#e8173a] text-white font-bold text-sm px-4 py-2 rounded-full active:scale-95 transition-transform shadow-sm flex items-center gap-2"
+            >
+              <CupSoda className="w-4 h-4" />
+              Resgatar Bebida
+            </button>
+          </div>
         </section>
 
         {/* History Section */}
