@@ -115,11 +115,11 @@ export default function AssinaturaCosechas() {
           onClick={() => navigate(-1)}
           className="w-10 h-10 flex items-center justify-center rounded-full active:bg-[#f0eded] transition-colors shrink-0"
         >
-          <ArrowLeft className="text-[#e8173a] w-6 h-6" />
+          <ArrowLeft className="text-[#bd002a] w-6 h-6" />
         </button>
         <div className="flex items-center gap-2 ml-2">
-          <CupSoda className="text-[#e8173a] w-5 h-5 shrink-0" />
-          <h1 className="font-display font-bold text-base text-[#e8173a] whitespace-nowrap">
+          <CupSoda className="text-[#bd002a] w-5 h-5 shrink-0" />
+          <h1 className="font-display font-extrabold text-xl tracking-tight text-[#bd002a] whitespace-nowrap">
             Assinatura Cosechas
           </h1>
         </div>

@@ -437,20 +437,16 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
               }`}
             >
               <span>Adicionar à sacola</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
-              <div className="flex items-center gap-1">
-                {(isReward && (rewardType === 'clube' || rewardType === 'assinatura')) && (
-                  <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/20 mr-1`}>
-                     {rewardType === 'clube' 
-                       ? <Crown className="w-3 h-3" /> 
-                       : <CupSoda className="w-3 h-3" />}
-                     <span className="text-[9px] font-bold uppercase tracking-wider">{rewardType === 'clube' ? 'Clube' : 'Assinatura'}</span>
+              {!isReward && (
+                <>
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
+                  <div className="flex items-center gap-1">
+                    <span>
+                      {totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </span>
                   </div>
-                )}
-                <span>
-                  {(isReward && totalPrice === 0) ? 'GRÁTIS' : totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </span>
-              </div>
+                </>
+              )}
             </button>
           </div>
         </motion.div>
