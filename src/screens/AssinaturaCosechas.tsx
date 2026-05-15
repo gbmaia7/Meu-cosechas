@@ -18,7 +18,7 @@ import {
   XCircle,
   Tag,
   Info
-} from 'lucide-react';
+, Crown} from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export default function AssinaturaCosechas() {
@@ -118,7 +118,7 @@ export default function AssinaturaCosechas() {
           <ArrowLeft className="text-[#e8173a] w-6 h-6" />
         </button>
         <div className="flex items-center gap-2 ml-2">
-          <Tag className="text-[#e8173a] w-5 h-5 shrink-0" />
+          <CupSoda className="text-[#e8173a] w-5 h-5 shrink-0" />
           <h1 className="font-display font-bold text-base text-[#e8173a] whitespace-nowrap">
             Assinatura Cosechas
           </h1>
@@ -322,8 +322,8 @@ export default function AssinaturaCosechas() {
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
         {[
           { icon: Utensils, label: 'Menu', active: false, path: '/HomeComSacola' },
-          { icon: CreditCard, label: 'Assinatura', active: true, path: '/assinatura' },
-          { icon: Star, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
+          { icon: CupSoda, label: 'Assinatura', active: true, path: '/assinatura' },
+          { icon: Crown, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
           { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
         ].map(item => (

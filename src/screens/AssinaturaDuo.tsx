@@ -14,7 +14,7 @@ import {
   User,
   Apple,
   AlertCircle
-} from 'lucide-react';
+, Crown} from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import ImageLightbox from '../components/ImageLightbox';
 import { CupSoda } from 'lucide-react';
@@ -283,8 +283,8 @@ export default function AssinaturaDuo() {
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
         {[
           { icon: Utensils, label: 'Menu', active: false, path: '/HomeComSacola' },
-          { icon: CreditCard, label: 'Assinatura', active: true, path: '/assinatura/duo' },
-          { icon: Star, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
+          { icon: CupSoda, label: 'Assinatura', active: true, path: '/assinatura/duo' },
+          { icon: Crown, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
           { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
         ].map(item => (

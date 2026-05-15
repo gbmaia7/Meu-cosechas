@@ -403,7 +403,7 @@ export default function Sacola() {
                         
                         {!item.name.startsWith('[CLUBE]') && !item.name.startsWith('[ASSINATURA]') && (
                           <div className="inline-flex items-center gap-1 bg-[#FDECEA] px-2 py-0.5 rounded-full mt-2">
-                             <span className="material-symbols-outlined shrink-0" style={{ fontVariationSettings: "'FILL' 1", color: '#E8173A', fontSize: '12px' }}>nutrition</span>
+                             <Crown className="w-3 h-3 text-[#E8173A] shrink-0" />
                              <span className="text-[9px] font-bold text-[#E8173A] leading-none">+1 ponto no Clube Cosechas</span>
                           </div>
                         )}
@@ -588,7 +588,7 @@ export default function Sacola() {
         {!isAuthenticated ? (
           <section className="bg-[#FDECEA] rounded-lg p-4 shadow-sm">
             <div className="flex gap-3 items-center mb-1">
-              <span className="material-symbols-outlined text-[#E8173A] text-2xl shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>nutrition</span>
+              <Crown className="text-[#E8173A] w-6 h-6 shrink-0" />
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-0.5 w-full gap-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#5d3f3e]">Clube Cosechas</span>
@@ -612,7 +612,7 @@ export default function Sacola() {
           </section>
         ) : userPoints < 7 ? (
           <section className="bg-[#FDECEA] rounded-lg flex gap-3 items-center py-4 px-4 shadow-sm">
-            <span className="material-symbols-outlined text-[#E8173A] text-2xl shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>nutrition</span>
+            <Crown className="text-[#E8173A] w-6 h-6 shrink-0" />
             <div className="flex-1">
               <div className="flex items-center justify-between mb-0.5 w-full gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#5d3f3e]">Clube Cosechas</span>
@@ -629,7 +629,7 @@ export default function Sacola() {
           </section>
         ) : (
           <section className="bg-[#FDECEA] rounded-lg flex gap-3 items-center py-4 px-4 shadow-sm">
-            <span className="material-symbols-outlined text-[#E8173A] text-2xl shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>nutrition</span>
+            <Crown className="text-[#E8173A] w-6 h-6 shrink-0" />
             <div className="flex-1">
               <div className="flex items-center justify-between mb-0.5 w-full">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-[#5d3f3e]">Clube Cosechas</span>

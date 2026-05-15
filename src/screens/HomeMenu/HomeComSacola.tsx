@@ -16,7 +16,7 @@ import {
   UserPlus, 
   Award,
   ChevronRight
-} from 'lucide-react';
+, Crown, CupSoda} from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { 
@@ -201,7 +201,7 @@ export default function HomeComSacola() {
         <section className="grid grid-cols-2 gap-3">
           <div className="bg-[#FDECEA] p-4 rounded-2xl border border-[#F3E0C1]/50 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col h-full">
             <div className="bg-white w-9 h-9 rounded-xl flex items-center justify-center mb-3 shadow-sm">
-              <Award className="text-[#bd002a] w-5 h-5" />
+              <Crown className="text-[#bd002a] w-5 h-5" />
             </div>
             <h3 className="font-bold text-[13px] leading-tight mb-1">Clube Cosechas</h3>
             <p className="text-[10px] text-[#5d3f3e] leading-snug mb-3 flex-grow">Ganhe pontos em cada compra e troque por prêmios</p>
@@ -644,8 +644,8 @@ export default function HomeComSacola() {
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
         {[
           { icon: Utensils, label: 'Menu', active: true, path: '/HomeComSacola' },
-          { icon: CreditCard, label: 'Assinatura', active: false, path: isAuthenticated ? '/assinatura/ativa' : '/assinatura' },
-          { icon: Star, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
+          { icon: CupSoda, label: 'Assinatura', active: false, path: isAuthenticated ? '/assinatura/ativa' : '/assinatura' },
+          { icon: Crown, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
           { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
         ].map((item: any) => (

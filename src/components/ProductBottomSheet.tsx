@@ -156,12 +156,7 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
                     {!isReward && (
                       <div className="flex flex-wrap gap-2 mt-2">
                         <div className="inline-flex items-center gap-1.5 bg-[#FDECEA] px-3 py-1 rounded-full">
-                          <span 
-                            className="material-symbols-outlined shrink-0" 
-                            style={{ fontVariationSettings: "'FILL' 1", color: '#E8173A', fontSize: '14px' }}
-                          >
-                            nutrition
-                          </span>
+                          <Crown className="w-3.5 h-3.5 text-[#E8173A] shrink-0" />
                           <span className="text-[10px] font-bold text-[#E8173A] leading-none">+1 ponto no Clube Cosechas</span>
                         </div>
                       </div>

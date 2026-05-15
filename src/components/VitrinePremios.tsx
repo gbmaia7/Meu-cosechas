@@ -1,4 +1,4 @@
-import { X, ChevronRight, CupSoda, Star, Plus } from 'lucide-react';
+import { X, ChevronRight, CupSoda, Star, Plus , Crown} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, PRODUCTS } from '../data/products';
 import { useState } from 'react';
@@ -98,7 +98,7 @@ export default function VitrinePremios({ tier, onClose }: VitrinePremiosProps) {
             <header className="sticky top-0 w-full z-10 bg-white shadow-sm px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-[#E8173A] flex items-center justify-center text-white">
-                  <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>nutrition</span>
+                  <Crown className="w-6 h-6 shrink-0" />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-display font-extrabold text-[#1c1b1b] text-base leading-none">

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { X, Utensils, Star, ShoppingBag, User, CreditCard, ArrowRight, Store, Smartphone, Info, Award, CupSoda } from 'lucide-react';
+import { X, Utensils, Star, ShoppingBag, User, CreditCard, ArrowRight, Store, Smartphone, Info, Award, CupSoda , Crown} from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export default function ClubeCosechasNaoLogado() {
@@ -40,7 +40,7 @@ export default function ClubeCosechasNaoLogado() {
       {/* TopAppBar */}
       <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-2xl shadow-sm flex justify-between items-center px-6 py-4">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[#bd002a]" style={{ fontVariationSettings: "'FILL' 1" }}>nutrition</span>
+          <Crown className="text-[#bd002a] w-5 h-5" />
           <h1 className="font-display font-extrabold text-[#bd002a] text-xl tracking-tight">Clube Cosechas</h1>
         </div>
         <button 
@@ -176,7 +176,7 @@ export default function ClubeCosechasNaoLogado() {
                 
                 <div className="flex gap-4">
                   <div className="w-10 h-10 rounded-full bg-[#bd002a]/10 flex items-center justify-center shrink-0">
-                    <Award className="w-5 h-5 text-[#bd002a]" />
+                    <Crown className="w-5 h-5 text-[#bd002a]" />
                   </div>
                   <p className="text-[#5d3f3e] text-sm leading-relaxed">1 ponto por compra. Junte para trocar por produtos da nossa loja.</p>
                 </div>
@@ -187,7 +187,7 @@ export default function ClubeCosechasNaoLogado() {
             <div className="bg-[#bd002a] text-white p-5 rounded-2xl shadow-[0_10px_30px_rgba(189,0,42,0.2)] relative overflow-hidden group">
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="material-symbols-outlined text-white text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
+                  <CupSoda className="text-white w-5 h-5" />
                   <h3 className="text-sm font-black font-display uppercase tracking-tight">Vantagem para assinantes</h3>
                 </div>
                 <p className="text-white/90 text-xs font-medium leading-relaxed mb-5 max-w-xl">
@@ -272,8 +272,8 @@ export default function ClubeCosechasNaoLogado() {
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
         {[
           { icon: Utensils, label: 'Menu', active: false, path: '/HomeComSacola' },
-          { icon: CreditCard, label: 'Assinatura', active: false, path: '/assinatura' },
-          { icon: Star, label: 'Clube', active: true, path: '/clube/nao-logado' },
+          { icon: CupSoda, label: 'Assinatura', active: false, path: '/assinatura' },
+          { icon: Crown, label: 'Clube', active: true, path: '/clube/nao-logado' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
           { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
         ].map(item => (

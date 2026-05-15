@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, Heart, Plus, Utensils, CreditCard, Star, ShoppingBag, ArrowRight, ChevronRight, User } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, Heart, Plus, Utensils, CreditCard, Star, ShoppingBag, ArrowRight, ChevronRight, User , Crown, CupSoda} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PRODUCTS, Product } from '../data/products';
 import ImageLightbox from '../components/ImageLightbox';
@@ -170,8 +170,8 @@ export default function Favoritos() {
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
         {[
           { icon: Utensils, label: 'Menu', active: false, path: '/HomeComSacola' },
-          { icon: CreditCard, label: 'Assinatura', active: false, path: isAuthenticated ? '/assinatura/ativa' : '/assinatura' },
-          { icon: Star, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
+          { icon: CupSoda, label: 'Assinatura', active: false, path: isAuthenticated ? '/assinatura/ativa' : '/assinatura' },
+          { icon: Crown, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
           { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
         ].map((item: any) => (

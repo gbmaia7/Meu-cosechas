@@ -6,10 +6,12 @@ import { MoreVertical, Store, ArrowRight, Bike, MapPin } from 'lucide-react';
 export default function PagamentoConfirmado() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items, totalPrice, clearCart, addActiveOrder } = useCart();
+  const { items, totalPrice, clearCart, addActiveOrder, userPoints } = useCart();
   
   const modality = location.state?.modality || 'counter';
   const address = location.state?.address;
+  
+  const validItemsCount = items.reduce((sum, item) => sum + ((item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) ? 0 : item.quantity), 0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -132,17 +134,19 @@ export default function PagamentoConfirmado() {
         </div>
         
         {/* Loyalty Points Badge */}
-        <div className="bg-[#FDECEA] rounded-full px-6 py-4 flex items-center justify-center gap-4 mb-10 w-full text-center">
-          <div className="w-10 h-10 bg-[#e8173a] rounded-full flex items-center justify-center flex-shrink-0">
-             <span className="material-symbols-outlined text-white text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                redeem
-            </span>
+        {validItemsCount > 0 && (
+          <div className="bg-[#FDECEA] rounded-full px-6 py-4 flex items-center justify-center gap-4 mb-10 w-full text-center">
+            <div className="w-10 h-10 bg-[#e8173a] rounded-full flex items-center justify-center flex-shrink-0">
+               <span className="material-symbols-outlined text-white text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  redeem
+              </span>
+            </div>
+            <div className="text-left">
+              <p className="text-[#8b1724] font-bold text-sm leading-none mb-1">+ {validItemsCount} ponto{validItemsCount > 1 ? 's' : ''} adicionado{validItemsCount > 1 ? 's' : ''} ao seu Clube Cosechas</p>
+              <p className="text-[#8b1724]/70 text-xs font-medium">Você agora tem {userPoints + validItemsCount} pontos.</p>
+            </div>
           </div>
-          <div className="text-left">
-            <p className="text-[#8b1724] font-bold text-sm leading-none mb-1">+ 1 ponto adicionado ao seu Clube Cosechas</p>
-            <p className="text-[#8b1724]/70 text-xs font-medium">Você agora tem 6 pontos.</p>
-          </div>
-        </div>
+        )}
         
         {/* Primary CTA */}
         <button 

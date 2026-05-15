@@ -9,7 +9,7 @@ import {
   ChevronRight,
   CupSoda,
   Bike
-} from 'lucide-react';
+, Crown} from 'lucide-react';
 
 export default function AcompanharPedido() {
   const navigate = useNavigate();
@@ -143,7 +143,7 @@ export default function AcompanharPedido() {
         <section className="bg-white rounded-lg p-6 shadow-[0_-8px_30px_rgb(0,0,0,0.02)] border border-[#e5e2e1]/30 relative overflow-hidden">
             <div className="flex justify-between items-start mb-6">
                 <div className="flex items-center gap-2 mb-1">
-                    <span className="material-symbols-outlined text-[#bd002a] text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>nutrition</span>
+                    <Crown className="text-[#bd002a] w-5 h-5" />
                     <h3 className="text-[#bd002a] font-bold text-[10px] uppercase tracking-widest font-display">Clube Cosechas</h3>
                 </div>
                 <button 
