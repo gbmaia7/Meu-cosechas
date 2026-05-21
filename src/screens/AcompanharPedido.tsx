@@ -102,11 +102,16 @@ export default function AcompanharPedido() {
                 {orderStatus === 'preparing' ? 'Você será notificado quando estiver pronto.' : (activeOrder?.modality === 'delivery' ? 'Aguarde no endereço selecionado.' : 'Retire no balcão da loja.')}
             </p>
             {activeOrder?.modality === 'delivery' && (
-              <div className="mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                <p className="text-xs text-[#5d3f3e] font-medium leading-relaxed">
-                   <span className="font-bold text-yellow-800">Atenção:</span> Fique atento ao seu WhatsApp, nosso colaborador entrará em contato por lá para finalizar a entrega.
+              <>
+                <div className="mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                  <p className="text-xs text-[#5d3f3e] font-medium leading-relaxed">
+                    <span className="font-bold text-yellow-800">Atenção:</span> Fique atento ao seu WhatsApp, nosso colaborador entrará em contato por lá para finalizar a entrega.
+                  </p>
+                </div>
+                <p className="mt-2 text-xs text-[#5d3f3e] text-left font-medium bg-blue-50 p-2.5 rounded-lg border border-blue-200 leading-snug">
+                  <span className="font-bold text-blue-800">Pontos do Clube:</span> Se o pagamento for feito na maquininha na entrega, seus pontos serão creditados após a confirmação do pagamento pelo entregador.
                 </p>
-              </div>
+              </>
             )}
           </div>
           
@@ -285,15 +290,9 @@ export default function AcompanharPedido() {
         {/* Action Button */}
         <div className="pt-4 pb-6 flex flex-col gap-3">
           {orderStatus === 'ready' ? (
-             <button 
+             <button
                 onClick={() => {
                     removeActiveOrder(activeOrder.id);
-                    // Add points only for valid (non-reward) items in the order
-                    const validItemsCount = activeOrder.items.reduce((sum, item) => sum + ((item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) ? 0 : item.quantity), 0);
-                    if (validItemsCount > 0) {
-                      // Original code used 1 point per checkout, but logically matching UI with "+1 ponto" per item means we should add validItemsCount
-                      setUserPoints(userPoints + validItemsCount);
-                    }
                     navigate('/');
                 }}
                 className="w-full py-4 rounded-full bg-[#bd002a] text-white font-bold text-base hover:bg-[#a00021] shadow-lg shadow-[#bd002a]/20 transition-all active:scale-95 duration-200"

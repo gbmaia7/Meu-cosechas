@@ -150,20 +150,19 @@ export default function PagamentoConfirmado() {
         
         {/* Primary CTA */}
         <button 
-          onClick={() => {
+          onClick={async () => {
+            console.log('[PagamentoConfirmado] itens ao confirmar:', items);
             if (items.length > 0) {
-              // Create the order, it doesn't give us the ID back linearly because addActiveOrder is a void state dispatcher, 
-              // but we can just redirect to default list if not using specific ID
-              addActiveOrder({
+              await addActiveOrder({
                 items: [...items],
                 totalPrice: totalPrice,
                 status: 'preparing',
                 modality,
                 address
               });
+            } else {
+              clearCart();
             }
-            clearCart();
-            // Just go to acompanhar-pedido, it will show the newest or all orders
             navigate('/acompanhar-pedido');
           }}
           className="w-full bg-gradient-to-r from-[#bd002a] to-[#e8173a] text-white font-bold py-5 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"

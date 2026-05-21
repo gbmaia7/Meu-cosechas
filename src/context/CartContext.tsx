@@ -50,7 +50,7 @@ interface CartContextType {
   totalPrice: number;
   clearCart: () => void;
   activeOrders: ActiveOrder[];
-  addActiveOrder: (order: Omit<ActiveOrder, 'id'>) => void;
+  addActiveOrder: (order: Omit<ActiveOrder, 'id'>) => Promise<void> | void;
   updateActiveOrderStatus: (id: string, status: 'preparing' | 'ready') => void;
   removeActiveOrder: (id: string) => void;
   productFrequency: Record<string, number>;
@@ -134,17 +134,105 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('productFrequency', JSON.stringify(productFrequency));
   }, [productFrequency]);
 
-  const addActiveOrder = (order: Omit<ActiveOrder, 'id'>) => {
-    setActiveOrders((prev) => [...prev, { ...order, id: Math.random().toString(36).substr(2, 9) }]);
-    
-    // Update product tracking for CRM/Ranking
+  const addActiveOrder = async (order: Omit<ActiveOrder, 'id'>) => {
+    const newOrder: ActiveOrder = {
+      ...order,
+      id: crypto.randomUUID(),
+    };
+    setActiveOrders((prev) => [...prev, newOrder]);
+
     setProductFrequency(prev => {
-       const next = { ...prev };
-       order.items.forEach(item => {
-          next[item.productId] = (next[item.productId] || 0) + item.quantity;
-       });
-       return next;
+      const next = { ...prev };
+      order.items.forEach(item => {
+        next[item.productId] = (next[item.productId] || 0) + item.quantity;
+      });
+      return next;
     });
+
+    clearCart();
+
+    if (!session || !phoneVerified) return;
+
+    const userId = session.user.id;
+
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('double_points, status')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    const hasDoublePoints = sub?.double_points === true;
+    const basePoints = 1;
+    const bonusPoints = hasDoublePoints ? 1 : 0;
+
+    const { data: savedOrder, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        user_id: userId,
+        subtotal: order.totalPrice,
+        total_price: order.totalPrice,
+        status: 'preparing',
+        payment_status: 'pending',
+        modality: order.modality || 'counter',
+        points_earned: basePoints + bonusPoints,
+      })
+      .select('id')
+      .single();
+
+    if (orderError) {
+      console.error('[CartContext] Erro ao salvar pedido:', orderError);
+      return;
+    }
+
+    const orderItems = order.items.map(item => ({
+      order_id: savedOrder.id,
+      product_id: item.productId,
+      product_name: item.name,
+      unit_price: item.price,
+      quantity: item.quantity,
+      size_label: item.size || null,
+      base: item.base || null,
+      notes: item.notes || null,
+      points_cost: item.pointsCost || 0,
+      is_reward: (item.pointsCost || 0) > 0,
+    }));
+
+    await supabase.from('order_items').insert(orderItems);
+
+    await supabase.from('loyalty_points_ledger').insert({
+      user_id: userId,
+      order_id: savedOrder.id,
+      points: basePoints,
+      reason: 'purchase',
+    });
+
+    if (bonusPoints > 0) {
+      await supabase.from('loyalty_points_ledger').insert({
+        user_id: userId,
+        order_id: savedOrder.id,
+        points: bonusPoints,
+        reason: 'double_points',
+      });
+    }
+
+    const newPoints = userPoints + basePoints + bonusPoints;
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('total_orders')
+      .eq('id', userId)
+      .single();
+
+    await supabase
+      .from('profiles')
+      .update({
+        points: newPoints,
+        total_orders: (profileData?.total_orders || 0) + 1,
+        last_purchase_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+
+    setUserPoints(newPoints);
   };
 
   const updateActiveOrderStatus = (id: string, status: 'preparing' | 'ready') => {

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { supabase } from '../lib/supabase';
 import { motion } from 'motion/react';
 import { ArrowLeft, X, Home, Utensils, Star, ShoppingBag, User, CreditCard, PartyPopper, Info, CupSoda , Crown} from 'lucide-react';
 import VitrinePremios from '../components/VitrinePremios';
@@ -9,10 +10,58 @@ export default function ClubeCosechasLogado() {
   const navigate = useNavigate();
   const { userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, totalItems } = useCart();
   const [selectedRewardTier, setSelectedRewardTier] = useState<7 | 10 | 12 | null>(null);
+  const [ledgerHistory, setLedgerHistory] = useState<{
+    id: string;
+    points: number;
+    reason: string;
+    created_at: string;
+    order_id: string | null;
+  }[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setHistoryLoading(false); return; }
+
+      const { data, error } = await supabase
+        .from('loyalty_points_ledger')
+        .select('id, points, reason, created_at, order_id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (!error && data) setLedgerHistory(data);
+      setHistoryLoading(false);
+    };
+    loadHistory();
+  }, []);
+
+  const formatReason = (reason: string) => {
+    const map: Record<string, string> = {
+      purchase: 'Compra realizada',
+      double_points: 'Bônus assinatura (2x)',
+      reward_redeem: 'Resgate de prêmio',
+      referral_bonus: 'Indicação de amigo',
+      expiration: 'Pontos expirados',
+      manual: 'Ajuste manual',
+    };
+    return map[reason] || reason;
+  };
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).toUpperCase();
+  };
 
   const handleToggleAuth = () => {
     setIsAuthenticated(!isAuthenticated);
@@ -37,12 +86,6 @@ export default function ClubeCosechasLogado() {
       name: 'Premium, Açaí Bowl G ou Trio Açaí',
       subtitle: 'Equivale a 12 compras ou 6 com Assinatura Cosechas'
     },
-  ];
-
-  const history = [
-    { name: 'Suco Funcional Detox', date: '12 DE JUNHO, 14:30', points: '+1' },
-    { name: 'Açaí Bowl M', date: '08 DE JUNHO, 10:15', points: '+1' },
-    { name: 'Vitamina Morango', date: '01 DE JUNHO, 17:45', points: '+1' },
   ];
 
   return (
@@ -211,25 +254,48 @@ export default function ClubeCosechasLogado() {
         {/* History */}
         <section className="space-y-4">
           <div className="flex justify-between items-end">
-            <h2 className="font-display font-extrabold text-xl text-[#1c1b1b]">Histórico de pontos</h2>
-            <button className="text-[#bd002a] font-bold text-sm hover:underline transition-all">Ver mais →</button>
+            <h2 className="font-display font-extrabold text-xl text-[#1c1b1b]">
+              Histórico de pontos
+            </h2>
           </div>
-          <div className="space-y-3">
-            {history.map((item, idx) => (
-              <div key={idx} className="bg-white p-4 rounded-xl flex items-center justify-between shadow-sm border border-[#e5e2e1]/30">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-[#f0eded] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[#5d3f3e]">local_drink</span>
+
+          {historyLoading ? (
+            <div className="bg-white rounded-xl p-6 text-center text-sm text-[#a8a29e]">
+              Carregando histórico...
+            </div>
+          ) : ledgerHistory.length === 0 ? (
+            <div className="bg-white rounded-xl p-6 text-center text-sm text-[#a8a29e]">
+              Nenhuma movimentação ainda. Faça seu primeiro pedido!
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {ledgerHistory.map((item) => (
+                <div key={item.id}
+                     className="bg-white p-4 rounded-xl flex items-center justify-between shadow-sm border border-[#e5e2e1]/30">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      item.points > 0 ? 'bg-emerald-50' : 'bg-red-50'
+                    }`}>
+                      <CupSoda className={`w-5 h-5 ${
+                        item.points > 0 ? 'text-emerald-600' : 'text-red-500'
+                      }`} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">{formatReason(item.reason)}</p>
+                      <p className="text-[10px] text-[#5d3f3e] font-medium uppercase">
+                        {formatDate(item.created_at)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-bold text-sm">{item.name}</p>
-                    <p className="text-[10px] text-[#5d3f3e] font-medium uppercase">{item.date}</p>
-                  </div>
+                  <span className={`font-display font-black text-lg ${
+                    item.points > 0 ? 'text-emerald-600' : 'text-[#bd002a]'
+                  }`}>
+                    {item.points > 0 ? '+' : ''}{item.points}
+                  </span>
                 </div>
-                <span className="font-display font-black text-[#bd002a] text-lg">{item.points}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* How it works */}
