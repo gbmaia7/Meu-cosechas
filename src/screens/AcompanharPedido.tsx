@@ -12,6 +12,8 @@ import {
   Bike
 , Crown} from 'lucide-react';
 
+const isClube = (name: string) => name.startsWith('[CLUBE]') || name.startsWith('[ASSINATURA]')
+
 export default function AcompanharPedido() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -313,17 +315,23 @@ export default function AcompanharPedido() {
                 activeOrder.items.map((item, index) => (
                     <div key={index} className="flex items-center gap-4">
                         <div className="flex-1">
-                            <h4 className="font-bold text-[#1c1b1b] font-display">
-                            {item.quantity}x {item.name}
-                            {item.size && <span className="ml-1 text-[10px] bg-[#eae7e7] px-1.5 py-0.5 rounded-md font-bold uppercase vertical-middle">{item.size}</span>}
+                            <h4 className="font-bold text-[#1c1b1b] font-display flex flex-wrap items-center gap-1">
+                              <span>{item.quantity}x {item.name}</span>
+                              {item.size && <span className="text-[10px] bg-[#eae7e7] px-1.5 py-0.5 rounded-md font-bold uppercase">{item.size}</span>}
+                              {isClube(item.name) && (
+                                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                                  {item.name.startsWith('[CLUBE]') ? 'Clube' : 'Assinatura'}
+                                </span>
+                              )}
                             </h4>
                             <p className="text-xs text-[#5d3f3e]">
                                 {item.extras?.map(e => e.name).join(', ')}
                             </p>
                         </div>
-                        <span className="font-bold text-[#1c1b1b]">
-                            {(item.price * item.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </span>
+                        {isClube(item.name)
+                          ? <span className="text-sm font-semibold text-red-600">Grátis</span>
+                          : <span className="text-sm font-semibold">{(item.price * item.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                        }
                     </div>
                 ))
             )}
@@ -332,7 +340,10 @@ export default function AcompanharPedido() {
           <div className="mt-8 pt-6 border-t border-[#f0eded] flex justify-between items-center">
             <span className="font-display font-bold text-lg text-[#1c1b1b]">Total</span>
             <span className="font-display font-extrabold text-2xl text-[#bd002a]">
-                {activeOrder?.totalPrice > 0 ? (activeOrder.totalPrice + (activeOrder.modality === 'counter' ? 0 : 5)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 29,90'}
+              {activeOrder.items.every(i => isClube(i.name))
+                ? <span className="text-red-600 font-bold">Grátis</span>
+                : <span className="font-bold">{activeOrder.totalPrice.toFixed(2).replace('.', ',')}</span>
+              }
             </span>
           </div>
         </section>

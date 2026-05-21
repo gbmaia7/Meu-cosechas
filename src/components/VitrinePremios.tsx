@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { X, ChevronRight, CupSoda, Star, Plus , Crown} from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, PRODUCTS } from '../data/products';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import ProductBottomSheet from './ProductBottomSheet';
 import { useCart } from '../context/CartContext';
 import ImageLightbox from './ImageLightbox';
@@ -12,67 +14,89 @@ interface VitrinePremiosProps {
 }
 
 export default function VitrinePremios({ tier, onClose }: VitrinePremiosProps) {
+  const navigate = useNavigate()
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const { addToCart, setUserPoints, userPoints } = useCart();
+  const { addToCart, setUserPoints, userPoints, session } = useCart();
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState('');
+  const [eligibleIds, setEligibleIds] = useState<{
+    product_id: string;
+    size_label: string | null;
+  }[]>([]);
+  const [loadingEligibility, setLoadingEligibility] = useState(true);
+
+  useEffect(() => {
+    if (!tier) return;
+    const loadEligibility = async () => {
+      setLoadingEligibility(true);
+      const { data } = await supabase
+        .from('reward_eligibility')
+        .select('product_id, size_label')
+        .eq('tier', tier)
+        .eq('is_active', true);
+      if (data) setEligibleIds(data);
+      setLoadingEligibility(false);
+    };
+    loadEligibility();
+  }, [tier]);
 
   if (!tier) return null;
 
-  // Filter products based on tier
-  const allowedCategories = tier === 7 
-    ? ['Funcional', 'Boa de Hoje', 'Promoção Seu Cosechas']
-    : tier === 10
-      ? ['Mix de Frutas', 'Milkshake', 'Linha Caribe']
-      : ['Premium'];
-  
-  // Also include specific Açaí products
-  const allowedProducts = PRODUCTS.filter(p => {
-    if (allowedCategories.includes(p.category)) return true;
-    if (tier === 10 && p.id === '3') return true; // Açaí Médio
-    if (tier === 12 && p.id === '2') return true; // Trio Açaí
-    // Note: Açaí Bowl (id 4) logic with size depends on selection, we can just allow the product
-    // and handle size cost inside the Add sheet if necessary, but to keep it simple we just allow it.
-    if (tier === 10 && p.id === '4') return true; // Açaí Bowl M
-    if (tier === 12 && p.id === '4') return true; // Açaí Bowl G
-    return false;
-  });
+  const allowedProducts = PRODUCTS.filter(p =>
+    eligibleIds.some(e => e.product_id === p.id)
+  );
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
   };
 
-  const handleAddReward = (options: { sizeLabel?: string; price: number; extras: any[]; notes: string; quantity: number; base?: string }) => {
-    // Determine target size for Açaí Bowl
-    let isSizeAllowed = true;
-    if (selectedProduct?.id === '4') {
-      if (tier === 10 && options.sizeLabel !== 'M') isSizeAllowed = false;
-      if (tier === 12 && options.sizeLabel !== 'G') isSizeAllowed = false;
-    }
+  const handleAddReward = async (options: { sizeLabel?: string; price: number; extras: any[]; notes: string; quantity: number; base?: string }) => {
+    const eligibleEntry = eligibleIds.find(
+      e => e.product_id === selectedProduct?.id
+    );
 
-    if (!isSizeAllowed) {
-      alert(`Para esse prêmio de ${tier} pontos, você deve selecionar o tamanho ${tier === 10 ? 'M' : 'G'}.`);
+    if (eligibleEntry?.size_label &&
+        options.sizeLabel !== eligibleEntry.size_label) {
+      alert(
+        `Para esse prêmio de ${tier} pontos, você deve ` +
+        `selecionar o tamanho ${eligibleEntry.size_label}.`
+      );
       return;
     }
 
     addToCart({
       productId: selectedProduct!.id,
       name: `[CLUBE] ${selectedProduct!.name}`,
-      price: options.price, // Uses the computed price from ProductBottomSheet
+      price: options.price,
       size: options.sizeLabel,
       extras: options.extras,
       notes: options.notes,
       image: selectedProduct!.image,
-      quantity: 1, // Only 1 reward per transaction,
+      quantity: 1,
       base: options.base,
-      pointsCost: tier
+      pointsCost: tier,
     });
 
-    // Deduct points
-    setUserPoints(Math.max(0, userPoints - tier));
-    
-    setSelectedProduct(null);
-    onClose();
+    const newPoints = Math.max(0, userPoints - tier)
+    setUserPoints(newPoints)
+
+    if (session) {
+      await supabase
+        .from('profiles')
+        .update({ points: newPoints })
+        .eq('id', session.user.id)
+
+      await supabase
+        .from('loyalty_points_ledger')
+        .insert({
+          user_id: session.user.id,
+          points: -tier,
+          reason: 'reward_redeem',
+          description: selectedProduct!.name,
+        })
+    }
+
+    navigate('/sacola')
   };
 
   return (
@@ -124,7 +148,15 @@ export default function VitrinePremios({ tier, onClose }: VitrinePremiosProps) {
                 </p>
               </div>
               
-              {allowedProducts.map((product) => (
+              {loadingEligibility ? (
+                <div className="text-center py-8 text-sm text-[#a8a29e]">
+                  Carregando prêmios...
+                </div>
+              ) : allowedProducts.length === 0 ? (
+                <div className="text-center py-8 text-sm text-[#a8a29e]">
+                  Nenhum prêmio disponível para este tier.
+                </div>
+              ) : allowedProducts.map((product) => (
                 <div
                   key={product.id}
                   className="relative bg-white p-4 rounded-lg flex gap-4 transition-transform border border-[#e5e2e1]/30 shadow-sm overflow-hidden"

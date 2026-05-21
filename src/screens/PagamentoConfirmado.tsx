@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { MoreVertical, Store, ArrowRight, Bike, MapPin } from 'lucide-react';
 
 export default function PagamentoConfirmado() {
@@ -8,10 +8,22 @@ export default function PagamentoConfirmado() {
   const location = useLocation();
   const { items, totalPrice, clearCart, addActiveOrder, userPoints, activeOrders } = useCart();
   
+  const [isProcessing, setIsProcessing] = useState(false)
+
   const modality = location.state?.modality || 'counter';
   const address = location.state?.address;
   const paymentMethod = location.state?.paymentMethod || 'pix';
-  
+  const isReward = location.state?.isReward || false
+
+  const [orderSnapshot] = useState(() => [...items])
+  const [subtotalSnapshot] = useState(() => totalPrice)
+
+  const isAllReward = orderSnapshot.every(
+    i => i.name.startsWith('[CLUBE]') || i.name.startsWith('[ASSINATURA]')
+  )
+  const deliveryFee = modality === 'delivery' ? 5.00 : 0
+  const computedTotal = isAllReward ? 0 : subtotalSnapshot + deliveryFee
+
   const validItemsCount = items.reduce((sum, item) => sum + ((item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) ? 0 : item.quantity), 0);
 
   useEffect(() => {
@@ -49,61 +61,48 @@ export default function PagamentoConfirmado() {
           </div>
           
           <div className="space-y-4 mb-6">
-            {items.length > 0 ? items.map((item, index) => (
-              <div key={index} className="flex justify-between gap-4">
-                <div className="flex gap-3 text-left">
-                  <span className="text-[#e8173a] font-bold">{item.quantity}x</span>
-                  <div>
-                    <p className="font-bold text-[#1c1b1b] leading-tight">{item.name}</p>
-                    <p className="text-[#5d3f3e] text-xs">
-                      {item.size ? `Tamanho: ${item.size}` : 'Tamanho Único'}
-                    </p>
+            {orderSnapshot.map((item, i) => {
+              const isRewardItem = item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')
+              const label = item.name.startsWith('[CLUBE]') ? 'Clube' : item.name.startsWith('[ASSINATURA]') ? 'Assinatura' : null
+              return (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>{item.quantity}× {item.name.replace(/^\[.*?\]\s*/, '')}</span>
+                    {label && (
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">{label}</span>
+                    )}
                   </div>
+                  {isRewardItem
+                    ? <span className="font-semibold text-red-600">Grátis</span>
+                    : <span>R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}</span>
+                  }
                 </div>
-              </div>
-            )) : (
-              // Fallback for styling preview
-              <>
-                <div className="flex justify-between gap-4">
-                  <div className="flex gap-3 text-left">
-                    <span className="text-[#e8173a] font-bold">1x</span>
-                    <div>
-                      <p className="font-bold text-[#1c1b1b] leading-tight">Smoothie Morango & Banana</p>
-                      <p className="text-[#5d3f3e] text-xs">Tamanho: M</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <div className="flex gap-3 text-left">
-                    <span className="text-[#e8173a] font-bold">1x</span>
-                    <div>
-                      <p className="font-bold text-[#1c1b1b] leading-tight">Suco Detox Verde Especial</p>
-                      <p className="text-[#5d3f3e] text-xs">Prensado a frio</p>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
+              )
+            })}
           </div>
           
           <div className="border-t border-dashed border-[#e7bcbb]/30 pt-6 space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-[#5d3f3e]">Subtotal</span>
-              <span className="text-[#1c1b1b] font-medium">R$ {totalPrice > 0 ? totalPrice.toFixed(2).replace('.', ',') : '34,90'}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-[#5d3f3e]">Desconto cupom</span>
-              <span className="text-[#00686c] font-bold">- R$ 5,00</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-[#5d3f3e]">Taxa de entrega</span>
-              <span className="text-[#00686c] font-bold">{modality === 'counter' ? 'Grátis' : 'R$ 5,00'}</span>
-            </div>
+            {!isAllReward && (
+              <div className="flex justify-between text-sm">
+                <span className="text-[#5d3f3e]">Subtotal</span>
+                <span className="text-[#1c1b1b] font-medium">R$ {subtotalSnapshot.toFixed(2).replace('.', ',')}</span>
+              </div>
+            )}
+            {modality === 'delivery' && (
+              <div className="flex justify-between text-sm">
+                <span className="text-[#5d3f3e]">Taxa de entrega</span>
+                {deliveryFee === 0
+                  ? <span className="text-[#00686c] font-bold">Grátis</span>
+                  : <span className="text-[#1c1b1b] font-medium">R$ {deliveryFee.toFixed(2).replace('.', ',')}</span>
+                }
+              </div>
+            )}
             <div className="flex justify-between items-center pt-2">
               <span className="text-[#1c1b1b] font-bold text-lg">Total</span>
-              <span className="text-[#e8173a] font-display font-extrabold text-2xl">
-                 R$ {totalPrice > 0 ? (totalPrice + (modality === 'counter' ? 0 : 5)).toFixed(2).replace('.', ',') : '29,90'}
-              </span>
+              {isAllReward
+                ? <span className="text-red-600 font-display font-extrabold text-2xl">Grátis</span>
+                : <span className="text-[#e8173a] font-display font-extrabold text-2xl">R$ {computedTotal.toFixed(2).replace('.', ',')}</span>
+              }
             </div>
           </div>
         </div>
@@ -164,24 +163,27 @@ export default function PagamentoConfirmado() {
         )}
         
         {/* Primary CTA */}
-        <button 
+        <button
+          disabled={isProcessing}
           onClick={async () => {
-            console.log('[PagamentoConfirmado] itens ao confirmar:', items);
+            if (isProcessing) return
+            setIsProcessing(true)
+
             if (items.length > 0) {
               await addActiveOrder({
                 items: [...items],
-                totalPrice: totalPrice,
+                totalPrice: isReward ? 0 : totalPrice,
                 status: 'preparing',
                 modality,
                 address,
                 payment_method: paymentMethod,
-              });
+              })
             } else {
-              clearCart();
+              clearCart()
             }
-            navigate('/acompanhar-pedido');
+            navigate('/acompanhar-pedido')
           }}
-          className="w-full bg-gradient-to-r from-[#bd002a] to-[#e8173a] text-white font-bold py-5 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-[#bd002a] to-[#e8173a] text-white font-bold py-5 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:pointer-events-none"
         >
           Acompanhar pedido
           <span className="material-symbols-outlined text-xl">arrow_forward</span>

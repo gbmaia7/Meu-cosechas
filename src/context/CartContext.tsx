@@ -138,6 +138,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [productFrequency]);
 
   const addActiveOrder = async (order: Omit<ActiveOrder, 'id'>) => {
+    console.log('[addActiveOrder] items recebidos:',
+      JSON.stringify(order.items.map(i => ({
+        name: i.name,
+        pointsCost: i.pointsCost,
+        startsWithClube: i.name.startsWith('[CLUBE]'),
+        startsWithAssinatura: i.name.startsWith('[ASSINATURA]')
+      })))
+    )
     setProductFrequency(prev => {
       const next = { ...prev };
       order.items.forEach(item => {
@@ -195,6 +203,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     const hasDoublePoints = sub?.double_points === true;
+
+    // Verifica se há itens pagos (não resgate de clube/assinatura)
+    const hasPaidItems = order.items.some(
+      item => !item.name.startsWith('[CLUBE]') &&
+              !item.name.startsWith('[ASSINATURA]')
+    )
+
+    console.log('[addActiveOrder] hasPaidItems:', hasPaidItems,
+      'items nomes:', order.items.map(i => i.name))
+
+    // Se não há itens pagos, não credita pontos
+    if (!hasPaidItems) {
+      return
+    }
+
     const basePoints = 1;
     const bonusPoints = hasDoublePoints ? 1 : 0;
 
@@ -239,11 +262,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       order.payment_method !== 'machine';
 
     if (shouldCreditPoints) {
+      const productNames = order.items
+        .filter(i => !i.name.startsWith('[CLUBE]') && !i.name.startsWith('[ASSINATURA]'))
+        .map(i => i.name.replace(/^\[.*?\]\s*/, ''))
+        .join(', ')
+
       await supabase.from('loyalty_points_ledger').insert({
         user_id: userId,
         order_id: savedOrder.id,
         points: basePoints,
         reason: 'purchase',
+        description: productNames,
       });
 
       if (bonusPoints > 0) {
@@ -252,6 +281,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
           order_id: savedOrder.id,
           points: bonusPoints,
           reason: 'double_points',
+          description: productNames,
         });
       }
 

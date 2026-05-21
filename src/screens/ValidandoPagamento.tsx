@@ -19,7 +19,7 @@ export default function ValidandoPagamento() {
       setIsValidating(false);
       setTimeout(() => {
         navigate('/pagamento-confirmado', {
-          state: { modality, address, paymentMethod },
+          state: { modality, address, paymentMethod, isReward: location.state?.isFree || false },
         });
       }, 800);
     }, 2800);

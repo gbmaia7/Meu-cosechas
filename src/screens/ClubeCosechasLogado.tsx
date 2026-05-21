@@ -14,6 +14,7 @@ export default function ClubeCosechasLogado() {
     id: string;
     points: number;
     reason: string;
+    description: string | null;
     created_at: string;
     order_id: string | null;
   }[]>([]);
@@ -30,7 +31,7 @@ export default function ClubeCosechasLogado() {
 
       const { data, error } = await supabase
         .from('loyalty_points_ledger')
-        .select('id, points, reason, created_at, order_id')
+        .select('id, points, reason, description, created_at, order_id')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -281,7 +282,9 @@ export default function ClubeCosechasLogado() {
                       }`} />
                     </div>
                     <div>
-                      <p className="font-bold text-sm">{formatReason(item.reason)}</p>
+                      <p className="font-bold text-sm">
+                        {item.description ? item.description : formatReason(item.reason)}
+                      </p>
                       <p className="text-[10px] text-[#5d3f3e] font-medium uppercase">
                         {formatDate(item.created_at)}
                       </p>
