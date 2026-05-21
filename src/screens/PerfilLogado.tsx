@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { X, Utensils, Star, ShoppingBag, User, CreditCard, UserPlus, Phone, CheckCircle2, AlertCircle, MapPin, Wallet, Heart, LogOut, ChevronRight , Crown, CupSoda} from 'lucide-react';
+import { X, Utensils, Star, ShoppingBag, User, CreditCard, UserPlus, Phone, CheckCircle2, AlertCircle, MapPin, Wallet, Heart, LogOut, ChevronRight, Crown, CupSoda, Mail } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { supabase } from '../lib/supabase';
 
 export default function PerfilLogado() {
   const navigate = useNavigate();
@@ -9,6 +10,15 @@ export default function PerfilLogado() {
   const [isPhoneVerified, setIsPhoneVerified] = useState(() => {
     return localStorage.getItem('isPhoneVerified') === 'true';
   });
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [profile, setProfile] = useState<{
+    name: string;
+    phone: string;
+    email: string | null;
+    phone_verified: boolean;
+    email_verified?: boolean;
+  } | null>(null);
 
   const togglePhoneVerified = () => {
     const newState = !isPhoneVerified;
@@ -18,11 +28,39 @@ export default function PerfilLogado() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    const loadProfile = async () => {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('[PerfilLogado] getUser:', { user, userError });
+
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('name, phone, email, phone_verified')
+        .eq('id', user.id)
+        .single();
+
+      console.log('[PerfilLogado] fetchProfile:', { data, error });
+
+      if (data) {
+        const emailVerified = !!user?.email_confirmed_at;
+        setProfile({ ...data, email_verified: emailVerified });
+      }
+    };
+    loadProfile();
   }, []);
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    navigate('/HomeComSacola');
+  const formatPhone = (phone: string) => {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 13) {
+      return `+${digits.slice(0, 2)} (${digits.slice(2, 4)}) ${digits.slice(4, 9)}-${digits.slice(9)}`;
+    }
+    return phone;
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/perfil/nao-logado');
   };
 
   return (
@@ -64,8 +102,15 @@ export default function PerfilLogado() {
         {/* User Info Header */}
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-[#e5e2e1]/50 flex items-start justify-between">
           <div>
-            <h2 className="font-display font-extrabold text-xl text-[#1c1b1b] mb-1">Gabriel Maia</h2>
-            <p className="text-sm font-medium text-[#5d3f3e]">maiagabrielbusiness@gmail.com</p>
+            <h2 className="font-display font-extrabold text-2xl text-[#1c1b1b]">
+              {profile?.name || 'Carregando...'}
+            </h2>
+            {profile?.email && (
+              <p className="text-[#5d3f3e] text-sm">{profile.email}</p>
+            )}
+            {profile?.phone && (
+              <p className="text-[#a89f9e] text-xs mt-1">{formatPhone(profile.phone)}</p>
+            )}
           </div>
           <div className="w-12 h-12 rounded-full bg-[#bd002a]/10 flex items-center justify-center shrink-0">
             <span className="font-display font-bold text-[#bd002a] text-xl">G</span>
@@ -73,47 +118,105 @@ export default function PerfilLogado() {
         </section>
 
         {/* Verification Alert / Status */}
-        <section className={`rounded-xl p-5 shadow-sm border ${isPhoneVerified ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
-          <div className="flex items-start gap-4">
-            <div className={`w-10 h-10 rounded-full flex flex-shrink-0 items-center justify-center ${isPhoneVerified ? 'bg-emerald-100' : 'bg-amber-100'}`}>
-              <Phone className={`w-5 h-5 ${isPhoneVerified ? 'text-emerald-600' : 'text-amber-600'}`} />
-            </div>
-            <div className="flex-grow">
-              <div className="flex items-center gap-2 mb-1 justify-between">
-                <div className="flex items-center gap-2">
-                  <h3 className={`font-display font-bold text-sm ${isPhoneVerified ? 'text-emerald-800' : 'text-amber-800'}`}>
-                    {localStorage.getItem('savedPhone') || '(21) 99999-9999'}
-                  </h3>
-                  {isPhoneVerified ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 text-amber-500" />
-                  )}
-                </div>
-                <button 
-                  onClick={() => navigate('/perfil/verificar-telefone')} 
-                  className={`text-[10px] font-bold uppercase underline ${isPhoneVerified ? 'text-emerald-700' : 'text-amber-700'}`}
-                >
-                  Alterar
-                </button>
+        {profile && (
+          <section className={`rounded-xl p-5 shadow-sm border ${profile.phone_verified ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+            <div className="flex items-start gap-4">
+              <div className={`w-10 h-10 rounded-full flex flex-shrink-0 items-center justify-center ${profile.phone_verified ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                <Phone className={`w-5 h-5 ${profile.phone_verified ? 'text-emerald-600' : 'text-amber-600'}`} />
               </div>
-              <p className={`text-xs ${isPhoneVerified ? 'text-emerald-700/80' : 'text-amber-800/80 mb-3'}`}>
-                {isPhoneVerified 
-                  ? 'Número de telefone verificado! Com isso você acumula pontos, pode resgatar prêmios e tem acesso a promoções exclusivas no Clube Cosechas!'
-                  : 'Sem o telefone verificado, você não poderá realizar pedidos para entrega, nem acumular pontos e resgatar prêmios no Clube Cosechas.'}
-              </p>
-              
-              {!isPhoneVerified && (
-                <button 
-                  onClick={() => navigate('/perfil/verificar-telefone')}
-                  className="bg-amber-500 text-white font-bold text-xs uppercase tracking-wider py-2 px-4 rounded-full hover:bg-amber-600 transition-colors shadow-sm"
-                >
-                  Verificar agora
-                </button>
-              )}
+              <div className="flex-grow">
+                <div className="flex items-center gap-2 mb-1 justify-between">
+                  <div className="flex items-center gap-2">
+                    <h3 className={`font-display font-bold text-sm ${profile.phone_verified ? 'text-emerald-800' : 'text-amber-800'}`}>
+                      {formatPhone(profile.phone || '')}
+                    </h3>
+                    {profile.phone_verified ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-amber-500" />
+                    )}
+                  </div>
+                  <button
+                    onClick={() => navigate('/perfil/verificar-telefone')}
+                    className={`text-[10px] font-bold uppercase underline ${profile.phone_verified ? 'text-emerald-700' : 'text-amber-700'}`}
+                  >
+                    Alterar
+                  </button>
+                </div>
+                <p className={`text-xs ${profile.phone_verified ? 'text-emerald-700/80' : 'text-amber-800/80 mb-3'}`}>
+                  {profile.phone_verified
+                    ? 'Número de telefone verificado! Com isso você acumula pontos, pode resgatar prêmios e tem acesso a promoções exclusivas no Clube Cosechas!'
+                    : 'Sem o telefone verificado, você não poderá realizar pedidos para entrega, nem acumular pontos e resgatar prêmios no Clube Cosechas.'}
+                </p>
+                {!profile.phone_verified && (
+                  <button
+                    onClick={() => navigate('/perfil/verificar-telefone')}
+                    className="bg-amber-500 text-white font-bold text-xs uppercase tracking-wider py-2 px-4 rounded-full hover:bg-amber-600 transition-colors shadow-sm"
+                  >
+                    Verificar agora
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
+
+        {/* Email Verification Status */}
+        {profile && profile.email && (
+          <section className={`rounded-xl p-5 shadow-sm border ${
+            profile.email_verified ? 'bg-emerald-50 border-emerald-100' : 'bg-blue-50 border-blue-100'
+          }`}>
+            <div className="flex items-start gap-4">
+              <div className={`w-10 h-10 rounded-full flex flex-shrink-0 items-center justify-center ${
+                profile.email_verified ? 'bg-emerald-100' : 'bg-blue-100'
+              }`}>
+                <Mail className={`w-5 h-5 ${profile.email_verified ? 'text-emerald-600' : 'text-blue-600'}`} />
+              </div>
+              <div className="flex-grow">
+                <div className="flex items-center gap-2 mb-1 justify-between">
+                  <div className="flex items-center gap-2">
+                    <h3 className={`font-display font-bold text-sm ${
+                      profile.email_verified ? 'text-emerald-800' : 'text-blue-800'
+                    }`}>
+                      {profile.email}
+                    </h3>
+                    {profile.email_verified
+                      ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                      : <AlertCircle className="w-4 h-4 text-blue-500" />
+                    }
+                  </div>
+                </div>
+                <p className={`text-xs ${
+                  profile.email_verified ? 'text-emerald-700/80' : 'text-blue-800/80 mb-3'
+                }`}>
+                  {profile.email_verified
+                    ? 'E-mail verificado! Você pode usá-lo para fazer login.'
+                    : 'Confirme seu e-mail para poder fazer login com ele.'}
+                </p>
+                {!profile.email_verified && (
+                  <button
+                    disabled={emailSending || emailSent}
+                    onClick={async () => {
+                      setEmailSending(true);
+                      const { error: updateError } = await supabase.auth.updateUser({
+                        email: profile!.email!
+                      });
+                      if (updateError) {
+                        console.error('updateUser error:', updateError);
+                      }
+                      setEmailSending(false);
+                      setEmailSent(true);
+                      setTimeout(() => setEmailSent(false), 5000);
+                    }}
+                    className="bg-blue-500 text-white font-bold text-xs uppercase tracking-wider py-2 px-4 rounded-full hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {emailSending ? 'Enviando...' : emailSent ? 'E-mail enviado! Verifique sua caixa.' : 'Reenviar confirmação'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Menu Items */}
         <section className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#e5e2e1]/50">

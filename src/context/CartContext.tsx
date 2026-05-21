@@ -5,6 +5,8 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Extra } from '../data/products';
+import { supabase } from '../lib/supabase';
+import { Session } from '@supabase/supabase-js';
 
 interface CartItem {
   id: string;
@@ -40,6 +42,10 @@ interface CartContextType {
   setSubsQuota: (quota: number) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (val: boolean) => void;
+  session: Session | null;
+  phoneVerified: boolean;
+  canEarnPoints: boolean;
+  canSubscribe: boolean;
   totalItems: number;
   totalPrice: number;
   clearCart: () => void;
@@ -72,7 +78,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('subsQuota', subsQuota.toString());
   }, [subsQuota]);
 
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Default to true to not break current flow
+  const [session, setSession] = useState<Session | null>(null);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+
+  const isAuthenticated = session !== null;
+  const canEarnPoints = isAuthenticated && phoneVerified;
+  const canSubscribe = isAuthenticated && phoneVerified;
+  // kept for backward compatibility — Supabase is now the source of truth
+  const setIsAuthenticated = (_val: boolean) => {};
+
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('points, phone_verified')
+      .eq('id', userId)
+      .single()
+    if (data) {
+      setPhoneVerified(data.phone_verified)
+      setUserPoints(data.points)
+    }
+  }
+
+  useEffect(() => {
+    console.log('[CartContext] iniciando auth listener')
+
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('[CartContext] getSession:', { session, error })
+      setSession(session)
+      if (session) fetchProfile(session.user.id)
+    }).catch(err => console.error('[CartContext] getSession error:', err))
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        console.log('[CartContext] onAuthStateChange:', { _event, session })
+        setSession(session)
+        if (session) fetchProfile(session.user.id)
+        else {
+          setPhoneVerified(false)
+          setUserPoints(0)
+          setSubsQuota(0)
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   const [activeOrders, setActiveOrders] = useState<ActiveOrder[]>([]);
   const [productFrequency, setProductFrequency] = useState<Record<string, number>>(() => {
     const saved = localStorage.getItem('productFrequency');
@@ -153,7 +204,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, subsQuota, setSubsQuota, isAuthenticated, setIsAuthenticated, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, updateActiveOrderStatus, removeActiveOrder, productFrequency }}>
+    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, subsQuota, setSubsQuota, isAuthenticated, setIsAuthenticated, session, phoneVerified, canEarnPoints, canSubscribe, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, updateActiveOrderStatus, removeActiveOrder, productFrequency }}>
       {children}
     </CartContext.Provider>
   );

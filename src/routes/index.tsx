@@ -28,7 +28,6 @@ import ValidandoPagamento from '../screens/ValidandoPagamento';
 import PagamentoConfirmado from '../screens/PagamentoConfirmado';
 import PagamentoConfirmadoVR from '../screens/PagamentoConfirmadoVR';
 import AcompanharPedido from '../screens/AcompanharPedido';
-
 import AssinaturaCheckout from '../screens/AssinaturaCheckout';
 import AssinaturaValidandoPagamento from '../screens/AssinaturaValidandoPagamento';
 import AssinaturaPagamentoConfirmado from '../screens/AssinaturaPagamentoConfirmado';
@@ -58,6 +57,7 @@ export function AppRoutes() {
       <Route path="/indique-ganhe/logado" element={<IndiqueGanheLogado />} />
       <Route path="/perfil/logado" element={<PerfilLogado />} />
       <Route path="/perfil/nao-logado" element={<PerfilNaoLogado />} />
+      <Route path="/verificar-telefone" element={<VerificarTelefone />} />
       <Route path="/perfil/verificar-telefone" element={<VerificarTelefone />} />
       <Route path="/perfil/enderecos" element={<MeusEnderecos />} />
       <Route path="/perfil/favoritos" element={<Favoritos />} />

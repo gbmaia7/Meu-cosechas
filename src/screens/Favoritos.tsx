@@ -135,7 +135,7 @@ export default function Favoritos() {
         {activeOrders.length > 0 && <FloatingOrderTracker activeOrders={activeOrders} />}
       </AnimatePresence>
 
-      <ImageLightbox img={lightboxImg} onClose={() => setLightboxImg(null)} />
+      <ImageLightbox isOpen={lightboxImg !== null} imageSrc={lightboxImg ?? ''} onClose={() => setLightboxImg(null)} />
       
       <ProductBottomSheet 
         product={selectedProduct} 

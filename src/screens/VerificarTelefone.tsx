@@ -1,26 +1,66 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Phone, ShieldCheck } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function VerificarTelefone() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState<1 | 2>(1);
   const [resendStatus, setResendStatus] = useState<'idle' | 'sent'>('idle');
-  const [phone, setPhone] = useState(localStorage.getItem('savedPhone') || '');
+  const [phone, setPhone] = useState(location.state?.phone || '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [otp, setOtp] = useState('');
+  const [normalizedPhone, setNormalizedPhone] = useState('');
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleResend = () => {
-    setResendStatus('sent');
-    setTimeout(() => setResendStatus('idle'), 3000);
+  const handleSendOtp = async () => {
+    setLoading(true);
+    setError('');
+    setNormalizedPhone(phone);
+    const { error } = await supabase.auth.signInWithOtp({ phone: phone });
+    setLoading(false);
+    if (error) {
+      setError('Não foi possível enviar o código. Verifique o número.');
+      return;
+    }
+    setStep(2);
   };
 
-  const handleVerify = () => {
-    localStorage.setItem('isPhoneVerified', 'true');
-    localStorage.setItem('savedPhone', phone || '(21) 99999-9999');
-    navigate(-1); // Go back to the previous screen (can be PerfilLogado or Sacola)
+  const handleVerify = async () => {
+    setLoading(true);
+    setError('');
+    const { error } = await supabase.auth.verifyOtp({
+      phone: normalizedPhone,
+      token: otp,
+      type: 'sms',
+    });
+    if (error) {
+      setLoading(false);
+      setError('Código incorreto ou expirado. Tente novamente.');
+      return;
+    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase
+        .from('profiles')
+        .update({ phone_verified: true, phone: normalizedPhone })
+        .eq('id', user.id);
+    }
+    setLoading(false);
+    navigate('/HomeComSacola', { replace: true });
+  };
+
+  const handleResend = async () => {
+    const { error } = await supabase.auth.signInWithOtp({ phone: normalizedPhone });
+    if (!error) {
+      setResendStatus('sent');
+      setTimeout(() => setResendStatus('idle'), 3000);
+    }
   };
 
   return (
@@ -55,21 +95,23 @@ export default function VerificarTelefone() {
               className="w-full text-center text-2xl font-bold bg-white border border-[#e5e2e1] rounded-xl py-4 px-4 focus:outline-none focus:border-[#bd002a] focus:ring-1 focus:ring-[#bd002a] transition-all mb-8 shadow-sm"
             />
 
+            {error && <p className="text-[#bd002a] text-sm text-center mt-2">{error}</p>}
+
             <div className="flex flex-col gap-3 w-full">
-              <button 
-                onClick={() => setStep(2)}
-                disabled={phone.length < 10}
+              <button
+                onClick={handleSendOtp}
+                disabled={phone.length < 10 || loading}
                 className={`w-full py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2 ${phone.length >= 10 ? 'bg-[#25D366] text-white shadow-[#25D366]/20' : 'bg-[#f0eded] text-[#a8a29e] shadow-none'}`}
               >
-                Enviar via WhatsApp
+                {loading ? 'Enviando...' : 'Enviar via WhatsApp'}
               </button>
-              
-              <button 
-                onClick={() => setStep(2)}
-                disabled={phone.length < 10}
+
+              <button
+                onClick={handleSendOtp}
+                disabled={phone.length < 10 || loading}
                 className={`w-full py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2 ${phone.length >= 10 ? 'bg-[#bd002a]/10 text-[#bd002a]' : 'bg-[#f0eded] text-[#a8a29e]'}`}
               >
-                Enviar via SMS
+                {loading ? 'Enviando...' : 'Enviar via SMS'}
               </button>
             </div>
           </div>
@@ -80,27 +122,28 @@ export default function VerificarTelefone() {
             </div>
             <h2 className="font-display font-extrabold text-2xl text-center mb-2">Código de Verificação</h2>
             <p className="text-center text-[#5d3f3e] text-sm mb-8">
-              Digite o código de 4 dígitos que acabamos de enviar para {phone}.
+              Digite o código de 6 dígitos que acabamos de enviar para {phone}.
             </p>
 
-            <div className="flex gap-4 justify-center mb-8">
-              {[1, 2, 3, 4].map((i) => (
-                <input 
-                  key={i}
-                  type="text"
-                  maxLength={1}
-                  className="w-14 h-16 text-center text-2xl font-bold bg-white border border-[#e5e2e1] rounded-xl focus:outline-none focus:border-[#bd002a] focus:ring-1 focus:ring-[#bd002a] transition-all shadow-sm"
-                />
-              ))}
-            </div>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+              className="w-full text-center text-3xl font-bold tracking-[0.5em] bg-white border border-[#e5e2e1] rounded-xl py-4 px-4 focus:outline-none focus:border-[#bd002a] focus:ring-1 focus:ring-[#bd002a] transition-all shadow-sm mb-8"
+              placeholder="000000"
+            />
 
-            <button 
+            <button
               onClick={handleVerify}
-              className="w-full bg-[#bd002a] text-white py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-transform"
+              disabled={otp.length < 6 || loading}
+              className="w-full bg-[#bd002a] text-white py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-60 disabled:scale-100"
             >
-              Verificar
+              {loading ? 'Verificando...' : 'Verificar'}
             </button>
-            <button 
+            {error && <p className="text-[#bd002a] text-sm text-center mt-2">{error}</p>}
+            <button
               onClick={handleResend} 
               className={`mt-4 text-xs font-bold uppercase tracking-wider transition-colors ${resendStatus === 'sent' ? 'text-emerald-600' : 'text-[#a8a29e]'}`}
             >
