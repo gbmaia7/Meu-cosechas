@@ -19,6 +19,7 @@ import Favoritos from '../screens/Favoritos';
 import Login from '../screens/Login';
 import Cadastro from '../screens/Cadastro';
 import EsqueceuSenha from '../screens/EsqueceuSenha';
+import RedefinirSenha from '../screens/RedefinirSenha';
 import Pagamento from '../screens/Pagamento';
 import PagamentoPix from '../screens/PagamentoPix';
 import NovoCartao from '../screens/NovoCartao';
@@ -64,6 +65,7 @@ export function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Cadastro />} />
       <Route path="/esqueceu-senha" element={<EsqueceuSenha />} />
+      <Route path="/redefinir-senha" element={<RedefinirSenha />} />
       <Route path="/pagamento" element={<Pagamento />} />
       <Route path="/pagamento/pix" element={<PagamentoPix />} />
       <Route path="/pagamento/cartao" element={<NovoCartao />} />

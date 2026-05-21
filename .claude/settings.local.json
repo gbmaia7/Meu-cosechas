@@ -4,7 +4,10 @@
       "Bash(npm install *)",
       "Bash(npx tsc *)",
       "Bash(npm uninstall *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git config *)",
+      "Bash(git push *)"
     ]
   }
 }

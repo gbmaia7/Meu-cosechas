@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { X, Utensils, Star, ShoppingBag, User, CreditCard, UserPlus, Phone, CheckCircle2, AlertCircle, MapPin, Wallet, Heart, LogOut, ChevronRight, Crown, CupSoda, Mail } from 'lucide-react';
+import { X, Utensils, Star, ShoppingBag, User, CreditCard, UserPlus, Phone, CheckCircle2, AlertCircle, MapPin, Wallet, Heart, LogOut, ChevronRight, Crown, CupSoda, Mail, Lock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 
@@ -12,6 +12,13 @@ export default function PerfilLogado() {
   });
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
+  const [showChangePass, setShowChangePass] = useState(false);
+  const [senhaAtual, setSenhaAtual] = useState('');
+  const [novaSenha, setNovaSenha] = useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [passLoading, setPassLoading] = useState(false);
+  const [passError, setPassError] = useState('');
+  const [passDone, setPassDone] = useState(false);
   const [profile, setProfile] = useState<{
     name: string;
     phone: string;
@@ -61,6 +68,65 @@ export default function PerfilLogado() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/perfil/nao-logado');
+  };
+
+  const handleAlterarSenha = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPassError('');
+
+    if (novaSenha.length < 6) {
+      setPassError('A nova senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
+    if (novaSenha !== confirmarSenha) {
+      setPassError('As senhas não coincidem.');
+      return;
+    }
+
+    setPassLoading(true);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setPassError('Sessão expirada. Faça login novamente.');
+      setPassLoading(false);
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      phone: user.phone || '',
+      password: senhaAtual,
+    });
+
+    if (signInError) {
+      const { error: emailError } = await supabase.auth.signInWithPassword({
+        email: user.email || '',
+        password: senhaAtual,
+      });
+      if (emailError) {
+        setPassError('Senha atual incorreta.');
+        setPassLoading(false);
+        return;
+      }
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: novaSenha });
+
+    setPassLoading(false);
+
+    if (updateError) {
+      setPassError('Não foi possível alterar a senha. Tente novamente.');
+      return;
+    }
+
+    setPassDone(true);
+    setSenhaAtual('');
+    setNovaSenha('');
+    setConfirmarSenha('');
+    setTimeout(() => {
+      setPassDone(false);
+      setShowChangePass(false);
+    }, 3000);
   };
 
   return (
@@ -253,7 +319,7 @@ export default function PerfilLogado() {
               <ChevronRight className="w-5 h-5 text-[#a8a29e]" />
             </button>
 
-            <button 
+            <button
               onClick={() => navigate('/perfil/favoritos')}
               className="w-full flex items-center justify-between p-5 hover:bg-[#fcf9f8] transition-colors"
             >
@@ -268,6 +334,79 @@ export default function PerfilLogado() {
               </div>
               <ChevronRight className="w-5 h-5 text-[#a8a29e]" />
             </button>
+
+            <button
+              onClick={() => { setShowChangePass(!showChangePass); setPassError(''); }}
+              className="w-full flex items-center justify-between p-5 hover:bg-[#fcf9f8] transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#f6f3f2] flex items-center justify-center shrink-0">
+                  <Lock className="w-5 h-5 text-[#5d3f3e]" />
+                </div>
+                <div className="text-left">
+                  <p className="font-display font-bold text-sm text-[#1c1b1b]">Alterar Senha</p>
+                  <p className="text-xs text-[#5d3f3e]">Redefina sua senha de acesso</p>
+                </div>
+              </div>
+              <ChevronRight className={`w-5 h-5 text-[#a8a29e] transition-transform ${showChangePass ? 'rotate-90' : ''}`} />
+            </button>
+
+            {showChangePass && (
+              <div className="px-5 pb-5 border-t border-[#f0eded]">
+                {!passDone ? (
+                  <form onSubmit={handleAlterarSenha} className="space-y-3 pt-4">
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a8a29e]" />
+                      <input
+                        type="password"
+                        placeholder="Senha atual"
+                        value={senhaAtual}
+                        onChange={(e) => setSenhaAtual(e.target.value)}
+                        required
+                        className="w-full pl-10 pr-4 py-3 bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl text-sm focus:outline-none focus:border-[#bd002a] transition-all"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a8a29e]" />
+                      <input
+                        type="password"
+                        placeholder="Nova senha (mín. 6 caracteres)"
+                        value={novaSenha}
+                        onChange={(e) => setNovaSenha(e.target.value)}
+                        required
+                        className="w-full pl-10 pr-4 py-3 bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl text-sm focus:outline-none focus:border-[#bd002a] transition-all"
+                      />
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a8a29e]" />
+                      <input
+                        type="password"
+                        placeholder="Confirmar nova senha"
+                        value={confirmarSenha}
+                        onChange={(e) => setConfirmarSenha(e.target.value)}
+                        required
+                        className="w-full pl-10 pr-4 py-3 bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl text-sm focus:outline-none focus:border-[#bd002a] transition-all"
+                      />
+                    </div>
+                    {passError && (
+                      <p className="text-[#bd002a] text-xs text-center">{passError}</p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={passLoading}
+                      className="w-full bg-[#bd002a] text-white py-3 rounded-full font-extrabold font-display uppercase tracking-wider text-xs shadow-md disabled:opacity-70"
+                    >
+                      {passLoading ? 'Salvando...' : 'Salvar nova senha'}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="flex items-center gap-3 pt-4 text-emerald-600">
+                    <CheckCircle2 className="w-5 h-5 shrink-0" />
+                    <p className="text-sm font-medium">Senha alterada com sucesso!</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
