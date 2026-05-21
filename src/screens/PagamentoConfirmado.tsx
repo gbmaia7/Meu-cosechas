@@ -6,10 +6,11 @@ import { MoreVertical, Store, ArrowRight, Bike, MapPin } from 'lucide-react';
 export default function PagamentoConfirmado() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items, totalPrice, clearCart, addActiveOrder, userPoints } = useCart();
+  const { items, totalPrice, clearCart, addActiveOrder, userPoints, activeOrders } = useCart();
   
   const modality = location.state?.modality || 'counter';
   const address = location.state?.address;
+  const paymentMethod = location.state?.paymentMethod || 'pix';
   
   const validItemsCount = items.reduce((sum, item) => sum + ((item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) ? 0 : item.quantity), 0);
 
@@ -134,17 +135,31 @@ export default function PagamentoConfirmado() {
         </div>
         
         {/* Loyalty Points Badge */}
-        {validItemsCount > 0 && (
+        {validItemsCount > 0 && paymentMethod !== 'cash' && paymentMethod !== 'machine' && (
           <div className="bg-[#FDECEA] rounded-full px-6 py-4 flex items-center justify-center gap-4 mb-10 w-full text-center">
             <div className="w-10 h-10 bg-[#e8173a] rounded-full flex items-center justify-center flex-shrink-0">
-               <span className="material-symbols-outlined text-white text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  redeem
+              <span className="material-symbols-outlined text-white text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                redeem
               </span>
             </div>
             <div className="text-left">
-              <p className="text-[#8b1724] font-bold text-sm leading-none mb-1">+ {validItemsCount} ponto{validItemsCount > 1 ? 's' : ''} adicionado{validItemsCount > 1 ? 's' : ''} ao seu Clube Cosechas</p>
-              <p className="text-[#8b1724]/70 text-xs font-medium">Você agora tem {userPoints + validItemsCount} pontos.</p>
+              <p className="text-[#8b1724] font-bold text-sm leading-none mb-1">
+                + {validItemsCount} ponto{validItemsCount > 1 ? 's' : ''} adicionado{validItemsCount > 1 ? 's' : ''} ao seu Clube Cosechas
+              </p>
+              <p className="text-[#8b1724]/70 text-xs font-medium">
+                Você agora tem {userPoints + validItemsCount} pontos.
+              </p>
             </div>
+          </div>
+        )}
+
+        {validItemsCount > 0 && (paymentMethod === 'cash' || paymentMethod === 'machine') && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-3 mb-10 w-full">
+            <span className="text-blue-600 mt-0.5 shrink-0">ℹ️</span>
+            <p className="text-xs text-blue-800 font-medium leading-relaxed">
+              <span className="font-bold">Pontos do Clube:</span> Seus pontos serão
+              creditados após a confirmação do pagamento pelo entregador.
+            </p>
           </div>
         )}
         
@@ -158,7 +173,8 @@ export default function PagamentoConfirmado() {
                 totalPrice: totalPrice,
                 status: 'preparing',
                 modality,
-                address
+                address,
+                payment_method: paymentMethod,
               });
             } else {
               clearCart();

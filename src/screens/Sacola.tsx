@@ -30,7 +30,7 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
 
 export default function Sacola() {
   const navigate = useNavigate();
-  const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, subsQuota, setSubsQuota, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated } = useCart();
+  const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, subsQuota, setSubsQuota, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, phoneVerified } = useCart();
   const [modality, setModality] = useState<'counter' | 'delivery'>('counter');
   const [coupon, setCoupon] = useState('');
   const [couponError, setCouponError] = useState(false);
@@ -49,7 +49,6 @@ export default function Sacola() {
   ];
 
   const [useSavedAddress, setUseSavedAddress] = useState<string | 'new'>('1');
-  const isPhoneVerified = localStorage.getItem('isPhoneVerified') === 'true';
   const [showPhoneAlert, setShowPhoneAlert] = useState(false);
   const [showFreeCheckoutConfirm, setShowFreeCheckoutConfirm] = useState(false);
 
@@ -701,7 +700,7 @@ export default function Sacola() {
           onClick={() => {
             if (!isFormValid) {
               setShowAddressErrors(true);
-            } else if (modality === 'delivery' && !isPhoneVerified) {
+            } else if (modality === 'delivery' && !phoneVerified) {
               setShowPhoneAlert(true);
             } else if (totalPrice === 0) {
               setShowFreeCheckoutConfirm(true);

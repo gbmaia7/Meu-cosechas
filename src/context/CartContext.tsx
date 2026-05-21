@@ -28,6 +28,9 @@ export interface ActiveOrder {
   status: 'preparing' | 'ready';
   modality?: 'counter' | 'delivery';
   address?: { block: string; room: string; complement?: string };
+  pickup_code?: string | null;
+  delivery_pin?: string | null;
+  payment_method?: string;
 }
 
 interface CartContextType {
@@ -135,12 +138,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [productFrequency]);
 
   const addActiveOrder = async (order: Omit<ActiveOrder, 'id'>) => {
-    const newOrder: ActiveOrder = {
-      ...order,
-      id: crypto.randomUUID(),
-    };
-    setActiveOrders((prev) => [...prev, newOrder]);
-
     setProductFrequency(prev => {
       const next = { ...prev };
       order.items.forEach(item => {
@@ -151,9 +148,44 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     clearCart();
 
-    if (!session || !phoneVerified) return;
+    if (!session || !phoneVerified) {
+      setActiveOrders((prev) => [...prev, {
+        ...order,
+        id: crypto.randomUUID(),
+        pickup_code: null,
+        delivery_pin: null,
+      }]);
+      return;
+    }
 
     const userId = session.user.id;
+
+    let pickupCode: string | null = null;
+    let deliveryPin: string | null = null;
+
+    if (order.modality === 'counter' || !order.modality) {
+      const today = new Date();
+      today.setHours(7, 0, 0, 0);
+      const { count } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('modality', 'counter')
+        .gte('created_at', today.toISOString());
+      const sequence = (count || 0) + 1;
+      pickupCode = `C-${String(sequence).padStart(3, '0')}`;
+    }
+
+    if (order.modality === 'delivery') {
+      deliveryPin = String(Math.floor(1000 + Math.random() * 9000));
+    }
+
+    const newOrder: ActiveOrder = {
+      ...order,
+      id: crypto.randomUUID(),
+      pickup_code: pickupCode,
+      delivery_pin: deliveryPin,
+    };
+    setActiveOrders((prev) => [...prev, newOrder]);
 
     const { data: sub } = await supabase
       .from('subscriptions')
@@ -176,8 +208,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         payment_status: 'pending',
         modality: order.modality || 'counter',
         points_earned: basePoints + bonusPoints,
+        pickup_code: pickupCode,
+        delivery_pin: deliveryPin,
       })
-      .select('id')
+      .select('id, pickup_code, delivery_pin')
       .single();
 
     if (orderError) {
@@ -200,39 +234,59 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     await supabase.from('order_items').insert(orderItems);
 
-    await supabase.from('loyalty_points_ledger').insert({
-      user_id: userId,
-      order_id: savedOrder.id,
-      points: basePoints,
-      reason: 'purchase',
-    });
+    const shouldCreditPoints =
+      order.payment_method !== 'cash' &&
+      order.payment_method !== 'machine';
 
-    if (bonusPoints > 0) {
+    if (shouldCreditPoints) {
       await supabase.from('loyalty_points_ledger').insert({
         user_id: userId,
         order_id: savedOrder.id,
-        points: bonusPoints,
-        reason: 'double_points',
+        points: basePoints,
+        reason: 'purchase',
       });
+
+      if (bonusPoints > 0) {
+        await supabase.from('loyalty_points_ledger').insert({
+          user_id: userId,
+          order_id: savedOrder.id,
+          points: bonusPoints,
+          reason: 'double_points',
+        });
+      }
+
+      const newPoints = userPoints + basePoints + bonusPoints;
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('total_orders')
+        .eq('id', userId)
+        .single();
+
+      await supabase
+        .from('profiles')
+        .update({
+          points: newPoints,
+          total_orders: (profileData?.total_orders || 0) + 1,
+          last_purchase_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
+
+      setUserPoints(newPoints);
+    } else {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('total_orders')
+        .eq('id', userId)
+        .single();
+
+      await supabase
+        .from('profiles')
+        .update({
+          total_orders: (profileData?.total_orders || 0) + 1,
+          last_purchase_at: new Date().toISOString(),
+        })
+        .eq('id', userId);
     }
-
-    const newPoints = userPoints + basePoints + bonusPoints;
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('total_orders')
-      .eq('id', userId)
-      .single();
-
-    await supabase
-      .from('profiles')
-      .update({
-        points: newPoints,
-        total_orders: (profileData?.total_orders || 0) + 1,
-        last_purchase_at: new Date().toISOString(),
-      })
-      .eq('id', userId);
-
-    setUserPoints(newPoints);
   };
 
   const updateActiveOrderStatus = (id: string, status: 'preparing' | 'ready') => {

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, X, ChevronRight, Banknote, CheckCircle2, CreditCard, Wallet } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
-type PaymentMethod = 'pix' | 'credit_card_saved' | 'credit_card' | 'debit_card' | 'vr';
+type PaymentMethod = 'pix' | 'credit_card_saved' | 'credit_card' | 'debit_card' | 'cash' | 'machine';
 
 export default function Pagamento() {
   const navigate = useNavigate();
@@ -74,11 +74,14 @@ export default function Pagamento() {
       case 'pix':
         navigate('/pagamento/pix', { state: { total: finalTotal.toFixed(2).replace('.', ','), modality, address } });
         break;
-      case 'vr':
-        navigate('/pagamento/vr', { state: { modality, address } });
-        break;
       case 'credit_card_saved':
         navigate('/validando-pagamento', { state: { modality, address } });
+        break;
+      case 'cash':
+        navigate('/pagamento-confirmado', { state: { modality, address, paymentMethod: 'cash' } });
+        break;
+      case 'machine':
+        navigate('/pagamento-confirmado', { state: { modality, address, paymentMethod: 'machine' } });
         break;
       default:
         navigate('/validando-pagamento', { state: { modality, address } });
@@ -252,26 +255,59 @@ export default function Pagamento() {
             )}
           </div>
 
-          {/* Vale Refeição / Alimentação */}
+          {/* Dinheiro — delivery only */}
           {modality === 'delivery' && (
-            <div 
-              onClick={() => setSelectedMethod('vr')}
-              className={`rounded-lg p-5 flex items-center justify-between transition-all duration-300 cursor-pointer ${selectedMethod === 'vr' ? 'ring-2 ring-[#bd002a] bg-[#bd002a]/5' : 'bg-white hover:bg-[#f6f3f2]'}`}
+            <div
+              onClick={() => setSelectedMethod('cash')}
+              className={`rounded-lg p-5 flex items-center justify-between transition-all duration-300 cursor-pointer ${selectedMethod === 'cash' ? 'ring-2 ring-[#bd002a] bg-[#bd002a]/5' : 'bg-white hover:bg-[#f6f3f2]'}`}
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#e7bcbb]/20 rounded-full flex items-center justify-center text-[#92001e]">
-                  <Wallet className="w-6 h-6" />
+                <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600">
+                  <Banknote className="w-6 h-6" />
                 </div>
                 <div>
-                  <p className="font-display font-bold">Vale Refeição/Alimentação</p>
-                  <p className="text-xs font-medium text-[#5d3f3e]">Levaremos a maquininha</p>
+                  <p className="font-display font-bold">Dinheiro</p>
+                  <p className="text-xs font-medium text-[#5d3f3e]">Pagar na entrega</p>
                 </div>
               </div>
-              {selectedMethod === 'vr' ? (
+              {selectedMethod === 'cash' ? (
                 <CheckCircle2 className="text-[#bd002a] font-bold w-6 h-6" />
               ) : (
                 <ChevronRight className="text-[#5d3f3e]" />
               )}
+            </div>
+          )}
+
+          {/* Maquininha — delivery only */}
+          {modality === 'delivery' && (
+            <div
+              onClick={() => setSelectedMethod('machine')}
+              className={`rounded-lg p-5 flex items-center justify-between transition-all duration-300 cursor-pointer ${selectedMethod === 'machine' ? 'ring-2 ring-[#bd002a] bg-[#bd002a]/5' : 'bg-white hover:bg-[#f6f3f2]'}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
+                  <CreditCard className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-display font-bold">Maquininha / Vale Refeição</p>
+                  <p className="text-xs font-medium text-[#5d3f3e]">Cartão, débito ou VR na entrega</p>
+                </div>
+              </div>
+              {selectedMethod === 'machine' ? (
+                <CheckCircle2 className="text-[#bd002a] font-bold w-6 h-6" />
+              ) : (
+                <ChevronRight className="text-[#5d3f3e]" />
+              )}
+            </div>
+          )}
+
+          {selectedMethod === 'machine' && modality === 'delivery' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-3">
+              <span className="text-blue-600 mt-0.5 shrink-0">ℹ️</span>
+              <p className="text-xs text-blue-800 font-medium leading-relaxed">
+                <span className="font-bold">Pontos do Clube:</span> Seus pontos serão
+                creditados após a confirmação do pagamento pelo entregador.
+              </p>
             </div>
           )}
         </section>
@@ -292,7 +328,11 @@ export default function Pagamento() {
           onClick={handleFinalize}
           className="flex-1 max-w-[200px] flex items-center justify-center rounded-full px-4 py-3.5 font-display font-semibold text-sm transition-all duration-200 bg-[#E8173A] text-white shadow-lg shadow-[#bd002a]/20 hover:scale-105 active:scale-95"
         >
-          Finalizar Pedido
+          Finalizar com{' '}
+          {selectedMethod === 'pix' ? 'Pix' :
+           selectedMethod === 'cash' ? 'Dinheiro na entrega' :
+           selectedMethod === 'machine' ? 'Maquininha na entrega' :
+           selectedMethod === 'credit_card_saved' ? 'Cartão salvo' : 'Pagamento'}
         </button>
       </nav>
     </div>

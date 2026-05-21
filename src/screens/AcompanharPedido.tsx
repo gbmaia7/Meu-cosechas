@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -23,7 +24,20 @@ export default function AcompanharPedido() {
     : (activeOrders.length > 0 ? activeOrders[0] : null);
 
   const orderStatus = activeOrder?.status || 'preparing';
-  
+  const [deliveryWhatsapp, setDeliveryWhatsapp] = useState('5521995435384');
+
+  useEffect(() => {
+    const loadConfig = async () => {
+      const { data } = await supabase
+        .from('store_config')
+        .select('value')
+        .eq('key', 'delivery_whatsapp')
+        .single();
+      if (data) setDeliveryWhatsapp(data.value);
+    };
+    loadConfig();
+  }, []);
+
   const toggleOrderStatus = () => {
     if (activeOrder) {
       updateActiveOrderStatus(activeOrder.id, orderStatus === 'preparing' ? 'ready' : 'preparing');
@@ -102,16 +116,11 @@ export default function AcompanharPedido() {
                 {orderStatus === 'preparing' ? 'Você será notificado quando estiver pronto.' : (activeOrder?.modality === 'delivery' ? 'Aguarde no endereço selecionado.' : 'Retire no balcão da loja.')}
             </p>
             {activeOrder?.modality === 'delivery' && (
-              <>
-                <div className="mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                  <p className="text-xs text-[#5d3f3e] font-medium leading-relaxed">
-                    <span className="font-bold text-yellow-800">Atenção:</span> Fique atento ao seu WhatsApp, nosso colaborador entrará em contato por lá para finalizar a entrega.
-                  </p>
-                </div>
-                <p className="mt-2 text-xs text-[#5d3f3e] text-left font-medium bg-blue-50 p-2.5 rounded-lg border border-blue-200 leading-snug">
-                  <span className="font-bold text-blue-800">Pontos do Clube:</span> Se o pagamento for feito na maquininha na entrega, seus pontos serão creditados após a confirmação do pagamento pelo entregador.
+              <div className="mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                <p className="text-xs text-[#5d3f3e] font-medium leading-relaxed">
+                  <span className="font-bold text-yellow-800">Atenção:</span> Fique atento ao seu WhatsApp, nosso colaborador entrará em contato por lá para finalizar a entrega.
                 </p>
-              </>
+              </div>
             )}
           </div>
           
@@ -143,6 +152,47 @@ export default function AcompanharPedido() {
             <div className={`absolute top-1/2 left-0 ${orderStatus === 'ready' ? 'w-full' : 'w-1/2'} h-1 bg-[#bd002a] -translate-y-1 transition-all duration-700 ease-in-out`}></div>
           </div>
         </section>
+
+        {/* Pickup Code — counter */}
+        {activeOrder?.modality === 'counter' && activeOrder?.pickup_code && (
+          <section className="bg-white rounded-lg p-6 shadow-sm border border-[#e5e2e1]/30 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#5d3f3e] mb-2">
+              Seu código de retirada
+            </p>
+            <p className="font-display font-extrabold text-7xl text-[#bd002a] tracking-wider">
+              {activeOrder.pickup_code}
+            </p>
+            <p className="text-xs text-[#5d3f3e] mt-3">
+              Mostre este código no balcão para retirar seu pedido.
+            </p>
+          </section>
+        )}
+
+        {/* Delivery PIN */}
+        {activeOrder?.modality === 'delivery' && activeOrder?.delivery_pin && (
+          <section className="bg-white rounded-lg p-6 shadow-sm border border-[#e5e2e1]/30 text-center space-y-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#5d3f3e]">
+              PIN de segurança
+            </p>
+            <p className="font-display font-extrabold text-7xl text-[#bd002a] tracking-[0.2em]">
+              {activeOrder.delivery_pin}
+            </p>
+            <p className="text-xs text-[#5d3f3e]">
+              Informe este código ao entregador para confirmar o recebimento.
+            </p>
+            <a
+              href={`https://wa.me/${deliveryWhatsapp}?text=${encodeURIComponent(
+                `Olá! Sou o cliente do pedido ${activeOrder.pickup_code || ''}, meu PIN é ${activeOrder.delivery_pin}. Estou aguardando a entrega.`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-full bg-[#25D366] text-white font-bold text-sm"
+            >
+              <span>💬</span>
+              Falar com o entregador
+            </a>
+          </section>
+        )}
 
         {/* Loyalty Card (From ClubeCosechasLogado config) */}
         <section className="bg-white rounded-lg p-6 shadow-[0_-8px_30px_rgb(0,0,0,0.02)] border border-[#e5e2e1]/30 relative overflow-hidden">

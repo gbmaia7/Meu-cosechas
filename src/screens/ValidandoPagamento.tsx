@@ -1,18 +1,41 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
 export default function ValidandoPagamento() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isValidating, setIsValidating] = useState(true);
+  const [progress, setProgress] = useState(0);
+
+  const modality = location.state?.modality || 'counter';
+  const address = location.state?.address;
+  const paymentMethod = location.state?.paymentMethod || 'pix';
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
     const timer = setTimeout(() => {
-      navigate('/pagamento-confirmado', { state: location.state });
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [navigate, location.state]);
+      setIsValidating(false);
+      setTimeout(() => {
+        navigate('/pagamento-confirmado', {
+          state: { modality, address, paymentMethod },
+        });
+      }, 800);
+    }, 2800);
+
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        const next = prev + Math.random() * 18;
+        return next > 92 ? 92 : next;
+      });
+    }, 120);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [modality, address, paymentMethod, navigate]);
 
   return (
     <div className="bg-[#fcf9f8] min-h-screen flex flex-col items-center justify-center p-6 text-center z-50">
