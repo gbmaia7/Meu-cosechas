@@ -73,11 +73,10 @@ export default function HomeComSacola() {
     if ((prod.sizes && prod.sizes.length > 0) || (prod.extras && prod.extras.length > 0) || (prod.baseOptions && prod.baseOptions.length > 0)) {
       setSelectedProduct(prod);
     } else {
-      const price = parseFloat(prod.priceDisplay.replace(/[^\d,]/g, '').replace(',', '.'));
       addToCart({
         productId: prod.id,
         name: prod.name,
-        price: price,
+        price: parseFloat(prod.priceDisplay.replace(/[^\d,]/g, '').replace(',', '.')),
       });
     }
   };
@@ -387,14 +386,14 @@ export default function HomeComSacola() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <ProductCard 
-                    prod={productOfToday} 
-                    onImageClick={handleImageClick} 
+                  <ProductCard
+                    prod={productOfToday}
+                    onImageClick={handleImageClick}
                     onPlusClick={handlePlusClick}
                     badge={effectiveBoaAvailability ? "HOJE" : undefined}
                     isAvailable={effectiveBoaAvailability}
                     availabilityMsg="A Boa de Hoje é uma promoção disponível às segundas, terças e quintas até as 16h."
-                  />
+                                     />
                 </div>
               )}
             </>
@@ -409,15 +408,15 @@ export default function HomeComSacola() {
 
               <div className="space-y-4">
                 {PROMOCAO_SEU_COSECHAS.map(prod => (
-                  <ProductCard 
-                    key={prod.id} 
-                    prod={prod} 
-                    onImageClick={handleImageClick} 
+                  <ProductCard
+                    key={prod.id}
+                    prod={prod}
+                    onImageClick={handleImageClick}
                     onPlusClick={handlePlusClick}
                     badge={effectivePromoAvailability ? "PROMOÇÃO" : undefined}
                     isAvailable={effectivePromoAvailability}
                     availabilityMsg="A Promoção Seu Cosechas é uma promoção disponível às quartas e sextas até as 16h."
-                  />
+                                     />
                 ))}
               </div>
             </>
@@ -431,7 +430,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {PRODUCTS.filter(p => parseInt(p.id) >= 0 && parseInt(p.id) <= 10).map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                 ))}
               </div>
             </>
@@ -445,7 +444,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {PRODUCTS.filter(p => p.category === 'Mix de Frutas').map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                 ))}
               </div>
             </>
@@ -461,7 +460,7 @@ export default function HomeComSacola() {
                 </div>
                 <div className="space-y-4">
                   {PRODUCTS.filter(p => p.category === 'Premium' && p.name.toLowerCase().includes('iogurte')).map(prod => (
-                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                   ))}
                 </div>
               </div>
@@ -473,7 +472,7 @@ export default function HomeComSacola() {
                 </div>
                 <div className="space-y-4">
                   {PRODUCTS.filter(p => p.category === 'Premium' && p.name.toLowerCase().includes('sorvete')).map(prod => (
-                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                   ))}
                 </div>
               </div>
@@ -485,7 +484,7 @@ export default function HomeComSacola() {
                 </div>
                 <div className="space-y-4">
                   {PRODUCTS.filter(p => p.category === 'Premium' && !p.name.toLowerCase().includes('iogurte') && !p.name.toLowerCase().includes('sorvete')).map(prod => (
-                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                   ))}
                 </div>
               </div>
@@ -500,7 +499,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {PRODUCTS.filter(p => p.category === 'Açaí').map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                 ))}
               </div>
             </>
@@ -514,7 +513,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {PRODUCTS.filter(p => p.category === 'Milkshake').map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                 ))}
               </div>
             </>
@@ -528,7 +527,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {LINHA_CARIBE.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                 ))}
               </div>
             </>
@@ -542,7 +541,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {FUNCIONAL.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                 ))}
               </div>
             </>
@@ -556,7 +555,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {COMECE_BEM.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                 ))}
               </div>
             </>
@@ -570,7 +569,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {ESPECIAIS.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                 ))}
               </div>
             </>
@@ -584,7 +583,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {SALADA_DE_FRUTAS.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                 ))}
               </div>
             </>
@@ -598,7 +597,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {COFFEE.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
                 ))}
               </div>
             </>
@@ -667,7 +666,7 @@ export default function HomeComSacola() {
         ))}
       </nav>
 
-      <ProductBottomSheet 
+      <ProductBottomSheet
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
         onAdd={handleAddFromSheet}
@@ -682,17 +681,17 @@ export default function HomeComSacola() {
   );
 }
 
-function ProductCard({ 
-  prod, 
-  onImageClick, 
-  onPlusClick, 
-  badge, 
-  isAvailable = true, 
-  availabilityMsg 
-}: { 
-  prod: Product; 
-  onImageClick: (img: string) => void; 
-  onPlusClick: (prod: Product) => void; 
+function ProductCard({
+  prod,
+  onImageClick,
+  onPlusClick,
+  badge,
+  isAvailable = true,
+  availabilityMsg,
+}: {
+  prod: Product;
+  onImageClick: (img: string) => void;
+  onPlusClick: (prod: Product) => void;
   key?: string;
   badge?: string;
   isAvailable?: boolean;
@@ -742,7 +741,7 @@ function ProductCard({
         </div>
         <div className="flex items-center justify-between mt-1">
           <span className="font-extrabold text-[#bd002a] text-sm">{prod.priceDisplay}</span>
-          <button 
+          <button
             disabled={!isAvailable}
             onClick={() => onPlusClick(prod)}
             className={`w-8 h-8 ${isAvailable ? 'bg-[#bd002a]' : 'bg-[#e5e2e1]'} rounded-full flex items-center justify-center text-white shrink-0 shadow-sm active:scale-90 transition-transform`}

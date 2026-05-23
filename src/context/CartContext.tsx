@@ -41,8 +41,6 @@ interface CartContextType {
   updateItem: (id: string, updates: Partial<CartItem>) => void;
   userPoints: number;
   setUserPoints: (points: number) => void;
-  subsQuota: number;
-  setSubsQuota: (quota: number) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (val: boolean) => void;
   session: Session | null;
@@ -72,15 +70,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('userPoints', userPoints.toString());
   }, [userPoints]);
 
-  const [subsQuota, setSubsQuota] = useState(() => {
-    const saved = localStorage.getItem('subsQuota');
-    return saved ? parseInt(saved, 10) : 12; // default to Trio 12
-  });
-
-  useEffect(() => {
-    localStorage.setItem('subsQuota', subsQuota.toString());
-  }, [subsQuota]);
-
   const [session, setSession] = useState<Session | null>(null);
   const [phoneVerified, setPhoneVerified] = useState(false);
 
@@ -108,18 +97,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session }, error }) => {
       console.log('[CartContext] getSession:', { session, error })
       setSession(session)
-      if (session) fetchProfile(session.user.id)
+      if (session) {
+        fetchProfile(session.user.id)
+      }
     }).catch(err => console.error('[CartContext] getSession error:', err))
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         console.log('[CartContext] onAuthStateChange:', { _event, session })
         setSession(session)
-        if (session) fetchProfile(session.user.id)
-        else {
+        if (session) {
+          fetchProfile(session.user.id)
+        } else {
           setPhoneVerified(false)
           setUserPoints(0)
-          setSubsQuota(0)
         }
       }
     )
@@ -142,8 +133,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       JSON.stringify(order.items.map(i => ({
         name: i.name,
         pointsCost: i.pointsCost,
-        startsWithClube: i.name.startsWith('[CLUBE]'),
-        startsWithAssinatura: i.name.startsWith('[ASSINATURA]')
+        startsWithClube: i.name.startsWith('[CLUBE]')
       })))
     )
     setProductFrequency(prev => {
@@ -200,14 +190,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       .select('double_points, status')
       .eq('user_id', userId)
       .eq('status', 'active')
-      .maybeSingle();
+      .maybeSingle()
 
     const hasDoublePoints = sub?.double_points === true;
 
     // Verifica se há itens pagos (não resgate de clube/assinatura)
     const hasPaidItems = order.items.some(
-      item => !item.name.startsWith('[CLUBE]') &&
-              !item.name.startsWith('[ASSINATURA]')
+      item => !item.name.startsWith('[CLUBE]')
     )
 
     console.log('[addActiveOrder] hasPaidItems:', hasPaidItems,
@@ -263,7 +252,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     if (shouldCreditPoints) {
       const productNames = order.items
-        .filter(i => !i.name.startsWith('[CLUBE]') && !i.name.startsWith('[ASSINATURA]'))
+        .filter(i => !i.name.startsWith('[CLUBE]'))
         .map(i => i.name.replace(/^\[.*?\]\s*/, ''))
         .join(', ')
 
@@ -376,7 +365,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, subsQuota, setSubsQuota, isAuthenticated, setIsAuthenticated, session, phoneVerified, canEarnPoints, canSubscribe, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, updateActiveOrderStatus, removeActiveOrder, productFrequency }}>
+    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, session, phoneVerified, canEarnPoints, canSubscribe, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, updateActiveOrderStatus, removeActiveOrder, productFrequency }}>
       {children}
     </CartContext.Provider>
   );

@@ -12,17 +12,17 @@ export const CATEGORY_COLORS: Record<string, string> = {
   'Salgado': 'bg-orange-500 text-white',
 };
 
-export default function ProductCard({ 
-  prod, 
-  onImageClick, 
-  onPlusClick, 
-  badge, 
-  isAvailable = true, 
-  availabilityMsg 
-}: { 
-  prod: Product; 
-  onImageClick: (img: string) => void; 
-  onPlusClick: (prod: Product) => void; 
+export default function ProductCard({
+  prod,
+  onImageClick,
+  onPlusClick,
+  badge,
+  isAvailable = true,
+  availabilityMsg,
+}: {
+  prod: Product;
+  onImageClick: (img: string) => void;
+  onPlusClick: (prod: Product) => void;
   key?: string;
   badge?: string;
   isAvailable?: boolean;

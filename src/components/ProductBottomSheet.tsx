@@ -440,11 +440,7 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
               {!isReward && (
                 <>
                   <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
-                  <div className="flex items-center gap-1">
-                    <span>
-                      {totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </span>
-                  </div>
+                  <span>{totalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                 </>
               )}
             </button>

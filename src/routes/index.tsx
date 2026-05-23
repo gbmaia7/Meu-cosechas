@@ -4,11 +4,6 @@ import HomeComSacola from '../screens/HomeMenu/HomeComSacola';
 import Sacola from '../screens/Sacola';
 import ClubeCosechasLogado from '../screens/ClubeCosechasLogado';
 import ClubeCosechasNaoLogado from '../screens/ClubeCosechasNaoLogado';
-import AssinaturaCosechas from '../screens/AssinaturaCosechas';
-import AssinaturaAtiva from '../screens/AssinaturaAtiva';
-import AssinaturaDuo from '../screens/AssinaturaDuo';
-import AssinaturaDaily from '../screens/AssinaturaDaily';
-import MenuAssinatura from '../screens/MenuAssinatura';
 import IndiqueGanhe from '../screens/IndiqueGanhe';
 import IndiqueGanheLogado from '../screens/IndiqueGanheLogado';
 import PerfilLogado from '../screens/PerfilLogado';
@@ -29,11 +24,7 @@ import ValidandoPagamento from '../screens/ValidandoPagamento';
 import PagamentoConfirmado from '../screens/PagamentoConfirmado';
 import PagamentoConfirmadoVR from '../screens/PagamentoConfirmadoVR';
 import AcompanharPedido from '../screens/AcompanharPedido';
-import AssinaturaCheckout from '../screens/AssinaturaCheckout';
-import AssinaturaValidandoPagamento from '../screens/AssinaturaValidandoPagamento';
-import AssinaturaPagamentoConfirmado from '../screens/AssinaturaPagamentoConfirmado';
-import AssinaturaTrocarPlano from '../screens/AssinaturaTrocarPlano';
-import AssinaturaCancelarPlano from '../screens/AssinaturaCancelarPlano';
+
 
 export function AppRoutes() {
   return (
@@ -44,16 +35,6 @@ export function AppRoutes() {
       <Route path="/sacola" element={<Sacola />} />
       <Route path="/clube/logado" element={<ClubeCosechasLogado />} />
       <Route path="/clube/nao-logado" element={<ClubeCosechasNaoLogado />} />
-      <Route path="/assinatura" element={<AssinaturaCosechas />} />
-      <Route path="/assinatura/checkout" element={<AssinaturaCheckout />} />
-      <Route path="/assinatura/validando-pagamento" element={<AssinaturaValidandoPagamento />} />
-      <Route path="/assinatura/pagamento-confirmado" element={<AssinaturaPagamentoConfirmado />} />
-      <Route path="/assinatura/trocar" element={<AssinaturaTrocarPlano />} />
-      <Route path="/assinatura/cancelar" element={<AssinaturaCancelarPlano />} />
-      <Route path="/assinatura/ativa" element={<AssinaturaAtiva />} />
-      <Route path="/assinatura/duo" element={<AssinaturaDuo />} />
-      <Route path="/assinatura/daily" element={<AssinaturaDaily />} />
-      <Route path="/assinatura/menu" element={<MenuAssinatura />} />
       <Route path="/indique-ganhe" element={<IndiqueGanhe />} />
       <Route path="/indique-ganhe/logado" element={<IndiqueGanheLogado />} />
       <Route path="/perfil/logado" element={<PerfilLogado />} />
