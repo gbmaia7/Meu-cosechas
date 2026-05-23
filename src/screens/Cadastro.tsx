@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, User, Lock, Mail } from 'lucide-react';
 import { PhoneInput } from 'react-international-phone';
@@ -31,7 +31,7 @@ export default function Cadastro() {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleCadastro = async (e: React.FormEvent) => {
+  const handleCadastro = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
 

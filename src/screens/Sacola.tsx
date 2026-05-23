@@ -747,7 +747,7 @@ export default function Sacola() {
           selectedProductForEdit ? 
             (() => {
               const item = items.find(i => i.id === selectedProductForEdit.itemId);
-              if (item?.name.startsWith('[CLUBE]')) return 'clube';
+              if (item?.name.startsWith('[CLUBE]')) return 'clube' as const;
               return undefined;
             })() 
           : undefined

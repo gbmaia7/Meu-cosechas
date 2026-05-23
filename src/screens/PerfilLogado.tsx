@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { X, Utensils, Star, ShoppingBag, User, CreditCard, UserPlus, Phone, CheckCircle2, AlertCircle, MapPin, Wallet, Heart, LogOut, ChevronRight, Crown, Mail, Lock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -70,7 +70,7 @@ export default function PerfilLogado() {
     navigate('/perfil/nao-logado');
   };
 
-  const handleAlterarSenha = async (e: React.FormEvent) => {
+  const handleAlterarSenha = async (e: FormEvent) => {
     e.preventDefault();
     setPassError('');
 

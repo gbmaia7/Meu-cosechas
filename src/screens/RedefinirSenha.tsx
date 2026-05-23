@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, Lock, CheckCircle2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -15,7 +15,7 @@ export default function RedefinirSenha() {
     window.scrollTo(0, 0)
   }, [])
 
-  const handleRedefinir = async (e: React.FormEvent) => {
+  const handleRedefinir = async (e: FormEvent) => {
     e.preventDefault()
     setError('')
 
