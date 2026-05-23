@@ -21,17 +21,17 @@ export default function ClubeCosechasNaoLogado() {
     { 
       points: 7, 
       name: 'Funcional, A Boa de Hoje ou Promoção Seu Cosechas',
-      subtitle: 'Equivale a 7 compras ou 4 com Assinatura Cosechas'
+      subtitle: 'Equivale a 7 compras'
     },
     { 
       points: 10, 
       name: 'Mix de Frutas, Milkshake, Linha Caribe, Açaí Médio ou Açaí Bowl M',
-      subtitle: 'Equivale a 10 compras ou 5 com Assinatura Cosechas'
+      subtitle: 'Equivale a 10 compras'
     },
     { 
       points: 12, 
       name: 'Premium, Açaí Bowl G ou Trio Açaí',
-      subtitle: 'Equivale a 12 compras ou 6 com Assinatura Cosechas'
+      subtitle: 'Equivale a 12 compras'
     },
   ];
 
@@ -183,26 +183,6 @@ export default function ClubeCosechasNaoLogado() {
               </div>
             </div>
 
-            {/* Subscription Advantage Card */}
-            <div className="bg-[#bd002a] text-white p-5 rounded-2xl shadow-[0_10px_30px_rgba(189,0,42,0.2)] relative overflow-hidden group">
-              <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <CupSoda className="text-white w-5 h-5" />
-                  <h3 className="text-sm font-black font-display uppercase tracking-tight">Vantagem para assinantes</h3>
-                </div>
-                <p className="text-white/90 text-xs font-medium leading-relaxed mb-5 max-w-xl">
-                  Assinantes ganham <span className="font-black font-display text-[#FFF3B0]">2 pontos por compra</span> e chegam mais rápido nos prêmios, além de garantir até <span className="font-black font-display text-[#FFF3B0]">20% de desconto.</span>
-                </p>
-                <div className="flex justify-center">
-                  <button 
-                    onClick={() => navigate('/assinatura')} 
-                    className="bg-white text-[#bd002a] font-display font-black py-2.5 px-6 rounded-full w-full shadow-lg hover:bg-[#f6f3f2] transition-colors uppercase text-[10px] tracking-widest active:scale-95 transition-transform"
-                  >
-                    Conhecer Assinatura Cosechas
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -272,7 +252,6 @@ export default function ClubeCosechasNaoLogado() {
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
         {[
           { icon: Utensils, label: 'Menu', active: false, path: '/HomeComSacola' },
-          { icon: CupSoda, label: 'Assinatura', active: false, path: '/assinatura' },
           { icon: Crown, label: 'Clube', active: true, path: '/clube/nao-logado' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
           { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },

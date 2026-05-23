@@ -12,7 +12,7 @@ import {
   Bike
 , Crown} from 'lucide-react';
 
-const isClube = (name: string) => name.startsWith('[CLUBE]') || name.startsWith('[ASSINATURA]')
+const isClube = (name: string) => name.startsWith('[CLUBE]')
 
 export default function AcompanharPedido() {
   const navigate = useNavigate();
@@ -320,7 +320,7 @@ export default function AcompanharPedido() {
                               {item.size && <span className="text-[10px] bg-[#eae7e7] px-1.5 py-0.5 rounded-md font-bold uppercase">{item.size}</span>}
                               {isClube(item.name) && (
                                 <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700">
-                                  {item.name.startsWith('[CLUBE]') ? 'Clube' : 'Assinatura'}
+                                  Clube
                                 </span>
                               )}
                             </h4>

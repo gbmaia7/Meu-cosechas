@@ -19,12 +19,12 @@ export default function PagamentoConfirmado() {
   const [subtotalSnapshot] = useState(() => totalPrice)
 
   const isAllReward = orderSnapshot.every(
-    i => i.name.startsWith('[CLUBE]') || i.name.startsWith('[ASSINATURA]')
+    i => i.name.startsWith('[CLUBE]')
   )
   const deliveryFee = modality === 'delivery' ? 5.00 : 0
   const computedTotal = isAllReward ? 0 : subtotalSnapshot + deliveryFee
 
-  const validItemsCount = items.reduce((sum, item) => sum + ((item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) ? 0 : item.quantity), 0);
+  const validItemsCount = items.reduce((sum, item) => sum + (item.name.startsWith('[CLUBE]') ? 0 : item.quantity), 0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -62,8 +62,8 @@ export default function PagamentoConfirmado() {
           
           <div className="space-y-4 mb-6">
             {orderSnapshot.map((item, i) => {
-              const isRewardItem = item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')
-              const label = item.name.startsWith('[CLUBE]') ? 'Clube' : item.name.startsWith('[ASSINATURA]') ? 'Assinatura' : null
+              const isRewardItem = item.name.startsWith('[CLUBE]')
+              const label = item.name.startsWith('[CLUBE]') ? 'Clube' : null
               return (
                 <div key={i} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">

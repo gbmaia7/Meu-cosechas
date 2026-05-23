@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { X, Utensils, Star, ShoppingBag, User, CreditCard, UserPlus, Phone, MapPin, Wallet, Gift , Crown, CupSoda} from 'lucide-react';
+import { X, Utensils, Star, ShoppingBag, User, CreditCard, UserPlus, Phone, MapPin, Wallet, Gift, Crown } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export default function PerfilNaoLogado() {
@@ -121,7 +121,6 @@ export default function PerfilNaoLogado() {
       <nav className="fixed bottom-0 left-[50%] -translate-x-[50%] w-full max-w-md z-50 flex justify-around items-center px-6 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] sm:rounded-t-[2.5rem]">
         {[
           { icon: Utensils, label: 'Menu', active: false, path: '/HomeComSacola' },
-          { icon: CupSoda, label: 'Assinatura', active: false, path: isAuthenticated ? '/assinatura/ativa' : '/assinatura' },
           { icon: Crown, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
           { icon: User, label: 'Perfil', active: true, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },

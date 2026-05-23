@@ -11,7 +11,7 @@ export default function PagamentoConfirmadoVR() {
   const modality = location.state?.modality || 'counter';
   const address = location.state?.address;
   
-  const validItemsCount = items.reduce((sum, item) => sum + ((item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) ? 0 : item.quantity), 0);
+  const validItemsCount = items.reduce((sum, item) => sum + (item.name.startsWith('[CLUBE]') ? 0 : item.quantity), 0);
 
   useEffect(() => {
     window.scrollTo(0, 0);

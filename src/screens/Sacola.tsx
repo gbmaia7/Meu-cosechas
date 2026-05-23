@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus, AlertCircle, Crown, CupSoda } from 'lucide-react';
+import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus, AlertCircle, Crown, CupSoda, Utensils, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE, FUNCIONAL, COMECE_BEM, BOA_DE_DIA } from '../data/products';
 import ProductBottomSheet from '../components/ProductBottomSheet';
@@ -30,7 +30,7 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
 
 export default function Sacola() {
   const navigate = useNavigate();
-  const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, subsQuota, setSubsQuota, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, phoneVerified } = useCart();
+  const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, phoneVerified } = useCart();
   const [modality, setModality] = useState<'counter' | 'delivery'>('counter');
   const [coupon, setCoupon] = useState('');
   const [couponError, setCouponError] = useState(false);
@@ -195,11 +195,9 @@ export default function Sacola() {
     if (selectedProductForEdit) {
       const originalItem = items.find(i => i.id === selectedProductForEdit.itemId);
       const isClube = originalItem?.name.startsWith('[CLUBE]');
-      const isAssinatura = originalItem?.name.startsWith('[ASSINATURA]');
-      
+
       let displayName = selectedProductForEdit.product.name;
       if (isClube) displayName = `[CLUBE] ${displayName}`;
-      if (isAssinatura) displayName = `[ASSINATURA] ${displayName}`;
       
       if (options.sizeLabel) displayName += ` (${options.sizeLabel})`;
       
@@ -217,18 +215,37 @@ export default function Sacola() {
 
   if (items.length === 0) {
     return (
-      <div className="bg-[#fcf9f8] min-h-screen flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-24 h-24 bg-[#f0eded] rounded-full flex items-center justify-center mb-6">
-          <ShoppingBag className="w-12 h-12 text-[#a8a29e]" />
+      <div className="bg-[#fcf9f8] min-h-screen flex flex-col font-body text-[#1c1b1b]">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center pb-32">
+          <div className="w-24 h-24 bg-[#f0eded] rounded-full flex items-center justify-center mb-6">
+            <ShoppingBag className="w-12 h-12 text-[#a8a29e]" />
+          </div>
+          <h2 className="text-xl font-bold text-[#1c1b1b] mb-2 font-display">Sua sacola está vazia</h2>
+          <p className="text-sm text-[#5d3f3e] mb-8">Adicione produtos do cardápio para continuar</p>
+          <button
+            onClick={() => navigate('/')}
+            className="bg-[#e8173a] text-white px-8 py-4 rounded-full font-bold shadow-lg active:scale-95 transition-transform"
+          >
+            Ver cardápio
+          </button>
         </div>
-        <h2 className="text-xl font-bold text-[#1c1b1b] mb-2 font-display">Sua sacola está vazia</h2>
-        <p className="text-sm text-[#5d3f3e] mb-8">Adicione produtos do cardápio para continuar</p>
-        <button 
-          onClick={() => navigate('/')}
-          className="bg-[#e8173a] text-white px-8 py-4 rounded-full font-bold shadow-lg active:scale-95 transition-transform"
-        >
-          Ver cardápio
-        </button>
+        <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
+          {[
+            { icon: Utensils, label: 'Menu', active: false, path: '/HomeComSacola' },
+            { icon: Crown, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
+            { icon: ShoppingBag, label: 'Sacola', active: true, path: '/sacola' },
+            { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
+          ].map((item) => (
+            <Link
+              key={item.label}
+              to={item.path}
+              className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a] bg-[#e8173a]/10' : 'text-[#a8a29e]'} rounded-full px-4 py-2 transition-transform duration-300 ${item.active ? 'scale-105' : 'active:scale-95'}`}
+            >
+              <item.icon className="w-6 h-6" />
+              <span className="font-display text-[10px] font-semibold mt-1">{item.label}</span>
+            </Link>
+          ))}
+        </nav>
       </div>
     );
   }
@@ -400,7 +417,7 @@ export default function Sacola() {
                           )}
                         </div>
                         
-                        {!item.name.startsWith('[CLUBE]') && !item.name.startsWith('[ASSINATURA]') && (
+                        {!item.name.startsWith('[CLUBE]') && (
                           <div className="inline-flex items-center gap-1 bg-[#FDECEA] px-2 py-0.5 rounded-full mt-2">
                              <Crown className="w-3 h-3 text-[#E8173A] shrink-0" />
                              <span className="text-[9px] font-bold text-[#E8173A] leading-none">+1 ponto no Clube Cosechas</span>
@@ -409,16 +426,14 @@ export default function Sacola() {
                       </div>
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex flex-col items-start gap-1">
-                          {(item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) && (
-                            <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${item.name.startsWith('[CLUBE]') ? 'bg-amber-50 text-amber-600 border border-amber-200/50' : 'bg-[#e8173a]/10 text-[#e8173a] border border-[#e8173a]/20'}`}>
-                               {item.name.startsWith('[CLUBE]') 
-                                 ? <Crown className="w-3 h-3" /> 
-                                 : <CupSoda className="w-3 h-3" />}
-                               <span className="text-[9px] font-bold uppercase tracking-wider">{item.name.startsWith('[CLUBE]') ? 'Clube' : 'Assinatura'}</span>
+                          {item.name.startsWith('[CLUBE]') && (
+                            <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200/50">
+                               <Crown className="w-3 h-3" />
+                               <span className="text-[9px] font-bold uppercase tracking-wider">Clube</span>
                             </div>
                           )}
-                          {(item.price > 0 || (!item.name.startsWith('[CLUBE]') && !item.name.startsWith('[ASSINATURA]'))) && (
-                            <span className={`text-[#bd002a] font-black ${item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]') ? 'text-xs' : 'text-base'}`}>
+                          {(item.price > 0 || !item.name.startsWith('[CLUBE]')) && (
+                            <span className={`text-[#bd002a] font-black ${item.name.startsWith('[CLUBE]') ? 'text-xs' : 'text-base'}`}>
                               {(item.price * item.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                             </span>
                           )}
@@ -434,8 +449,8 @@ export default function Sacola() {
                           <span className="px-3 font-bold text-xs">{item.quantity}</span>
                           <button 
                             onClick={() => updateQuantity(item.id, 1)}
-                            className={`w-6 h-6 flex items-center justify-center text-[#e8173a] ${(item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')) ? 'opacity-30 cursor-not-allowed' : ''}`}
-                            disabled={item.name.startsWith('[CLUBE]') || item.name.startsWith('[ASSINATURA]')}
+                            className={`w-6 h-6 flex items-center justify-center text-[#e8173a] ${item.name.startsWith('[CLUBE]') ? 'opacity-30 cursor-not-allowed' : ''}`}
+                            disabled={item.name.startsWith('[CLUBE]')}
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
@@ -724,7 +739,7 @@ export default function Sacola() {
           selectedProductForEdit ? 
             (() => {
               const item = items.find(i => i.id === selectedProductForEdit.itemId);
-              return item?.name.startsWith('[CLUBE]') || item?.name.startsWith('[ASSINATURA]');
+              return item?.name.startsWith('[CLUBE]');
             })() 
           : false
         }
@@ -733,7 +748,6 @@ export default function Sacola() {
             (() => {
               const item = items.find(i => i.id === selectedProductForEdit.itemId);
               if (item?.name.startsWith('[CLUBE]')) return 'clube';
-              if (item?.name.startsWith('[ASSINATURA]')) return 'assinatura';
               return undefined;
             })() 
           : undefined
@@ -772,9 +786,6 @@ export default function Sacola() {
                     if (itemRemoved?.pointsCost) {
                       setUserPoints(userPoints + (itemRemoved.pointsCost * itemRemoved.quantity));
                     }
-                    if (itemRemoved?.name.startsWith('[ASSINATURA]')) {
-                      setSubsQuota(subsQuota + itemRemoved.quantity);
-                    }
                     removeFromCart(itemToRemove);
                     setItemToRemove(null);
                   }}
@@ -810,7 +821,7 @@ export default function Sacola() {
               
               <h3 className="font-display text-xl font-bold text-center text-[#1c1b1b] mb-2">Confirmar resgate grátis?</h3>
               <p className="text-center text-[#5d3f3e] text-sm mb-6">
-                Este pedido não terá custos e utilizará seus benefícios (clube/assinatura). <strong>Esta ação não poderá ser desfeita</strong>. Confirma o resgate?
+                Este pedido não terá custos e utilizará seus benefícios do Clube Cosechas. <strong>Esta ação não poderá ser desfeita</strong>. Confirma o resgate?
               </p>
               
               <div className="flex flex-col gap-3">

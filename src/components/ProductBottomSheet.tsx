@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { X, Check, Minus, Plus, Zap, Flower2, Activity, PlusCircle, Apple, Wheat, Heart, Star, Leaf, Citrus, IceCream, Milk, Crown, CupSoda } from 'lucide-react';
+import { X, Check, Minus, Plus, Zap, Flower2, Activity, PlusCircle, Apple, Wheat, Heart, Star, Leaf, Citrus, IceCream, Milk, Crown } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo, useEffect } from 'react';
 import { Product, Extra } from '../data/products';
@@ -14,7 +14,7 @@ interface ProductBottomSheetProps {
   onClose: () => void;
   onAdd: (options: { sizeLabel?: string; price: number; extras: Extra[]; notes: string; quantity: number; base?: string }) => void;
   isReward?: boolean;
-  rewardType?: 'clube' | 'assinatura';
+  rewardType?: 'clube';
 }
 
 const ExtraIcon = ({ iconName }: { iconName: string }) => {
@@ -168,12 +168,10 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
                         <span className="text-[#a8a29e] line-through text-xs font-bold leading-tight">
                           {originalTotalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                         </span>
-                        {(rewardType === 'clube' || rewardType === 'assinatura') && (
-                          <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md ${rewardType === 'clube' ? 'bg-amber-50 text-amber-600 border border-amber-200/50' : 'bg-[#e8173a]/10 text-[#e8173a] border border-[#e8173a]/20'}`}>
-                             {rewardType === 'clube' 
-                               ? <Crown className="w-3 h-3" /> 
-                               : <CupSoda className="w-3 h-3" />}
-                             <span className="text-[9px] font-bold uppercase tracking-wider">{rewardType === 'clube' ? 'Clube' : 'Assinatura'}</span>
+                        {rewardType === 'clube' && (
+                          <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200/50">
+                            <Crown className="w-3 h-3" />
+                            <span className="text-[9px] font-bold uppercase tracking-wider">Clube</span>
                           </div>
                         )}
                         {(totalPrice > 0 || (!rewardType)) && (

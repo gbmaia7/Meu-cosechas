@@ -16,7 +16,7 @@ import {
   UserPlus, 
   Award,
   ChevronRight
-, Crown, CupSoda} from 'lucide-react';
+, Crown} from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { 
@@ -46,7 +46,6 @@ export default function HomeComSacola() {
   const [selectedCategory, setSelectedCategory] = useState('Mais pedidos');
   const [manualAvailability, setManualAvailability] = useState<'AUTO' | 'AVAILABLE' | 'UNAVAILABLE'>('AUTO');
   const [manualDay, setManualDay] = useState<number>(new Date().getDay());
-  const [subsState, setSubsState] = useState<'none' | 'duo' | 'trio' | 'daily'>('none');
 
   const agora = new Date();
   const diaSemana = agora.getDay(); // 0=Dom, 1=Seg... 6=Sab
@@ -242,86 +241,6 @@ export default function HomeComSacola() {
           </div>
         </section>
 
-        {/* Simulator Toggle for Assinatura */}
-        <div className="flex flex-wrap justify-end gap-2 px-1 mb-4">
-          <button 
-            onClick={() => setSubsState('none')}
-            className={`text-[9px] font-bold px-2 py-1 rounded-md transition-colors ${subsState === 'none' ? 'text-[#bd002a] border border-[#bd002a] bg-[#bd002a]/5' : 'text-[#a8a29e] border border-[#a8a29e] active:bg-[#f0eded]'}`}
-          >
-            Inativo
-          </button>
-          <button 
-            onClick={() => setSubsState('duo')}
-            className={`text-[9px] font-bold px-2 py-1 rounded-md transition-colors ${subsState === 'duo' ? 'text-[#bd002a] border border-[#bd002a] bg-[#bd002a]/5' : 'text-[#a8a29e] border border-[#a8a29e] active:bg-[#f0eded]'}`}
-          >
-            Duo
-          </button>
-          <button 
-            onClick={() => setSubsState('trio')}
-            className={`text-[9px] font-bold px-2 py-1 rounded-md transition-colors ${subsState === 'trio' ? 'text-[#bd002a] border border-[#bd002a] bg-[#bd002a]/5' : 'text-[#a8a29e] border border-[#a8a29e] active:bg-[#f0eded]'}`}
-          >
-            Trio
-          </button>
-          <button 
-            onClick={() => setSubsState('daily')}
-            className={`text-[9px] font-bold px-2 py-1 rounded-md transition-colors ${subsState === 'daily' ? 'text-[#bd002a] border border-[#bd002a] bg-[#bd002a]/5' : 'text-[#a8a29e] border border-[#a8a29e] active:bg-[#f0eded]'}`}
-          >
-            Daily
-          </button>
-        </div>
-
-        {/* Featured Assinatura Card */}
-        {subsState === 'none' ? (
-          <section className="relative overflow-hidden rounded-lg bg-[#bd002a] min-h-[14rem] flex items-center p-8 transition-transform active:scale-98 shadow-xl">
-            <div className="z-10 w-2/3">
-              <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-widest mb-3 inline-block">Exclusivo</span>
-              <h2 className="text-white font-extrabold text-2xl leading-tight mb-2 font-display">Assinatura Cosechas</h2>
-              <p className="text-white/80 text-sm mb-4">Assine agora e ganhe até 20% off em todas as compras + pontos em dobro</p>
-              <button onClick={() => navigate('/assinatura')} className="bg-white text-[#bd002a] px-6 py-2.5 rounded-full font-bold text-xs uppercase tracking-wider shadow-md">Conhecer planos</button>
-            </div>
-          </section>
-        ) : (
-          <section onClick={() => navigate('/assinatura/ativa')} className="relative overflow-hidden rounded-lg bg-gradient-to-br from-[#bd002a] to-[#e8173a] min-h-[14rem] flex items-center p-8 transition-transform active:scale-98 shadow-xl cursor-pointer">
-            <div className="absolute top-0 right-0 p-4">
-              <span className="bg-white/20 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">ATIVO</span>
-            </div>
-            {/* Decorative Image */}
-            <div className="absolute -bottom-6 -right-6 w-32 h-32 opacity-20 pointer-events-none">
-              <img 
-                alt="Morangos" 
-                className="w-full h-full object-cover rounded-full mix-blend-overlay" 
-                src="https://images.unsplash.com/photo-1518635017498-87f514b751ba?q=80&w=260&auto=format&fit=crop"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            
-            <div className="z-10 w-2/3">
-              <h2 className="text-white font-extrabold text-3xl leading-tight mb-1 font-display">
-                Plano {subsState === 'duo' ? 'Duo' : subsState === 'trio' ? 'Trio' : 'Daily'}
-              </h2>
-              <p className="text-white/90 text-[10px] font-bold uppercase tracking-widest mb-3">Assinatura Cosechas</p>
-              <ul className="text-white/90 text-sm mb-4 space-y-1 font-medium pl-1">
-                <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-white"/>{subsState === 'duo' ? '10%' : subsState === 'trio' ? '15%' : '20%'} off</li>
-                {subsState !== 'duo' && <li className="flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-white"/>Pontos em dobro</li>}
-              </ul>
-
-              <div className="mb-5 pr-8">
-                <div className="flex justify-between text-white text-[10px] font-bold uppercase tracking-wider mb-1.5">
-                  <span>Uso este mês</span>
-                  <span>4/{subsState === 'duo' ? 8 : subsState === 'trio' ? 12 : 16}</span>
-                </div>
-                <div className="h-1.5 w-full bg-black/20 rounded-full overflow-hidden">
-                   <div className="h-full bg-white rounded-full" style={{ width: `${(4 / (subsState === 'duo' ? 8 : subsState === 'trio' ? 12 : 16)) * 100}%` }} />
-                </div>
-              </div>
-
-              <button className="bg-white text-[#bd002a] px-5 py-2.5 rounded-full font-bold text-[11px] uppercase tracking-wider shadow-md flex items-center gap-2 pointer-events-none w-max">
-                <ShoppingBag className="w-4 h-4" /> Usar benefícios
-              </button>
-            </div>
-          </section>
-        )}
-
         {/* Search */}
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5d3f3e] w-5 h-5" />
@@ -430,7 +349,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {PRODUCTS.filter(p => parseInt(p.id) >= 0 && parseInt(p.id) <= 10).map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>
@@ -444,7 +363,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {PRODUCTS.filter(p => p.category === 'Mix de Frutas').map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>
@@ -460,7 +379,7 @@ export default function HomeComSacola() {
                 </div>
                 <div className="space-y-4">
                   {PRODUCTS.filter(p => p.category === 'Premium' && p.name.toLowerCase().includes('iogurte')).map(prod => (
-                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                   ))}
                 </div>
               </div>
@@ -472,7 +391,7 @@ export default function HomeComSacola() {
                 </div>
                 <div className="space-y-4">
                   {PRODUCTS.filter(p => p.category === 'Premium' && p.name.toLowerCase().includes('sorvete')).map(prod => (
-                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                   ))}
                 </div>
               </div>
@@ -484,7 +403,7 @@ export default function HomeComSacola() {
                 </div>
                 <div className="space-y-4">
                   {PRODUCTS.filter(p => p.category === 'Premium' && !p.name.toLowerCase().includes('iogurte') && !p.name.toLowerCase().includes('sorvete')).map(prod => (
-                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                   ))}
                 </div>
               </div>
@@ -499,7 +418,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {PRODUCTS.filter(p => p.category === 'Açaí').map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>
@@ -513,7 +432,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {PRODUCTS.filter(p => p.category === 'Milkshake').map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>
@@ -527,7 +446,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {LINHA_CARIBE.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>
@@ -541,7 +460,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {FUNCIONAL.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>
@@ -555,7 +474,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {COMECE_BEM.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>
@@ -569,7 +488,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {ESPECIAIS.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>
@@ -583,7 +502,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {SALADA_DE_FRUTAS.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>
@@ -597,7 +516,7 @@ export default function HomeComSacola() {
               </div>
               <div className="space-y-4">
                 {COFFEE.map(prod => (
-                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} discountPercent={discountPercent} />
+                  <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
                 ))}
               </div>
             </>
@@ -643,7 +562,6 @@ export default function HomeComSacola() {
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">
         {[
           { icon: Utensils, label: 'Menu', active: true, path: '/HomeComSacola' },
-          { icon: CupSoda, label: 'Assinatura', active: false, path: isAuthenticated ? '/assinatura/ativa' : '/assinatura' },
           { icon: Crown, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
           { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
