@@ -18,8 +18,10 @@ export default function Pagamento() {
 
   const modality = location.state?.modality || 'delivery';
   const address = location.state?.address;
+  const couponDiscount = location.state?.couponDiscount ?? 0;
+  const referrerId = location.state?.referrerId ?? null;
   const deliveryFee = modality === 'counter' ? 0 : 5.00;
-  const finalTotal = totalPrice + deliveryFee;
+  const finalTotal = Math.max(0, totalPrice + deliveryFee - couponDiscount);
 
   const toggleSavedCardsState = () => {
     const newState = !hasSavedCards;
@@ -75,16 +77,16 @@ export default function Pagamento() {
         navigate('/pagamento/pix', { state: { total: finalTotal.toFixed(2).replace('.', ','), modality, address } });
         break;
       case 'credit_card_saved':
-        navigate('/validando-pagamento', { state: { modality, address } });
+        navigate('/validando-pagamento', { state: { modality, address, couponDiscount, referrerId } });
         break;
       case 'cash':
-        navigate('/pagamento-confirmado', { state: { modality, address, paymentMethod: 'cash' } });
+        navigate('/pagamento-confirmado', { state: { modality, address, paymentMethod: 'cash', couponDiscount, referrerId } });
         break;
       case 'machine':
-        navigate('/pagamento-confirmado', { state: { modality, address, paymentMethod: 'machine' } });
+        navigate('/pagamento-confirmado', { state: { modality, address, paymentMethod: 'machine', couponDiscount, referrerId } });
         break;
       default:
-        navigate('/validando-pagamento', { state: { modality, address } });
+        navigate('/validando-pagamento', { state: { modality, address, couponDiscount, referrerId } });
     }
   };
 

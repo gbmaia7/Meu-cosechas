@@ -76,6 +76,15 @@ export default function Cadastro() {
         .update({ name: nome, phone: normalizedPhone, email: email })
         .eq('id', data.user.id);
 
+      const nomeLetras = nome.replace(/\s+/g, '').substring(0, 4).toUpperCase();
+      const digitos = Math.floor(1000 + Math.random() * 9000).toString();
+      const referralCode = `${nomeLetras}${digitos}`;
+
+      await supabase
+        .from('profiles')
+        .update({ referral_code: referralCode })
+        .eq('id', data.user.id);
+
       await supabase.auth.updateUser({ email: email });
     }
 

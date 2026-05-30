@@ -11,6 +11,8 @@ export default function ValidandoPagamento() {
   const modality = location.state?.modality || 'counter';
   const address = location.state?.address;
   const paymentMethod = location.state?.paymentMethod || 'pix';
+  const couponDiscount = location.state?.couponDiscount ?? 0;
+  const referrerId = location.state?.referrerId ?? null;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -19,7 +21,7 @@ export default function ValidandoPagamento() {
       setIsValidating(false);
       setTimeout(() => {
         navigate('/pagamento-confirmado', {
-          state: { modality, address, paymentMethod, isReward: location.state?.isFree || false },
+          state: { modality, address, paymentMethod, isReward: location.state?.isFree || false, couponDiscount, referrerId },
         });
       }, 800);
     }, 2800);

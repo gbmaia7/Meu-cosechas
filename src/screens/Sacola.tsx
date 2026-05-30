@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { supabase } from '../lib/supabase';
 import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE, FUNCIONAL, COMECE_BEM, BOA_DE_DIA } from '../data/products';
 import ProductBottomSheet from '../components/ProductBottomSheet';
 
@@ -34,6 +35,10 @@ export default function Sacola() {
   const [modality, setModality] = useState<'counter' | 'delivery'>('counter');
   const [coupon, setCoupon] = useState('');
   const [couponError, setCouponError] = useState(false);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponSuccess, setCouponSuccess] = useState(false);
+  const [referrerId, setReferrerId] = useState<string | null>(null);
   const [selectedProductForEdit, setSelectedProductForEdit] = useState<{ product: any, itemId: string } | null>(null);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
 
@@ -79,7 +84,7 @@ export default function Sacola() {
 
   const deliveryFee = modality === 'counter' ? 0 : 5.00;
   const subtotal = totalPrice;
-  const total = subtotal + deliveryFee;
+  const total = Math.max(0, subtotal + deliveryFee - couponDiscount);
 
   const isFormValid = useMemo(() => {
     if (modality === 'counter') return true;
@@ -115,13 +120,44 @@ export default function Sacola() {
     return sections;
   }, [items]);
 
-  const handleApplyCoupon = () => {
-    if (coupon.toUpperCase() !== 'COSECHAS10') {
-      setCouponError(true);
-    } else {
-      setCouponError(false);
-      // Implement coupon logic if needed
+  const handleApplyCoupon = async () => {
+    setCouponError(false)
+    setCouponSuccess(false)
+    if (!coupon.trim()) return
+
+    const code = coupon.trim().toUpperCase()
+
+    const { data: referrer } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('referral_code', code)
+      .single()
+
+    if (!referrer) {
+      setCouponError(true)
+      return
     }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (referrer.id === user?.id) {
+      setCouponError(true)
+      return
+    }
+
+    const { count } = await supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user?.id)
+
+    if ((count ?? 0) > 0) {
+      setCouponError(true)
+      return
+    }
+
+    setCouponDiscount(5)
+    setAppliedCoupon(code)
+    setReferrerId(referrer.id)
+    setCouponSuccess(true)
   };
 
   const handleUpgrade = (itemId: string, productId: string) => {
@@ -681,7 +717,16 @@ export default function Sacola() {
               Aplicar
             </button>
           </div>
-          {couponError && <p className="text-[10px] font-bold text-[#ba1a1a] pl-1">Cupom inválido ou expirado.</p>}
+          {couponError && (
+            <p className="text-[10px] font-bold text-[#ba1a1a] pl-1">
+              Cupom inválido, já utilizado ou não aplicável ao seu perfil.
+            </p>
+          )}
+          {couponSuccess && (
+            <p className="text-[10px] font-bold text-green-700 pl-1">
+              Cupom aplicado! R$5,00 de desconto.
+            </p>
+          )}
         </section>
 
         {/* Order Summary */}
@@ -691,6 +736,12 @@ export default function Sacola() {
               <span>Subtotal</span>
               <span>{subtotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
             </div>
+            {couponDiscount > 0 && (
+              <div className="flex justify-between text-sm text-green-700">
+                <span>Desconto indicação ({appliedCoupon})</span>
+                <span>- R$ 5,00</span>
+              </div>
+            )}
             <div className="flex justify-between text-xs font-medium text-[#5d3f3e]">
               <span>Taxa de entrega</span>
               {modality === 'counter' ? (
@@ -720,7 +771,7 @@ export default function Sacola() {
             } else if (totalPrice === 0) {
               setShowFreeCheckoutConfirm(true);
             } else {
-              navigate('/pagamento', { state: { modality, address } });
+              navigate('/pagamento', { state: { modality, address, couponDiscount, referrerId } });
             }
           }}
           disabled={!isFormValid && false} // Keep enabled to show errors if clicked, OR follow prompt: "desabilitado (opacidade reduzida) enquanto estiverem vazios"

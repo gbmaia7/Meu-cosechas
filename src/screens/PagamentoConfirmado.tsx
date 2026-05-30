@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useEffect, useState } from 'react';
 import { MoreVertical, Store, ArrowRight, Bike, MapPin } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 
 export default function PagamentoConfirmado() {
   const navigate = useNavigate();
@@ -13,7 +14,9 @@ export default function PagamentoConfirmado() {
   const modality = location.state?.modality || 'counter';
   const address = location.state?.address;
   const paymentMethod = location.state?.paymentMethod || 'pix';
-  const isReward = location.state?.isReward || false
+  const isReward = location.state?.isReward || false;
+  const couponDiscount = location.state?.couponDiscount ?? 0;
+  const referrerId = location.state?.referrerId ?? null;
 
   const [orderSnapshot] = useState(() => [...items])
   const [subtotalSnapshot] = useState(() => totalPrice)
@@ -22,7 +25,7 @@ export default function PagamentoConfirmado() {
     i => i.name.startsWith('[CLUBE]')
   )
   const deliveryFee = modality === 'delivery' ? 5.00 : 0
-  const computedTotal = isAllReward ? 0 : subtotalSnapshot + deliveryFee
+  const computedTotal = isAllReward ? 0 : subtotalSnapshot + deliveryFee - couponDiscount
 
   const validItemsCount = items.reduce((sum, item) => sum + (item.name.startsWith('[CLUBE]') ? 0 : item.quantity), 0);
 
@@ -86,6 +89,12 @@ export default function PagamentoConfirmado() {
               <div className="flex justify-between text-sm">
                 <span className="text-[#5d3f3e]">Subtotal</span>
                 <span className="text-[#1c1b1b] font-medium">R$ {subtotalSnapshot.toFixed(2).replace('.', ',')}</span>
+              </div>
+            )}
+            {couponDiscount > 0 && (
+              <div className="flex justify-between text-sm text-green-700">
+                <span>Desconto indicação</span>
+                <span>- R$ 5,00</span>
               </div>
             )}
             {modality === 'delivery' && (
@@ -181,6 +190,25 @@ export default function PagamentoConfirmado() {
             } else {
               clearCart()
             }
+
+            if (referrerId) {
+              const { data: { user } } = await supabase.auth.getUser()
+
+              await supabase.from('referrals').insert({
+                referrer_id: referrerId,
+                referred_id: user?.id,
+                status: 'redeemed',
+                converted_at: new Date().toISOString(),
+              })
+
+              await supabase.from('credits').insert({
+                user_id: referrerId,
+                amount: 5.00,
+                reason: 'referral_bonus',
+                expires_at: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+              })
+            }
+
             navigate('/acompanhar-pedido')
           }}
           className="w-full bg-gradient-to-r from-[#bd002a] to-[#e8173a] text-white font-bold py-5 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:pointer-events-none"
