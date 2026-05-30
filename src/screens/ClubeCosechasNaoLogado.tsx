@@ -90,30 +90,30 @@ export default function ClubeCosechasNaoLogado() {
         </section>
 
         {/* Como funciona Section */}
-        <section className="py-6">
-          <div className="text-center mb-8">
+        <section className="bg-white rounded-lg px-6 py-8 sm:p-8 shadow-sm border border-[#e5e2e1]/30 space-y-12">
+          <div className="text-center space-y-3">
             <h2 className="text-2xl font-black font-display text-[#1c1b1b] uppercase mb-1">Como funciona?</h2>
             <p className="text-[#5d3f3e]/60 font-bold text-[10px] uppercase tracking-widest leading-tight">Válido somente na Unidade Dimension Office Barra</p>
-            <div className="w-12 h-1 bg-[#bd002a] mx-auto rounded-full mt-4"></div>
+            <div className="w-12 h-1 bg-[#bd002a] mx-auto rounded-full"></div>
           </div>
           
-          <div className="space-y-12">
+          <div className="space-y-10">
             {/* Step 1 */}
             <div className="relative">
-              <div className="relative z-10 space-y-4">
-                <div>
+              <div className="relative z-10 space-y-5">
+                <div className="space-y-1">
                   <h3 className="font-display font-black text-[#bd002a] text-xs uppercase tracking-[0.2em] mb-1">Passo 01:</h3>
                   <h4 className="font-display font-extrabold text-[#1c1b1b] text-lg">Cadastre-se</h4>
                 </div>
                 
-                <div className="flex gap-4">
+                <div className="flex gap-4 items-start">
                   <div className="w-10 h-10 rounded-full bg-[#bd002a]/10 flex items-center justify-center shrink-0">
                     <User className="w-5 h-5 text-[#bd002a]" />
                   </div>
-                  <p className="text-[#5d3f3e] text-sm leading-relaxed">Crie sua conta em segundos e comece a pontuar.</p>
+                  <p className="text-[#5d3f3e] text-sm pt-0.5 leading-relaxed">Crie sua conta em segundos e comece a pontuar.</p>
                 </div>
 
-                <div className="flex justify-center md:justify-start">
+                <div className="flex justify-center md:justify-start pt-1">
                   <button 
                     onClick={() => navigate('/login')}
                     className="bg-[#bd002a] text-white font-display font-bold py-3 px-8 rounded-full shadow-lg shadow-[#bd002a]/20 text-xs active:scale-95 transition-transform"
@@ -126,37 +126,37 @@ export default function ClubeCosechasNaoLogado() {
 
             {/* Step 2 */}
             <div className="relative">
-              <div className="relative z-10 space-y-4">
-                <div>
+              <div className="relative z-10 space-y-5">
+                <div className="space-y-1">
                   <h3 className="font-display font-black text-[#bd002a] text-xs uppercase tracking-[0.2em] mb-1">Passo 02:</h3>
                   <h4 className="font-display font-extrabold text-[#1c1b1b] text-lg">Acumule pontos</h4>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="flex gap-4">
+                <div className="space-y-5">
+                  <div className="flex gap-4 items-start">
                     <div className="w-10 h-10 rounded-full bg-[#bd002a]/10 flex items-center justify-center shrink-0">
                       <Store className="w-5 h-5 text-[#bd002a]" />
                     </div>
-                    <div>
-                      <h5 className="font-bold text-[#1c1b1b] text-sm mb-1">Compre no Caixa</h5>
+                    <div className="pt-0.5">
+                      <h5 className="font-bold text-[#1c1b1b] text-sm leading-tight mb-1">Compre no Caixa</h5>
                       <p className="text-[#5d3f3e] text-xs leading-relaxed">
                         Informe seu número de telefone no caixa ao fazer o pedido e os pontos serão creditados.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 py-2">
                     <div className="flex-1 h-[1px] bg-[#bd002a]/10"></div>
                     <span className="text-[10px] font-bold italic text-[#bd002a]/30">ou</span>
                     <div className="flex-1 h-[1px] bg-[#bd002a]/10"></div>
                   </div>
 
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 items-start">
                     <div className="w-10 h-10 rounded-full bg-[#bd002a]/10 flex items-center justify-center shrink-0">
                       <Smartphone className="w-5 h-5 text-[#bd002a]" />
                     </div>
-                    <div>
-                      <h5 className="font-bold text-[#1c1b1b] text-sm mb-1">Peça no Meu Cosechas</h5>
+                    <div className="pt-0.5">
+                      <h5 className="font-bold text-[#1c1b1b] text-sm leading-tight mb-1">Peça no Meu Cosechas</h5>
                       <p className="text-[#5d3f3e] text-xs leading-relaxed">
                         Seus pontos são creditados automaticamente no seu perfil.
                       </p>
@@ -168,17 +168,17 @@ export default function ClubeCosechasNaoLogado() {
 
             {/* Step 3 */}
             <div className="relative">
-              <div className="relative z-10 space-y-4">
-                <div>
+              <div className="relative z-10 space-y-5">
+                <div className="space-y-1">
                   <h3 className="font-display font-black text-[#bd002a] text-xs uppercase tracking-[0.2em] mb-1">Passo 03:</h3>
                   <h4 className="font-display font-extrabold text-[#1c1b1b] text-lg">Troque por Prêmios</h4>
                 </div>
                 
-                <div className="flex gap-4">
+                <div className="flex gap-4 items-start">
                   <div className="w-10 h-10 rounded-full bg-[#bd002a]/10 flex items-center justify-center shrink-0">
                     <Crown className="w-5 h-5 text-[#bd002a]" />
                   </div>
-                  <p className="text-[#5d3f3e] text-sm leading-relaxed">1 ponto por compra. Junte para trocar por produtos da nossa loja.</p>
+                  <p className="text-[#5d3f3e] text-sm pt-0.5 leading-relaxed">1 ponto por compra. Junte para trocar por produtos da nossa loja.</p>
                 </div>
               </div>
             </div>

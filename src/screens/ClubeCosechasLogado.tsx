@@ -74,20 +74,31 @@ export default function ClubeCosechasLogado() {
   const rewards = [
     { 
       points: 7, 
+      title: 'Funcionais e promoções',
       name: 'Funcional, A Boa de Hoje ou Promoção Seu Cosechas',
-      subtitle: 'Equivale a 7 compras'
+      subtitle: 'Equivale a 7 compras',
+      description: 'Escolha entre funcionais, Boa de Hoje ou Promoção Seu Cosechas.'
     },
     { 
       points: 10, 
+      title: 'Mix, Milkshake e Açaí médio',
       name: 'Mix de Frutas, Milkshake, Linha Caribe, Açaí Médio ou Açaí Bowl M',
-      subtitle: 'Equivale a 10 compras'
+      subtitle: 'Equivale a 10 compras',
+      description: 'Inclui Mix de Frutas, Milkshake, Linha Caribe, Açaí Médio ou Açaí Bowl M.'
     },
     { 
       points: 12, 
+      title: 'Premium e Açaís grandes',
       name: 'Premium, Açaí Bowl G ou Trio Açaí',
-      subtitle: 'Equivale a 12 compras'
+      subtitle: 'Equivale a 12 compras',
+      description: 'Resgate produtos Premium, Açaí Bowl G ou Trio Açaí.'
     },
   ];
+  const availableRewards = rewards.filter((reward) => userPoints >= reward.points);
+  const bestAvailableReward = availableRewards[availableRewards.length - 1] || null;
+  const nextReward = rewards.find((reward) => reward.points > userPoints) || null;
+  const currentTarget = nextReward || bestAvailableReward || rewards[0];
+  const pointsToNextReward = nextReward ? nextReward.points - userPoints : 0;
 
   return (
     <div className="bg-[#fcf9f8] font-body text-[#1c1b1b] antialiased min-h-screen pb-40">
@@ -145,9 +156,22 @@ export default function ClubeCosechasLogado() {
 
         {/* Progress Section */}
         <section className="bg-white rounded-lg p-6 shadow-sm border border-[#e5e2e1]/30">
-          <h3 className="font-display font-bold text-sm mb-4 leading-tight">
-            Próximo prêmio: {rewards.find(r => r.points > userPoints)?.name || rewards[rewards.length - 1].name}
-          </h3>
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#5d3f3e]">Seu progresso</p>
+              <h3 className="font-display font-extrabold text-lg leading-tight text-[#1c1b1b]">
+                {bestAvailableReward ? `Você pode resgatar: ${bestAvailableReward.title}` : `Próximo prêmio: ${currentTarget.title}`}
+              </h3>
+            </div>
+            {bestAvailableReward && (
+              <button
+                onClick={() => setSelectedRewardTier(bestAvailableReward.points as 7 | 10 | 12)}
+                className="shrink-0 bg-[#bd002a] text-white font-display font-bold text-[10px] px-4 py-2 rounded-full uppercase active:scale-95 transition-transform"
+              >
+                Resgatar
+              </button>
+            )}
+          </div>
           <div className="relative pt-8 pb-4">
             {/* Progress Line Background */}
             <div className="absolute top-10 left-0 w-full h-2 bg-[#f0eded] rounded-full overflow-hidden">
@@ -201,55 +225,90 @@ export default function ClubeCosechasLogado() {
                 {userPoints} pontos
               </span>
             </div>
-            <p className="mt-2 text-xs font-bold text-[#5d3f3e]">
-              {userPoints >= 7 ? (
-                <span className="text-[#bd002a]">🎉 Prêmio disponível!</span>
+            <p className="mt-2 text-xs font-bold text-[#5d3f3e] leading-relaxed">
+              {nextReward ? (
+                `Faltam ${pointsToNextReward} pontos para ${nextReward.title}`
               ) : (
-                `Faltam ${7 - userPoints} compras para o próximo prêmio`
+                <span className="text-[#bd002a]">Você já alcançou o maior prêmio disponível.</span>
               )}
             </p>
+            {bestAvailableReward && (
+              <p className="mt-1 text-[11px] font-bold text-[#bd002a]">
+                Melhor resgate disponível: {bestAvailableReward.title}
+              </p>
+            )}
           </div>
         </section>
 
-        {/* Rewards Table */}
-        <section className="overflow-hidden bg-white rounded-lg shadow-sm border border-[#e5e2e1]/30">
-          <div className="flex justify-between items-center px-6 py-4 bg-[#f6f3f2] font-display font-bold text-[10px] tracking-widest text-[#5d3f3e] uppercase">
-            <span className="w-20">Pontos</span>
-            <span className="flex-grow text-left px-2">Prêmio</span>
-            <span className="w-24 text-right">Resgatar</span>
+        {/* Rewards Cards */}
+        <section className="space-y-3">
+          <div className="flex items-end justify-between px-1">
+            <h2 className="font-display font-extrabold text-xl text-[#1c1b1b]">
+              Prêmios do Clube
+            </h2>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#5d3f3e]/60">
+              1 compra = 1 ponto
+            </span>
           </div>
-          <div className="divide-y divide-[#f0eded]">
-            {rewards.map((reward) => (
-              <div key={reward.points} className="flex items-center px-6 py-8">
-                <div className="w-20 shrink-0 flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-[#FDECEA] flex items-center justify-center shrink-0 border border-[#bd002a]/10">
-                    <CupSoda className="w-5 h-5 text-[#bd002a]" />
+
+          {rewards.map((reward) => {
+            const canRedeem = userPoints >= reward.points;
+            const isBestAvailable = bestAvailableReward?.points === reward.points;
+
+            return (
+              <article
+                key={reward.points}
+                className={`bg-white rounded-lg p-5 border shadow-sm transition-colors ${
+                  isBestAvailable
+                    ? 'border-[#bd002a] ring-2 ring-[#bd002a]/10'
+                    : 'border-[#e5e2e1]/30'
+                }`}
+              >
+                <div className="flex gap-4">
+                  <div className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center shrink-0 ${
+                    canRedeem ? 'bg-[#FDECEA] text-[#bd002a]' : 'bg-[#f0eded] text-[#5d3f3e]'
+                  }`}>
+                    <span className="font-display font-black text-xl leading-none">{reward.points}</span>
+                    <span className="text-[9px] font-bold uppercase leading-none">pts</span>
                   </div>
-                  <div>
-                    <span className="font-display font-extrabold text-2xl text-[#bd002a]">{reward.points}</span>
-                    <span className="text-[10px] font-bold text-[#5d3f3e] block leading-none">pts</span>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="font-display font-extrabold text-base text-[#1c1b1b] leading-tight">
+                          {reward.title}
+                        </h3>
+                        <p className="text-[10px] font-bold text-[#bd002a] uppercase tracking-wider mt-1">
+                          {reward.subtitle}
+                        </p>
+                      </div>
+                      {isBestAvailable && (
+                        <span className="shrink-0 bg-[#bd002a]/10 text-[#bd002a] text-[9px] font-black px-2 py-1 rounded-full uppercase">
+                          Disponível
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="mt-3 text-xs text-[#5d3f3e] leading-relaxed">
+                      {reward.description}
+                    </p>
+
+                    <button
+                      disabled={!canRedeem}
+                      onClick={() => setSelectedRewardTier(reward.points as 7 | 10 | 12)}
+                      className={`mt-4 w-full font-display font-bold text-[11px] py-3 rounded-full uppercase transition-all ${
+                        canRedeem
+                          ? 'bg-[#bd002a] text-white active:scale-95 shadow-sm shadow-[#bd002a]/20'
+                          : 'bg-[#f0eded] text-[#5d3f3e] opacity-60 cursor-not-allowed'
+                      }`}
+                    >
+                      {canRedeem ? 'Resgatar prêmio' : `Faltam ${reward.points - userPoints} pontos`}
+                    </button>
                   </div>
                 </div>
-                <div className="flex-grow px-2">
-                  <p className="font-display font-bold text-sm text-[#1c1b1b] mb-1">{reward.name}</p>
-                  <p className="font-body text-[10px] text-[#5d3f3e]">{reward.subtitle}</p>
-                </div>
-                <div className="w-24 shrink-0 text-right">
-                  <button 
-                    disabled={userPoints < reward.points}
-                    onClick={() => setSelectedRewardTier(reward.points as 7 | 10 | 12)}
-                    className={`w-full font-display font-bold text-[10px] py-2.5 rounded-full uppercase transition-all shadow-sm ${
-                      userPoints >= reward.points 
-                        ? 'bg-[#bd002a] text-white active:scale-95 shadow-[#bd002a]/20' 
-                        : 'bg-[#f0eded] text-[#5d3f3e] opacity-50 cursor-not-allowed'
-                    }`}
-                  >
-                    Resgatar
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              </article>
+            );
+          })}
         </section>
 
         {/* History */}
@@ -302,42 +361,42 @@ export default function ClubeCosechasLogado() {
         </section>
 
         {/* How it works */}
-        <section className="bg-white rounded-lg p-8 shadow-sm border border-[#e5e2e1]/30 space-y-10 relative overflow-hidden">
-          <div className="text-center space-y-1">
+        <section className="bg-white rounded-lg px-6 py-8 sm:p-8 shadow-sm border border-[#e5e2e1]/30 space-y-12 relative overflow-hidden">
+          <div className="text-center space-y-3">
             <h2 className="font-display font-black text-2xl text-[#1c1b1b] uppercase tracking-tight">Como funciona?</h2>
-            <p className="text-[10px] font-bold text-[#5d3f3e]/60 uppercase tracking-widest">Válido somente para na Unidade Dimension Office Barra</p>
-            <div className="w-12 h-1 bg-[#bd002a] mx-auto rounded-full mt-4"></div>
+            <p className="text-[10px] font-bold text-[#5d3f3e]/60 uppercase tracking-widest leading-relaxed">Válido somente para na Unidade Dimension Office Barra</p>
+            <div className="w-12 h-1 bg-[#bd002a] mx-auto rounded-full"></div>
           </div>
           
-          <div className="space-y-12">
+          <div className="space-y-10">
             {/* Step 01 */}
             <div className="relative">
-              <div className="relative z-10 space-y-4">
-                <div>
+              <div className="relative z-10 space-y-5">
+                <div className="space-y-1">
                   <h3 className="font-display font-black text-[#bd002a] text-xs uppercase tracking-[0.2em] mb-1">Passo 01:</h3>
                   <h4 className="font-display font-extrabold text-lg text-[#1c1b1b] leading-tight">Compre na Loja ou Peça no Meu Cosechas</h4>
                 </div>
-                <div className="grid grid-cols-1 gap-6 mt-4">
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-[#e8173a]/10 text-[#bd002a]">
+                <div className="grid grid-cols-1 gap-5">
+                  <div className="flex gap-4 items-start">
+                    <div className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-[#e8173a]/10 text-[#bd002a]">
                       <span className="material-symbols-outlined text-lg">point_of_sale</span>
                     </div>
-                    <div>
-                      <h5 className="font-bold text-sm text-[#1c1b1b]">Compre no caixa</h5>
+                    <div className="pt-0.5">
+                      <h5 className="font-bold text-sm text-[#1c1b1b] leading-tight">Compre no caixa</h5>
                       <p className="text-[#5d3f3e] text-xs mt-1 leading-relaxed">Informe seu número de telefone no caixa ao fazer seu pedido e os pontos serão creditados para você</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 py-1">
+                  <div className="flex items-center gap-4 py-2">
                     <div className="flex-1 h-px bg-[#f0eded]"></div>
                     <span className="font-display italic font-black text-[#bd002a]/40 text-sm lowercase px-2">ou</span>
                     <div className="flex-1 h-px bg-[#f0eded]"></div>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-[#e8173a]/10 text-[#bd002a]">
+                  <div className="flex gap-4 items-start">
+                    <div className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-[#e8173a]/10 text-[#bd002a]">
                       <span className="material-symbols-outlined text-lg">smartphone</span>
                     </div>
-                    <div>
-                      <h5 className="font-bold text-sm text-[#1c1b1b]">Peça no Meu Cosechas</h5>
+                    <div className="pt-0.5">
+                      <h5 className="font-bold text-sm text-[#1c1b1b] leading-tight">Peça no Meu Cosechas</h5>
                       <p className="text-[#5d3f3e] text-xs mt-1 leading-relaxed">Seus pontos são creditados automaticamente no seu perfil</p>
                     </div>
                   </div>
@@ -347,25 +406,25 @@ export default function ClubeCosechasLogado() {
 
             {/* Step 02 */}
             <div className="relative">
-              <div className="relative z-10 space-y-2">
-                <div>
+              <div className="relative z-10 space-y-5">
+                <div className="space-y-1">
                   <h3 className="font-display font-black text-[#bd002a] text-xs uppercase tracking-[0.2em] mb-1">Passo 02:</h3>
                   <h4 className="font-display font-extrabold text-lg text-[#1c1b1b] leading-tight">Acumule e Ganhe</h4>
                 </div>
-                <div className="flex gap-4 items-start pt-2">
-                  <div className="w-8 h-8 shrink-0 flex items-center justify-center rounded-full bg-[#e8173a]/10 text-[#bd002a]">
+                <div className="flex gap-4 items-start">
+                  <div className="w-10 h-10 shrink-0 flex items-center justify-center rounded-full bg-[#e8173a]/10 text-[#bd002a]">
                     <span className="material-symbols-outlined text-lg">celebration</span>
                   </div>
-                  <p className="text-[#5d3f3e] text-sm mt-1 leading-relaxed">1 ponto por compra. Junte para trocar por produtos da nossa loja</p>
+                  <p className="text-[#5d3f3e] text-sm pt-0.5 leading-relaxed">1 ponto por compra. Junte para trocar por produtos da nossa loja</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <footer className="pt-4 text-center">
-            <div className="flex items-center gap-4 bg-[#f0eded] rounded-xl p-6 border border-[#e5e2e1]/50 mb-8 text-left">
+          <footer className="pt-2 text-center">
+            <div className="flex items-start gap-4 bg-[#f0eded] rounded-xl p-5 border border-[#e5e2e1]/50 mb-6 text-left">
               <Info className="text-[#e8173a] w-5 h-5 shrink-0" />
-              <p className="text-[11px] font-medium text-[#5d3f3e] leading-tight">
+              <p className="text-[11px] font-medium text-[#5d3f3e] leading-relaxed">
                 Compre pelo menos uma vez a cada 45 dias para manter seus pontos vivos.
               </p>
             </div>

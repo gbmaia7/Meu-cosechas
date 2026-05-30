@@ -44,6 +44,7 @@ export default function HomeComSacola() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Mais pedidos');
+  const [searchQuery, setSearchQuery] = useState('');
   const [manualAvailability, setManualAvailability] = useState<'AUTO' | 'AVAILABLE' | 'UNAVAILABLE'>('AUTO');
   const [manualDay, setManualDay] = useState<number>(new Date().getDay());
 
@@ -62,6 +63,19 @@ export default function HomeComSacola() {
   const effectivePromoAvailability = manualAvailability === 'AUTO'
     ? (isPromoDayEffective && hora < 16)
     : (manualAvailability === 'AVAILABLE');
+
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const searchResults = normalizedSearchQuery
+    ? PRODUCTS.filter((product) => {
+        const searchableText = [
+          product.name,
+          product.category,
+          product.description,
+        ].join(' ').toLowerCase();
+
+        return searchableText.includes(normalizedSearchQuery);
+      })
+    : [];
 
   const handleImageClick = (img: string) => {
     setLightboxImage(img);
@@ -244,7 +258,13 @@ export default function HomeComSacola() {
         {/* Search */}
         <div className="relative group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5d3f3e] w-5 h-5" />
-          <input className="w-full bg-[#f0eded] border-none rounded-md py-4 pl-12 pr-4 focus:ring-2 focus:ring-[#bd002a]/20 focus:bg-[#ffffff] transition-all" placeholder="O que você quer beber hoje?" type="text"/>
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="w-full bg-[#f0eded] border-none rounded-md py-4 pl-12 pr-4 focus:ring-2 focus:ring-[#bd002a]/20 focus:bg-[#ffffff] transition-all"
+            placeholder="O que você quer beber hoje?"
+            type="text"
+          />
         </div>
         
         {/* Categories */}
@@ -276,8 +296,42 @@ export default function HomeComSacola() {
 
         {/* Products */}
         <section className="space-y-6">
+          {normalizedSearchQuery && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Resultados</h3>
+              </div>
+              {searchResults.length > 0 ? (
+                <div className="space-y-4">
+                  {searchResults.map(prod => {
+                    const isPromoProduct = prod.category === 'Promoção Seu Cosechas';
+                    return (
+                      <ProductCard
+                        key={prod.id}
+                        prod={prod}
+                        onImageClick={handleImageClick}
+                        onPlusClick={handlePlusClick}
+                        badge={isPromoProduct && effectivePromoAvailability ? "PROMOÇÃO" : undefined}
+                        isAvailable={isPromoProduct ? effectivePromoAvailability : true}
+                        availabilityMsg={isPromoProduct ? "A Promoção Seu Cosechas é uma promoção disponível às quartas e sextas até as 16h." : undefined}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="py-12 flex flex-col items-center justify-center text-center px-4 bg-white rounded-2xl border border-[#f0eded]">
+                  <div className="bg-[#f0eded] w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                    <Search className="text-[#a8a29e] w-8 h-8" />
+                  </div>
+                  <h4 className="font-bold text-[#1c1b1b] mb-1">Nenhum produto encontrado</h4>
+                  <p className="text-xs text-[#5d3f3e]">Tente buscar por outro nome ou categoria.</p>
+                </div>
+              )}
+            </>
+          )}
+
           {/* Boa de Hoje Section */}
-          {selectedCategory === 'Boa de hoje' && (
+          {!normalizedSearchQuery && selectedCategory === 'Boa de hoje' && (
             <>
               <div className="flex flex-col px-2 gap-1 mb-4">
                 <div className="flex items-center justify-between">
@@ -319,7 +373,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Promoção Seu Cosechas Section */}
-          {selectedCategory === 'Promoção Seu Cosechas' && (
+          {!normalizedSearchQuery && selectedCategory === 'Promoção Seu Cosechas' && (
             <>
               <div className="flex items-center justify-between px-2 mb-4">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Promoção Seu Cosechas</h3>
@@ -342,7 +396,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Mais Pedidos Section */}
-          {selectedCategory === 'Mais pedidos' && (
+          {!normalizedSearchQuery && selectedCategory === 'Mais pedidos' && (
             <>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Mais Pedidos</h3>
@@ -356,7 +410,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Mix de Frutas Section */}
-          {selectedCategory === 'Mix de frutas' && (
+          {!normalizedSearchQuery && selectedCategory === 'Mix de frutas' && (
             <>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Mix de Frutas</h3>
@@ -370,7 +424,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Premium Section */}
-          {selectedCategory === 'Premium' && (
+          {!normalizedSearchQuery && selectedCategory === 'Premium' && (
             <div className="space-y-8">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -411,7 +465,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Açaís Section */}
-          {selectedCategory === 'Açaís' && (
+          {!normalizedSearchQuery && selectedCategory === 'Açaís' && (
             <>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Açaís</h3>
@@ -425,7 +479,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Milkshakes Section */}
-          {selectedCategory === 'Milkshakes' && (
+          {!normalizedSearchQuery && selectedCategory === 'Milkshakes' && (
             <>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Milkshakes</h3>
@@ -439,7 +493,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Linha Caribe Section */}
-          {selectedCategory === 'Linha Caribe' && (
+          {!normalizedSearchQuery && selectedCategory === 'Linha Caribe' && (
             <>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Linha Caribe</h3>
@@ -453,7 +507,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Funcional Section */}
-          {selectedCategory === 'Funcional' && (
+          {!normalizedSearchQuery && selectedCategory === 'Funcional' && (
             <>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Funcional</h3>
@@ -467,7 +521,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Comece Bem Seu Dia Section */}
-          {(selectedCategory === 'Comece bem seu dia' || selectedCategory === 'Comece Bem Seu Dia') && (
+          {!normalizedSearchQuery && (selectedCategory === 'Comece bem seu dia' || selectedCategory === 'Comece Bem Seu Dia') && (
             <>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Comece Bem Seu Dia</h3>
@@ -481,7 +535,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Especiais Section */}
-          {selectedCategory === 'Especiais' && (
+          {!normalizedSearchQuery && selectedCategory === 'Especiais' && (
             <>
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Especiais</h3>
@@ -495,7 +549,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Salada de Frutas Section */}
-          {selectedCategory === 'Salada de Frutas' && (
+          {!normalizedSearchQuery && selectedCategory === 'Salada de Frutas' && (
             <>
               <div className="flex items-center justify-between px-2 mb-4">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Salada de Frutas</h3>
@@ -509,7 +563,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Coffee Section */}
-          {selectedCategory === 'Coffee' && (
+          {!normalizedSearchQuery && selectedCategory === 'Coffee' && (
             <>
               <div className="flex items-center justify-between px-2 mb-4">
                 <h3 className="text-xl font-extrabold font-display text-[#1c1b1b]">Tropical & Spicy Coffee</h3>
@@ -523,7 +577,7 @@ export default function HomeComSacola() {
           )}
 
           {/* Placeholder for other categories */}
-          {selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && selectedCategory !== 'Coffee' && selectedCategory !== 'Linha Caribe' && selectedCategory !== 'Funcional' && selectedCategory !== 'Comece bem seu dia' && selectedCategory !== 'Comece Bem Seu Dia' && selectedCategory !== 'Especiais' && selectedCategory !== 'Boa de hoje' && selectedCategory !== 'Promoção Seu Cosechas' && selectedCategory !== 'Salada de Frutas' && (
+          {!normalizedSearchQuery && selectedCategory !== 'Mais pedidos' && selectedCategory !== 'Mix de frutas' && selectedCategory !== 'Premium' && selectedCategory !== 'Açaís' && selectedCategory !== 'Milkshakes' && selectedCategory !== 'Coffee' && selectedCategory !== 'Linha Caribe' && selectedCategory !== 'Funcional' && selectedCategory !== 'Comece bem seu dia' && selectedCategory !== 'Comece Bem Seu Dia' && selectedCategory !== 'Especiais' && selectedCategory !== 'Boa de hoje' && selectedCategory !== 'Promoção Seu Cosechas' && selectedCategory !== 'Salada de Frutas' && (
             <div className="py-12 flex flex-col items-center justify-center text-center px-4">
               <div className="bg-[#f0eded] w-16 h-16 rounded-full flex items-center justify-center mb-4">
                 <Utensils className="text-[#a8a29e] w-8 h-8" />

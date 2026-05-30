@@ -82,12 +82,16 @@ export const EXTRA_MILKSHAKE: Extra[] = [
 ];
 
 export const EXTRA_FITNESS: Extra[] = [
+  { id: 'extra-aveia-fit', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
+  { id: 'extra-mel-fit', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
   { id: 'extra-whey', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
   { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
 export const FUNCIONAL_EXTRAS: Extra[] = [
+  { id: 'extra-aveia-f', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
+  { id: 'extra-mel-f', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
   { id: 'extra-whey-f', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
   { id: 'extra-colageno-f', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina-f', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
@@ -218,6 +222,8 @@ export const COMECE_BEM: Product[] = [
 ];
 
 export const EXTRA_CARIBE: Extra[] = [
+  { id: 'extra-aveia-caribe', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
+  { id: 'extra-mel-caribe', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
   { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
@@ -282,6 +288,8 @@ export const LINHA_CARIBE: Product[] = [
 ];
 
 export const EXTRA_MIX_FRUTAS: Extra[] = [
+  { id: 'extra-aveia-mix', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
+  { id: 'extra-mel-mix', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
   { id: 'extra-cha-verde', name: 'Chá Verde', description: 'Mais energia e antioxidante', price: 3.00, icon: 'leaf' },
   { id: 'extra-suco-laranja', name: 'Suco de Laranja', description: 'Vitamina C extra', price: 3.00, icon: 'citrus' },
   { id: 'extra-whey', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
@@ -290,6 +298,8 @@ export const EXTRA_MIX_FRUTAS: Extra[] = [
 ];
 
 export const EXTRA_ESPECIAIS: Extra[] = [
+  { id: 'extra-aveia-e', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
+  { id: 'extra-mel-e', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
   { id: 'extra-whey-e', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
   { id: 'extra-colageno-e', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina-e', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
@@ -446,6 +456,8 @@ export const SALADA_DE_FRUTAS: Product[] = [
 ];
 
 export const EXTRA_COFFEE: Extra[] = [
+  { id: 'extra-aveia-c', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
+  { id: 'extra-mel-c', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
   { id: 'extra-creatina-c', name: 'Creatina', description: 'Performance e força', price: 5.00, icon: 'fitness' },
   { id: 'extra-colageno-c', name: 'Colágeno', description: 'Elasticidade e saúde', price: 5.00, icon: 'health_and_safety' },
 ];
