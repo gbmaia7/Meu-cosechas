@@ -417,20 +417,20 @@ export const SALADA_DE_FRUTAS: Product[] = [
     id: 'salada-1',
     name: 'Salada de Frutas',
     category: 'Salada de Frutas',
-    description: 'Mamão, abacaxi, uva roxa sem caroço e morango.',
+    description: 'Frutas frescas selecionadas: mamão, abacaxi, uva roxa sem caroço e morango. Leve, natural e refrescante.',
     priceDisplay: 'R$ 19,00',
     points: 1,
-    image: 'https://images.unsplash.com/photo-1518635017498-87f514b751ba?q=80&w=260&auto=format&fit=crop',
+    image: 'https://i.imgur.com/qIrFPQS.png',
     extras: EXTRA_SALADA
   },
   {
     id: 'salada-2',
     name: 'Salada de Frutas Premium',
     category: 'Salada de Frutas',
-    description: 'Nossa salada premium leva mamão, abacaxi, uva roxa sem caroço, morango, blueberry e cranberries, servida com iogurte natural ou sorvete à sua escolha.',
+    description: 'Nossa versão especial com mamão, abacaxi, uva roxa sem caroço, morango, blueberry e cranberry. Escolha com iogurte natural ou sorvete.',
     priceDisplay: 'R$ 21,50',
     points: 1,
-    image: 'https://images.unsplash.com/photo-1518635017498-87f514b751ba?q=80&w=260&auto=format&fit=crop',
+    image: 'https://i.imgur.com/R8nqhyB.png',
     baseOptions: [
       { label: 'Iogurte Natural' },
       { label: 'Sorvete' }
