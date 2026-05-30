@@ -440,7 +440,7 @@ export const SALADA_DE_FRUTAS: Product[] = [
     description: 'Nossa versão especial com mamão, abacaxi, uva roxa sem caroço, morango, blueberry e cranberry. Escolha com iogurte natural ou sorvete.',
     priceDisplay: 'R$ 21,50',
     points: 1,
-    image: 'https://i.imgur.com/R8nqhyB.png',
+    image: 'https://i.imgur.com/8XJ8i7g.png',
     baseOptions: [
       { label: 'Iogurte Natural' },
       { label: 'Sorvete' }
