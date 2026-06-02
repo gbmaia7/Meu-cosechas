@@ -17,13 +17,13 @@ import EsqueceuSenha from '../screens/EsqueceuSenha';
 import RedefinirSenha from '../screens/RedefinirSenha';
 import Pagamento from '../screens/Pagamento';
 import PagamentoPix from '../screens/PagamentoPix';
-import NovoCartao from '../screens/NovoCartao';
-import GerenciarCartoes from '../screens/GerenciarCartoes';
 import PagamentoVR from '../screens/PagamentoVR';
 import ValidandoPagamento from '../screens/ValidandoPagamento';
 import PagamentoConfirmado from '../screens/PagamentoConfirmado';
 import PagamentoConfirmadoVR from '../screens/PagamentoConfirmadoVR';
 import AcompanharPedido from '../screens/AcompanharPedido';
+import Loja from '../screens/Loja';
+import Entregador from '../screens/Entregador';
 
 
 export function AppRoutes() {
@@ -49,13 +49,13 @@ export function AppRoutes() {
       <Route path="/redefinir-senha" element={<RedefinirSenha />} />
       <Route path="/pagamento" element={<Pagamento />} />
       <Route path="/pagamento/pix" element={<PagamentoPix />} />
-      <Route path="/pagamento/cartao" element={<NovoCartao />} />
       <Route path="/pagamento/vr" element={<PagamentoVR />} />
-      <Route path="/gerenciar-cartoes" element={<GerenciarCartoes />} />
       <Route path="/validando-pagamento" element={<ValidandoPagamento />} />
       <Route path="/pagamento-confirmado" element={<PagamentoConfirmado />} />
       <Route path="/pagamento-confirmado-vr" element={<PagamentoConfirmadoVR />} />
       <Route path="/acompanhar-pedido" element={<AcompanharPedido />} />
+      <Route path="/loja" element={<Loja />} />
+      <Route path="/entregador" element={<Entregador />} />
     </Routes>
   );
 }

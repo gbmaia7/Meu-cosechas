@@ -25,7 +25,12 @@ export default function AcompanharPedido() {
     ? activeOrders.find(o => o.id === idFromUrl) 
     : (activeOrders.length > 0 ? activeOrders[0] : null);
 
-  const orderStatus = activeOrder?.status || 'preparing';
+  const orderStatus =
+    activeOrder?.status === 'ready' ||
+    activeOrder?.status === 'out_for_delivery' ||
+    activeOrder?.status === 'delivered'
+      ? 'ready'
+      : 'preparing';
   const [deliveryWhatsapp, setDeliveryWhatsapp] = useState('5521995435384');
 
   useEffect(() => {

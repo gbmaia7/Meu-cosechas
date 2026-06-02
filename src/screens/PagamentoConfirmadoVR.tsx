@@ -157,7 +157,8 @@ export default function PagamentoConfirmadoVR() {
                 totalPrice: totalPrice,
                 status: 'preparing',
                 modality,
-                address
+                address,
+                payment_method: 'vr'
               });
             }
             clearCart();

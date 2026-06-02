@@ -25,7 +25,7 @@ export interface ActiveOrder {
   id: string;
   items: CartItem[];
   totalPrice: number;
-  status: 'preparing' | 'ready';
+  status: 'new' | 'accepted' | 'preparing' | 'ready' | 'out_for_delivery' | 'delivered' | 'cancelled';
   modality?: 'counter' | 'delivery';
   address?: { block: string; room: string; complement?: string };
   pickup_code?: string | null;
@@ -52,7 +52,7 @@ interface CartContextType {
   clearCart: () => void;
   activeOrders: ActiveOrder[];
   addActiveOrder: (order: Omit<ActiveOrder, 'id'>) => Promise<void> | void;
-  updateActiveOrderStatus: (id: string, status: 'preparing' | 'ready') => void;
+  updateActiveOrderStatus: (id: string, status: ActiveOrder['status']) => void;
   removeActiveOrder: (id: string) => void;
   productFrequency: Record<string, number>;
 }
@@ -177,14 +177,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       deliveryPin = String(Math.floor(1000 + Math.random() * 9000));
     }
 
-    const newOrder: ActiveOrder = {
-      ...order,
-      id: crypto.randomUUID(),
-      pickup_code: pickupCode,
-      delivery_pin: deliveryPin,
-    };
-    setActiveOrders((prev) => [...prev, newOrder]);
-
     const { data: sub } = await supabase
       .from('subscriptions')
       .select('double_points, status')
@@ -202,23 +194,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
     console.log('[addActiveOrder] hasPaidItems:', hasPaidItems,
       'items nomes:', order.items.map(i => i.name))
 
-    // Se não há itens pagos, não credita pontos
-    if (!hasPaidItems) {
-      return
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, phone')
+      .eq('id', userId)
+      .single();
+
+    let addressId: string | null = null;
+
+    if (order.modality === 'delivery' && order.address) {
+      const { data: savedAddress, error: addressError } = await supabase
+        .from('addresses')
+        .insert({
+          user_id: userId,
+          label: 'Entrega do pedido',
+          block: order.address.block,
+          room: order.address.room,
+          complement: order.address.complement || null,
+          is_default: false,
+        })
+        .select('id')
+        .single();
+
+      if (addressError) {
+        console.error('[CartContext] Erro ao salvar endereco:', addressError);
+      } else {
+        addressId = savedAddress.id;
+      }
     }
 
-    const basePoints = 1;
-    const bonusPoints = hasDoublePoints ? 1 : 0;
+    const basePoints = hasPaidItems ? 1 : 0;
+    const bonusPoints = hasPaidItems && hasDoublePoints ? 1 : 0;
+    const paymentMethod = order.payment_method || 'pix';
+    const paymentStatus =
+      paymentMethod === 'cash' || paymentMethod === 'machine' || paymentMethod === 'vr'
+        ? 'pay_on_delivery'
+        : 'paid';
 
     const { data: savedOrder, error: orderError } = await supabase
       .from('orders')
       .insert({
         user_id: userId,
+        guest_name: profile?.name || null,
+        guest_phone: profile?.phone || null,
         subtotal: order.totalPrice,
         total_price: order.totalPrice,
-        status: 'preparing',
-        payment_status: 'pending',
+        status: 'new',
+        payment_method: paymentMethod,
+        payment_status: paymentStatus,
         modality: order.modality || 'counter',
+        address_id: addressId,
         points_earned: basePoints + bonusPoints,
         pickup_code: pickupCode,
         delivery_pin: deliveryPin,
@@ -230,6 +255,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       console.error('[CartContext] Erro ao salvar pedido:', orderError);
       return;
     }
+
+    const newOrder: ActiveOrder = {
+      ...order,
+      id: savedOrder.id,
+      status: 'new',
+      pickup_code: savedOrder.pickup_code,
+      delivery_pin: savedOrder.delivery_pin,
+    };
+    setActiveOrders((prev) => [...prev, newOrder]);
 
     const orderItems = order.items.map(item => ({
       order_id: savedOrder.id,
@@ -244,13 +278,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
       is_reward: (item.pointsCost || 0) > 0,
     }));
 
-    await supabase.from('order_items').insert(orderItems);
+    const { data: savedItems, error: itemError } = await supabase
+      .from('order_items')
+      .insert(orderItems)
+      .select('id');
+
+    if (itemError) {
+      console.error('[CartContext] Erro ao salvar itens do pedido:', itemError);
+      return;
+    }
+
+    const extras = order.items.flatMap((item, index) =>
+      (item.extras || []).map(extra => ({
+        order_item_id: savedItems?.[index]?.id,
+        extra_id: extra.id,
+        extra_name: extra.name,
+        extra_price: extra.price,
+      }))
+    ).filter(extra => extra.order_item_id);
+
+    if (extras.length > 0) {
+      await supabase.from('order_item_extras').insert(extras);
+    }
 
     const shouldCreditPoints =
       order.payment_method !== 'cash' &&
-      order.payment_method !== 'machine';
+      order.payment_method !== 'machine' &&
+      order.payment_method !== 'vr';
 
-    if (shouldCreditPoints) {
+    if (shouldCreditPoints && hasPaidItems) {
       const productNames = order.items
         .filter(i => !i.name.startsWith('[CLUBE]'))
         .map(i => i.name.replace(/^\[.*?\]\s*/, ''))
@@ -308,7 +364,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateActiveOrderStatus = (id: string, status: 'preparing' | 'ready') => {
+  const updateActiveOrderStatus = (id: string, status: ActiveOrder['status']) => {
     setActiveOrders((prev) => prev.map(order => order.id === id ? { ...order, status } : order));
   };
 
