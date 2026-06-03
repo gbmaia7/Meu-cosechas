@@ -62,7 +62,6 @@ type StoreOrder = {
   modality: 'counter' | 'delivery';
   notes: string | null;
   pickup_code: string | null;
-  delivery_pin: string | null;
   created_at: string;
   updated_at: string;
   accepted_at?: string | null;
@@ -237,7 +236,6 @@ const getOrderActions = (order: StoreOrder): Array<{ status: OrderStatus; label:
       ? [{ status: 'out_for_delivery', label: 'Saiu entrega' }]
       : [{ status: 'delivered', label: 'Retirado' }];
   }
-  if (status === 'out_for_delivery') return [{ status: 'delivered', label: 'Entregue' }];
 
   return [];
 };
@@ -298,7 +296,27 @@ export default function Loja() {
     const { data, error } = await supabase
       .from('orders')
       .select(`
-        *,
+        id,
+        user_id,
+        guest_name,
+        guest_phone,
+        subtotal,
+        total_price,
+        payment_method,
+        payment_status,
+        status,
+        modality,
+        notes,
+        pickup_code,
+        created_at,
+        updated_at,
+        accepted_at,
+        prepared_at,
+        ready_at,
+        out_for_delivery_at,
+        delivered_at,
+        cancelled_at,
+        cancel_reason,
         profiles:user_id(name, phone, email),
         addresses:address_id(block, room, complement, street, number),
         order_items(
@@ -316,7 +334,7 @@ export default function Loja() {
       return;
     }
 
-    const nextOrders = (data || []) as StoreOrder[];
+    const nextOrders = (data || []) as unknown as StoreOrder[];
     setOrders(nextOrders);
     setSelectedOrder((current) => {
       if (!current) return nextOrders[0] || null;
@@ -375,7 +393,6 @@ export default function Loja() {
       const haystack = [
         order.id,
         order.pickup_code,
-        order.delivery_pin,
         getCustomerName(order),
         getCustomerPhone(order),
         getAddressLine(order),
@@ -539,7 +556,7 @@ export default function Loja() {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar pedido, cliente ou PIN"
+                placeholder="Buscar pedido ou cliente"
                 className="w-full sm:w-80 rounded-full border border-[#e5e2e1] bg-[#fcf9f8] pl-10 pr-4 py-3 text-sm outline-none focus:border-[#bd002a]"
               />
             </div>
@@ -642,7 +659,7 @@ export default function Loja() {
                               </p>
 
                               <div className="mt-3 pt-2 border-t border-[#e5e2e1] flex items-center justify-between text-[11px] text-[#5d3f3e]">
-                                <span className="rounded-md bg-[#f3eeee] px-2 py-1 font-bold">{order.delivery_pin ? `PIN ${order.delivery_pin}` : (order.pickup_code || `#${order.id.slice(0, 8)}`)}</span>
+                                <span className="rounded-md bg-[#f3eeee] px-2 py-1 font-bold">{order.pickup_code || `#${order.id.slice(0, 8)}`}</span>
                                 <span className="font-bold text-[#1c1b1b]">{formatCurrency(Number(order.total_price))}</span>
                               </div>
                             </button>
@@ -715,8 +732,8 @@ export default function Loja() {
                       <p className="font-bold">{formatCurrency(Number(selectedOrder.total_price))}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-[#5d3f3e]">Codigo/PIN</p>
-                      <p className="font-bold">{selectedOrder.delivery_pin || selectedOrder.pickup_code || '-'}</p>
+                      <p className="text-[10px] uppercase font-bold text-[#5d3f3e]">Codigo</p>
+                      <p className="font-bold">{selectedOrder.pickup_code || `#${selectedOrder.id.slice(0, 8)}`}</p>
                     </div>
                   </div>
                 </section>

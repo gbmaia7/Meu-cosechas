@@ -248,7 +248,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         pickup_code: pickupCode,
         delivery_pin: deliveryPin,
       })
-      .select('id, pickup_code, delivery_pin')
+      .select('id, pickup_code')
       .single();
 
     if (orderError) {
@@ -261,7 +261,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       id: savedOrder.id,
       status: 'new',
       pickup_code: savedOrder.pickup_code,
-      delivery_pin: savedOrder.delivery_pin,
+      delivery_pin: deliveryPin,
     };
     setActiveOrders((prev) => [...prev, newOrder]);
 
