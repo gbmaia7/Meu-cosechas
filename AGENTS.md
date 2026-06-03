@@ -1,63 +1,90 @@
-# Engineering Workflow
+# Memoria Operacional para Agentes
 
-## Repository Analysis
+Este arquivo e o ponto de entrada para agentes de IA no projeto Meu-Cosechas.
+Ele complementa as skills e a documentacao, sem substituir instrucoes especificas
+do usuario ou o codigo-fonte.
 
-Before making changes:
+## Visao Geral
 
-1. Use codebase-recon
-2. Understand architecture
-3. Identify impacted files
-4. Identify risks
+Meu-Cosechas e uma aplicacao React/Vite para cardapio, sacola, pagamentos,
+acompanhamento de pedidos, operacao de loja, entregador e Clube Cosechas.
+O backend observado usa Supabase, tabelas SQL, RLS, RPCs e Edge Functions.
 
-## Planning
+## Ordem de Prioridade
 
-Before implementation:
+1. Codigo-fonte
+2. Solicitacoes explicitas do usuario
+3. AGENTS.md
+4. CLAUDE.md
+5. Skills
+6. Docs
+7. Memory
 
-1. Use create-plan
-2. Create implementation plan
-3. Present plan
-4. Wait for approval
+## Fontes Oficiais
 
-## Coding Rules
+Produto:
+docs/produto.md
 
-Follow karpathy-guidelines.
+Visao:
+docs/vision.md
 
-- Prefer smallest working change
-- Avoid unnecessary abstractions
-- Avoid speculative features
-- Avoid unrelated refactors
-- Touch only required files
-- Match existing code style and architecture
+Arquitetura:
+docs/arquitetura.md
 
-## Verification
+Regras de negocio:
+docs/regras-negocio.md
 
-Before completion:
+Pagamentos:
+docs/pagamentos-mercado-pago.md
 
-- Run tests when available
-- Run lint when available
-- Run build when available
+Fluxo de pedidos:
+docs/fluxo-pedidos.md
 
-## Review
+## Processo Antes de Implementar
 
-Use codex-review.
+1. Entender a tarefa.
+2. Ler apenas os arquivos necessarios.
+3. Consultar documentacao relevante.
+4. Verificar decisoes anteriores.
+5. Criar plano.
+6. Executar.
 
-Report:
+IMPORTANTE:
 
-- Files changed
-- Verification performed
-- Risks found
-- Remaining issues
+Nao carregar toda a documentacao.
+Ler apenas os arquivos relacionados a tarefa atual.
 
-## Communication
+## Politica de Atualizacao
 
-Before coding:
+Atualizar documentacao sempre que:
 
-- State assumptions
-- State scope
-- State verification strategy
+* regras de negocio mudarem
+* arquitetura mudar
+* fluxo de pedidos mudar
+* integracao de pagamento mudar
 
-After coding:
+Atualizar memoria sempre que:
 
-- Summarize changes
-- Summarize validation
-- Highlight risks
+* decisoes importantes forem tomadas
+* bugs recorrentes forem descobertos
+* pendencias forem criadas ou resolvidas
+
+## Relacao com Skills
+
+* Skills existentes permanecem validas.
+* Nao alterar skills sem autorizacao.
+* Utilizar skills quando fizer sentido.
+* O AGENTS.md complementa as skills.
+* O AGENTS.md nao substitui as skills.
+
+## Praticas Herdadas do Workflow Atual
+
+Antes de mudancas relevantes:
+
+* usar recon do codigo quando o contexto nao estiver claro
+* identificar arquitetura, arquivos impactados e riscos
+* criar plano antes de implementar
+* preferir a menor mudanca funcional
+* evitar refactors nao relacionados
+* rodar lint, build e testes quando disponiveis
+* revisar o diff antes de finalizar
