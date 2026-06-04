@@ -18,7 +18,21 @@ Registrar decisoes tecnicas relevantes para evitar redescoberta e inconsistencia
 * Impacto: entregador envia PIN para RPC; PIN em texto claro nao deve ser exposto para loja/entregador.
 * Arquivos afetados: `supabase/confirm_delivery_pin.sql`, `src/screens/Entregador.tsx`, `src/screens/Loja.tsx`, `src/context/CartContext.tsx`.
 
+### 2026-06-03
+
+* Decisao: substituir InfinitePay por Mercado Pago Checkout Transparente.
+* Motivo: InfinitePay direciona para checkout externo; o produto deve manter Pix e cartao dentro do app.
+* Impacto: pedidos online passam a nascer como `pending_payment`; Mercado Pago confirma via webhook/consulta backend; loja so deve ver pedido pago.
+* Arquivos afetados: `src/screens/Pagamento.tsx`, `src/screens/PagamentoPix.tsx`, `src/screens/ValidandoPagamento.tsx`, `supabase/functions/create-mercado-pago-payment/index.ts`, `supabase/functions/get-mercado-pago-payment/index.ts`, `supabase/functions/webhook-mercado-pago/index.ts`, `supabase/mercado_pago_payments.sql`.
+
+### 2026-06-04
+
+* Decisao: remover Edge Functions legadas InfinitePay.
+* Motivo: Mercado Pago validado em sandbox; InfinitePay nao sera mais usado.
+* Impacto: arquivos locais excluidos. Funcoes remotas devem ser deletadas no Supabase Dashboard.
+* Arquivos afetados: `supabase/functions/create-infinite-checkout`, `verify-infinite-payment`, `webhook-infinitepay`.
+
 ## Pendencias
 
-* A definir: padrao oficial de migrations.
-* Necessita validacao: separar documentacao de pagamentos InfinitePay e Mercado Pago.
+* A definir: padrao oficial de migrations. (resolvido em 2026-06-04 — ver docs/database.md)
+* Remover as 3 Edge Functions InfinitePay do Supabase Dashboard se ainda estiverem ativas.

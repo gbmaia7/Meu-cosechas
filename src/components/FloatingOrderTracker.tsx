@@ -18,7 +18,6 @@ export default function FloatingOrderTracker() {
     '/pagamento',
     '/pagamento/pix',
     '/pagamento/vr',
-    '/pagamento/cartao',
     '/sacola'
   ];
   if (hiddenRoutes.includes(location.pathname)) return null;

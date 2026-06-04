@@ -16,8 +16,12 @@ tratada como "Necessita validacao".
 ### Pedido
 
 * Pedido pode ser `counter` ou `delivery`.
-* Status observados: `new`, `preparing`, `ready`, `out_for_delivery`,
-  `delivered`, `cancelled` e variantes legadas.
+* Status observados: `pending_payment`, `new`, `preparing`, `ready`,
+  `out_for_delivery`, `delivered`, `payment_failed`, `expired`, `cancelled`
+  e variantes legadas.
+* Pedidos online devem nascer como `pending_payment`.
+* Loja e entregador nao devem operar pedido `pending_payment`.
+* Pedido online so entra na operacao quando pagamento for aprovado.
 * Retirada no balcao usa `pickup_code`.
 * Entrega usa PIN de seguranca exibido ao cliente e validado no backend.
 * Loja nao deve visualizar PIN de entrega.
@@ -25,15 +29,23 @@ tratada como "Necessita validacao".
 
 ### Pagamento
 
-* Formas observadas: Pix, cartao de credito/debito via checkout, dinheiro,
-  maquininha e VR/VA.
+* Formas observadas: Pix, cartao de credito/debito via Mercado Pago Checkout
+  Transparente, dinheiro, maquininha e VR/VA.
 * Pagamentos em dinheiro/maquininha/VR podem ser tratados como
   `pay_on_delivery`.
+* Confirmacao final de Pix/cartao deve vir de webhook ou consulta backend ao
+  Mercado Pago.
 
 ### Clube Cosechas
 
 * Existe conceito de pontos, assinatura e resgate.
 * A regra detalhada de pontuacao necessita validacao.
+
+## Expiracao de pedidos
+
+* Pedidos em `pending_payment` ha mais de 40 minutos sao marcados como `expired` + `payment_status = failed`.
+* Job pg_cron `expire-pending-payment-orders` roda a cada 5 minutos.
+* Se webhook do Mercado Pago chegar apos expiracao, o pedido pode ser aprovado (MP e fonte de verdade).
 
 ## Pendencias
 

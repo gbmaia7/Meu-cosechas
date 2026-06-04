@@ -20,6 +20,7 @@ type StoreRole = 'customer' | 'store' | 'admin';
 
 type OrderStatus =
   | 'pending'
+  | 'pending_payment'
   | 'new'
   | 'accepted'
   | 'paid'
@@ -27,6 +28,8 @@ type OrderStatus =
   | 'ready'
   | 'out_for_delivery'
   | 'delivered'
+  | 'payment_failed'
+  | 'expired'
   | 'canceled'
   | 'cancelled';
 
@@ -100,6 +103,7 @@ const finalColumns: Array<{ key: OrderStatus; label: string; icon: typeof Clock 
 
 const statusLabels: Record<OrderStatus, string> = {
   pending: 'Novo',
+  pending_payment: 'Aguardando pagamento',
   new: 'Novo',
   accepted: 'Aceito',
   paid: 'Pago',
@@ -107,6 +111,8 @@ const statusLabels: Record<OrderStatus, string> = {
   ready: 'Pronto',
   out_for_delivery: 'Saiu para entrega',
   delivered: 'Entregue',
+  payment_failed: 'Pagamento falhou',
+  expired: 'Expirado',
   canceled: 'Cancelado',
   cancelled: 'Cancelado',
 };
@@ -134,6 +140,7 @@ const paymentStatusLabels: Record<PaymentStatus, string> = {
 
 const normalizeStatus = (status: OrderStatus): OrderStatus => {
   if (status === 'pending' || status === 'paid') return 'new';
+  if (status === 'pending_payment' || status === 'payment_failed' || status === 'expired') return status;
   if (status === 'accepted') return 'preparing';
   if (status === 'canceled') return 'cancelled';
   return status;
@@ -334,7 +341,8 @@ export default function Loja() {
       return;
     }
 
-    const nextOrders = (data || []) as unknown as StoreOrder[];
+    const nextOrders = ((data || []) as unknown as StoreOrder[])
+      .filter((order) => !['pending_payment', 'payment_failed', 'expired'].includes(order.status));
     setOrders(nextOrders);
     setSelectedOrder((current) => {
       if (!current) return nextOrders[0] || null;

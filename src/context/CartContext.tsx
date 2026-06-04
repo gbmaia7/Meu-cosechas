@@ -52,6 +52,7 @@ interface CartContextType {
   clearCart: () => void;
   activeOrders: ActiveOrder[];
   addActiveOrder: (order: Omit<ActiveOrder, 'id'>) => Promise<void> | void;
+  trackActiveOrder: (order: ActiveOrder) => void;
   updateActiveOrderStatus: (id: string, status: ActiveOrder['status']) => void;
   removeActiveOrder: (id: string) => void;
   productFrequency: Record<string, number>;
@@ -368,6 +369,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setActiveOrders((prev) => prev.map(order => order.id === id ? { ...order, status } : order));
   };
 
+  const trackActiveOrder = (order: ActiveOrder) => {
+    setActiveOrders((prev) => {
+      if (prev.some((activeOrder) => activeOrder.id === order.id)) return prev;
+      return [...prev, order];
+    });
+  };
+
   const removeActiveOrder = (id: string) => {
     setActiveOrders((prev) => prev.filter(order => order.id !== id));
   };
@@ -421,7 +429,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, session, phoneVerified, canEarnPoints, canSubscribe, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, updateActiveOrderStatus, removeActiveOrder, productFrequency }}>
+    <CartContext.Provider value={{ items, addToCart, updateQuantity, removeFromCart, updateItem, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, session, phoneVerified, canEarnPoints, canSubscribe, totalItems, totalPrice, clearCart, activeOrders, addActiveOrder, trackActiveOrder, updateActiveOrderStatus, removeActiveOrder, productFrequency }}>
       {children}
     </CartContext.Provider>
   );

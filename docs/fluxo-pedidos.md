@@ -18,14 +18,16 @@ confirmar entrega. O cliente acompanha o pedido em `AcompanharPedido.tsx`.
 2. Cliente adiciona itens na sacola.
 3. Cliente escolhe modalidade de retirada ou entrega.
 4. Cliente escolhe pagamento.
-5. Pedido e salvo no Supabase quando aplicavel.
-6. Cliente acompanha status.
-7. Em entrega, cliente visualiza o PIN de seguranca.
+5. Para Pix/cartao, pedido e salvo no Supabase como `pending_payment`.
+6. Mercado Pago confirma pagamento via webhook/consulta backend.
+7. Pedido muda para `new` apos pagamento aprovado.
+8. Cliente acompanha status.
+9. Em entrega, cliente visualiza o PIN de seguranca.
 
 ### Loja
 
 1. Loja acessa `/loja`.
-2. Loja visualiza pedidos do dia.
+2. Loja visualiza pedidos pagos do dia.
 3. Loja aceita/prepara pedido.
 4. Loja marca pedido como pronto.
 5. Para delivery, loja marca como saiu para entrega.
@@ -50,3 +52,4 @@ confirmar entrega. O cliente acompanha o pedido em `AcompanharPedido.tsx`.
 ## Historico de atualizacao
 
 * 2026-06-03: template inicial criado com fluxo observado no sistema.
+* 2026-06-03: atualizado fluxo online para Mercado Pago com `pending_payment`.

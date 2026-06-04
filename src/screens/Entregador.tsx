@@ -3,7 +3,7 @@ import { Bike, CheckCircle2, LogOut, Phone, RefreshCw, ShieldCheck, Store, Walle
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
-type StoreRole = 'customer' | 'store' | 'admin';
+type StoreRole = 'customer' | 'store' | 'admin' | 'delivery';
 type DeliveryStatus = 'ready' | 'out_for_delivery' | 'delivered';
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'pay_on_delivery';
 type DeliveryTab = 'ready' | 'route' | 'completed';
@@ -126,7 +126,7 @@ export default function Entregador() {
   const [successMessage, setSuccessMessage] = useState('');
   const [pinModal, setPinModal] = useState<PinModal>(null);
 
-  const canAccess = role === 'store' || role === 'admin';
+  const canAccess = role === 'store' || role === 'admin' || role === 'delivery';
 
   const readyOrders = useMemo(
     () => orders.filter((order) => order.status === 'ready'),

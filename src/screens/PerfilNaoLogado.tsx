@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { X, Utensils, Star, ShoppingBag, User, CreditCard, UserPlus, Phone, MapPin, Wallet, Gift, Crown } from 'lucide-react';
+import { X, Utensils, ShoppingBag, User, MapPin, Wallet, Gift, Crown } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export default function PerfilNaoLogado() {
@@ -97,7 +97,7 @@ export default function PerfilNaoLogado() {
               <div>
                 <h4 className="font-display font-bold text-[#1c1b1b] mb-1">Checkout Rápido</h4>
                 <p className="text-xs text-[#5d3f3e] leading-relaxed">
-                  Salve seus cartões para um pagamento seguro e em poucos cliques.
+                  Pague com Pix ou cartao dentro do app pelo Mercado Pago.
                 </p>
               </div>
             </div>

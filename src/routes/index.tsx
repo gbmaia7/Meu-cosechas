@@ -18,6 +18,7 @@ import RedefinirSenha from '../screens/RedefinirSenha';
 import Pagamento from '../screens/Pagamento';
 import PagamentoPix from '../screens/PagamentoPix';
 import PagamentoVR from '../screens/PagamentoVR';
+import NovoCartao from '../screens/NovoCartao';
 import ValidandoPagamento from '../screens/ValidandoPagamento';
 import PagamentoConfirmado from '../screens/PagamentoConfirmado';
 import PagamentoConfirmadoVR from '../screens/PagamentoConfirmadoVR';
@@ -50,6 +51,7 @@ export function AppRoutes() {
       <Route path="/pagamento" element={<Pagamento />} />
       <Route path="/pagamento/pix" element={<PagamentoPix />} />
       <Route path="/pagamento/vr" element={<PagamentoVR />} />
+      <Route path="/pagamento/cartao" element={<NovoCartao />} />
       <Route path="/validando-pagamento" element={<ValidandoPagamento />} />
       <Route path="/pagamento-confirmado" element={<PagamentoConfirmado />} />
       <Route path="/pagamento-confirmado-vr" element={<PagamentoConfirmadoVR />} />

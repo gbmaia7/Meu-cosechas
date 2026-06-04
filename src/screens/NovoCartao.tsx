@@ -1,210 +1,207 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, CreditCard, Calendar, Lock } from 'lucide-react';
+import { ChevronLeft, CreditCard, Calendar, Lock, Loader2 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+
+declare global {
+  interface Window {
+    MercadoPago?: new (publicKey: string) => any;
+  }
+}
+
+const loadMercadoPago = async () => {
+  if (window.MercadoPago) return window.MercadoPago;
+  await new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>('script[src="https://sdk.mercadopago.com/js/v2"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error('Erro ao carregar MercadoPago.js')), { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://sdk.mercadopago.com/js/v2';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Erro ao carregar MercadoPago.js'));
+    document.body.appendChild(script);
+  });
+  if (!window.MercadoPago) throw new Error('MercadoPago.js indisponível.');
+  return window.MercadoPago;
+};
 
 export default function NovoCartao() {
   const navigate = useNavigate();
   const location = useLocation();
-  const type = location.state?.type || 'credit_card'; // 'credit_card' or 'debit_card'
-  
+  const type = location.state?.type || 'credit_card';
+  const selecting = location.state?.selecting;
+
   const [cardNumber, setCardNumber] = useState('');
   const [cardHolder, setCardHolder] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
+  const [cpf, setCpf] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '');
-    const formatted = value.match(/.{1,4}/g)?.join(' ') || value;
-    setCardNumber(formatted.slice(0, 19));
-    if (errors.cardNumber) setErrors({ ...errors, cardNumber: '' });
+  const validate = () => {
+    const next: Record<string, string> = {};
+    if (cardNumber.replace(/\D/g, '').length < 13) next.cardNumber = 'Número inválido';
+    if (cardHolder.trim().split(' ').length < 2) next.cardHolder = 'Nome completo';
+    if (expiry.length < 5) next.expiry = 'Data inválida';
+    if (cvv.length < 3) next.cvv = 'CVV inválido';
+    if (cpf.replace(/\D/g, '').length !== 11) next.cpf = 'CPF inválido';
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
-  const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '');
-    let formattedValue = value;
-    if (value.length >= 3) {
-      formattedValue = `${value.slice(0, 2)}/${value.slice(2, 4)}`;
-    }
-    setExpiry(formattedValue);
-    if (errors.expiry) setErrors({ ...errors, expiry: '' });
-  };
+  const handleSave = async () => {
+    if (!validate()) return;
+    setSaving(true);
+    setError('');
+    try {
+      const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
+      if (!publicKey) throw new Error('Public Key não configurada.');
 
-  const handleCvvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '');
-    setCvv(value.slice(0, 4));
-    if (errors.cvv) setErrors({ ...errors, cvv: '' });
-  };
+      const cleanCard = cardNumber.replace(/\D/g, '');
+      const cleanCpf = cpf.replace(/\D/g, '');
+      const [month, shortYear] = expiry.split('/');
+      const year = shortYear?.length === 2 ? `20${shortYear}` : shortYear;
 
-  const handleCardHolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCardHolder(e.target.value);
-    if (errors.cardHolder) setErrors({ ...errors, cardHolder: '' });
-  };
+      const MercadoPago = await loadMercadoPago();
+      const mp = new MercadoPago(publicKey);
 
-  const handleSave = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!cardNumber || cardNumber.replace(/\D/g, '').length < 13) {
-      newErrors.cardNumber = 'Número de cartão inválido';
-    }
-    
-    if (!cardHolder || cardHolder.trim().split(' ').length < 2) {
-      newErrors.cardHolder = 'Insira o nome completo';
-    }
+      const methods = await mp.getPaymentMethods({ bin: cleanCard.slice(0, 6) });
+      const paymentMethodId = methods?.results?.[0]?.id || methods?.[0]?.id;
+      if (!paymentMethodId) throw new Error('Bandeira não identificada.');
 
-    if (!expiry || expiry.length < 5) {
-      newErrors.expiry = 'Data inválida';
-    } else {
-      const [month] = expiry.split('/');
-      const monthNum = parseInt(month, 10);
-      if (monthNum < 1 || monthNum > 12) {
-        newErrors.expiry = 'Mês inválido';
-      }
-    }
+      const token = await mp.createCardToken({
+        cardNumber: cleanCard,
+        cardholderName: cardHolder,
+        cardExpirationMonth: month,
+        cardExpirationYear: year,
+        securityCode: cvv,
+        identificationType: 'CPF',
+        identificationNumber: cleanCpf,
+      });
+      if (!token?.id) throw new Error('Não foi possível tokenizar o cartão.');
 
-    if (!cvv || cvv.length < 3) {
-      newErrors.cvv = 'CVV inválido';
-    }
+      const { error: fnError } = await supabase.functions.invoke('save-card', {
+        body: { token: token.id },
+      });
+      if (fnError) throw new Error('Não foi possível salvar o cartão. Tente novamente.');
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    localStorage.removeItem('savedCardRemoved');
-    const last4 = cardNumber.replace(/\D/g, '').slice(-4) || '0000';
-    
-    const newCard = {
-      id: Date.now().toString(),
-      name: cardHolder || 'Cartão Principal',
-      last4: last4,
-      type: 'Crédito'
-    };
-    
-    const existingCardsStr = localStorage.getItem('savedCards');
-    let existingCards = [];
-    if (existingCardsStr) {
-      existingCards = JSON.parse(existingCardsStr);
-    } else {
-      // Migrate old format if exists
-      const oldName = localStorage.getItem('savedCardName');
-      const removed = localStorage.getItem('savedCardRemoved') === 'true';
-      if (oldName && !removed) {
-        existingCards.push({
-          id: 'old-1',
-          name: oldName,
-          last4: localStorage.getItem('savedCardLast4') || '4242',
-          type: 'Crédito'
-        });
-      }
-    }
-    
-    existingCards.push(newCard);
-    localStorage.setItem('savedCards', JSON.stringify(existingCards));
-    localStorage.removeItem('savedCardRemoved'); // clear legacy
-    
-    if (location.state?.returnToAssinatura || location.state?.selecting === false || location.state?.selecting === undefined) {
       navigate(-1);
-    } else {
-      navigate('/pagamento', { state: { preSelectedMethod: 'credit_card_saved' } });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao salvar cartão.');
+    } finally {
+      setSaving(false);
     }
   };
+
+  const field = (label: string, children: React.ReactNode, err?: string) => (
+    <div className="space-y-1">
+      <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">{label}</label>
+      {children}
+      {err && <p className="text-[#e8173a] text-[10px] font-bold px-1">{err}</p>}
+    </div>
+  );
+
+  const inputClass = (hasError?: boolean) =>
+    `w-full bg-white border ${hasError ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`;
 
   return (
-    <div className="bg-[#fcf9f8] min-h-screen text-[#1c1b1b] font-body relative z-0">
-      <header className="fixed top-0 w-full z-50 bg-[#fcf9f8]/70 backdrop-blur-xl flex items-center px-6 h-16">
-        <button 
-          onClick={() => navigate(-1)}
-          className="text-[#E8173A] hover:bg-zinc-100 transition-colors p-2 rounded-full scale-95 active:scale-90 transition-transform -ml-2 mr-2"
-        >
+    <div className="bg-[#fcf9f8] min-h-screen text-[#1c1b1b] font-body">
+      <header className="fixed top-0 w-full z-50 bg-[#fcf9f8]/70 backdrop-blur-xl flex items-center px-6 h-16 gap-4">
+        <button onClick={() => navigate(-1)} className="text-[#E8173A] p-2 rounded-full active:scale-95 transition-transform -ml-2">
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h1 className="font-display font-bold text-lg text-[#1c1b1b]">Novo Cartão</h1>
+        <h1 className="font-display font-bold text-lg">Novo Cartão</h1>
       </header>
 
-      <main className="pt-24 px-6 max-w-md mx-auto space-y-6">
-        <div className="mb-8">
-          <h2 className="font-display text-2xl font-extrabold tracking-tight mb-2">
-            {type === 'debit_card' ? 'Adicionar cartão de débito' : 'Adicionar cartão de crédito'}
+      <main className="pt-24 px-6 max-w-md mx-auto space-y-4 pb-12">
+        <div className="mb-6">
+          <h2 className="font-display text-2xl font-extrabold tracking-tight mb-1">
+            {type === 'debit_card' ? 'Cartão de débito' : 'Cartão de crédito'}
           </h2>
-          <p className="text-[#5d3f3e] font-medium text-sm">Insira os dados do seu cartão para concluir a compra de forma rápida e segura.</p>
+          <p className="text-[#5d3f3e] text-sm">Dados tokenizados pelo Mercado Pago. Nunca armazenamos o número completo.</p>
         </div>
 
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">Número do cartão</label>
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-xs text-red-800 font-medium">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {field('Número do cartão',
             <div className="relative">
               <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a8a29e]" />
-              <input 
+              <input
                 type="text"
                 value={cardNumber}
-                onChange={handleCardNumberChange} 
-                placeholder="0000 0000 0000 0000" 
+                onChange={(e) => setCardNumber(e.target.value.replace(/[^\d ]/g, '').slice(0, 19))}
+                placeholder="0000 0000 0000 0000"
                 className={`w-full bg-white border ${errors.cardNumber ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
               />
-            </div>
-            {errors.cardNumber && <p className="text-[#e8173a] text-[10px] font-bold px-1">{errors.cardNumber}</p>}
-          </div>
+            </div>,
+            errors.cardNumber,
+          )}
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">Nome do titular</label>
-            <input 
-              type="text"
-              value={cardHolder}
-              onChange={handleCardHolderChange} 
-              placeholder="Como está impresso no cartão" 
-              className={`w-full bg-white border ${errors.cardHolder ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
-            />
-            {errors.cardHolder && <p className="text-[#e8173a] text-[10px] font-bold px-1">{errors.cardHolder}</p>}
-          </div>
+          {field('Nome do titular',
+            <input type="text" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} placeholder="Como está no cartão" className={inputClass(!!errors.cardHolder)} />,
+            errors.cardHolder,
+          )}
 
-          <div className="flex gap-4">
-            <div className="space-y-1 flex-1">
-              <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">Validade</label>
+          <div className="grid grid-cols-2 gap-3">
+            {field('Validade',
               <div className="relative">
                 <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a8a29e]" />
-                <input 
-                  type="text" 
-                  placeholder="MM/AA" 
+                <input
+                  type="text"
                   value={expiry}
-                  onChange={handleExpiryChange}
-                  maxLength={5}
+                  onChange={(e) => setExpiry(e.target.value.replace(/[^\d/]/g, '').slice(0, 5))}
+                  placeholder="MM/AA"
                   className={`w-full bg-white border ${errors.expiry ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
                 />
-              </div>
-              {errors.expiry && <p className="text-[#e8173a] text-[10px] font-bold px-1">{errors.expiry}</p>}
-            </div>
-            <div className="space-y-1 flex-1">
-              <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">CVV</label>
+              </div>,
+              errors.expiry,
+            )}
+            {field('CVV',
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a8a29e]" />
-                <input 
+                <input
                   type="text"
                   value={cvv}
-                  onChange={handleCvvChange} 
-                  placeholder="123" 
+                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="123"
                   className={`w-full bg-white border ${errors.cvv ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
                 />
-              </div>
-              {errors.cvv && <p className="text-[#e8173a] text-[10px] font-bold px-1">{errors.cvv}</p>}
-            </div>
+              </div>,
+              errors.cvv,
+            )}
           </div>
 
-          <div className="pt-6">
-             <button 
-                type="submit"
-                className="w-full mt-6 flex items-center justify-center gap-2 py-4 bg-[#bd002a] text-white rounded-full font-display font-bold shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-all"
-              >
-                Salvar Cartão
-              </button>
-          </div>
+          {field('CPF do titular',
+            <input
+              type="text"
+              value={cpf}
+              onChange={(e) => setCpf(e.target.value.replace(/\D/g, '').slice(0, 11))}
+              placeholder="000.000.000-00"
+              className={inputClass(!!errors.cpf)}
+            />,
+            errors.cpf,
+          )}
+        </div>
 
-        </form>
-
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full mt-6 flex items-center justify-center gap-2 py-4 bg-[#bd002a] text-white rounded-full font-display font-bold shadow-lg shadow-[#bd002a]/20 active:scale-95 transition-all disabled:opacity-70"
+        >
+          {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Cartão'}
+        </button>
       </main>
     </div>
   );

@@ -7,19 +7,23 @@ import { supabase } from '../lib/supabase';
 export default function PagamentoConfirmado() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items, totalPrice, clearCart, addActiveOrder, userPoints, activeOrders } = useCart();
+  const { items, totalPrice, clearCart, addActiveOrder, trackActiveOrder, userPoints } = useCart();
   
   const [isProcessing, setIsProcessing] = useState(false)
 
   const modality = location.state?.modality || 'counter';
   const address = location.state?.address;
   const paymentMethod = location.state?.paymentMethod || 'pix';
+  const existingOrder = location.state?.existingOrder === true;
+  const orderId = location.state?.orderId;
+  const pickupCode = location.state?.pickupCode || location.state?.pickup_code || null;
+  const deliveryPin = location.state?.deliveryPin || location.state?.delivery_pin || null;
   const isReward = location.state?.isReward || false;
   const couponDiscount = location.state?.couponDiscount ?? 0;
   const referrerId = location.state?.referrerId ?? null;
 
-  const [orderSnapshot] = useState(() => [...items])
-  const [subtotalSnapshot] = useState(() => totalPrice)
+  const [orderSnapshot] = useState(() => location.state?.orderSnapshot || [...items])
+  const [subtotalSnapshot] = useState(() => location.state?.totalPriceSnapshot ?? totalPrice)
 
   const isAllReward = orderSnapshot.every(
     i => i.name.startsWith('[CLUBE]')
@@ -27,7 +31,7 @@ export default function PagamentoConfirmado() {
   const deliveryFee = modality === 'delivery' ? 5.00 : 0
   const computedTotal = isAllReward ? 0 : subtotalSnapshot + deliveryFee - couponDiscount
 
-  const validItemsCount = items.reduce((sum, item) => sum + (item.name.startsWith('[CLUBE]') ? 0 : item.quantity), 0);
+  const validItemsCount = orderSnapshot.reduce((sum, item) => sum + (item.name.startsWith('[CLUBE]') ? 0 : item.quantity), 0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -178,10 +182,23 @@ export default function PagamentoConfirmado() {
             if (isProcessing) return
             setIsProcessing(true)
 
-            if (items.length > 0) {
+            if (existingOrder && orderId && orderSnapshot.length > 0) {
+              trackActiveOrder({
+                id: orderId,
+                items: [...orderSnapshot],
+                totalPrice: isReward ? 0 : subtotalSnapshot,
+                status: 'new',
+                modality,
+                address,
+                payment_method: paymentMethod,
+                pickup_code: pickupCode,
+                delivery_pin: deliveryPin,
+              })
+              clearCart()
+            } else if (orderSnapshot.length > 0) {
               await addActiveOrder({
-                items: [...items],
-                totalPrice: isReward ? 0 : totalPrice,
+                items: [...orderSnapshot],
+                totalPrice: isReward ? 0 : subtotalSnapshot,
                 status: 'preparing',
                 modality,
                 address,

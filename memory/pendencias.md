@@ -4,14 +4,30 @@ Registrar pendencias operacionais, tecnicas e de produto.
 
 ## Registro
 
+### RLS orders_store_select — pending_payment
+
+* Pendencia: filtrar pedidos pending_payment no RLS, nao apenas no frontend.
+* Prioridade: alta.
+* Status: **concluido** em 2026-06-04.
+* Resolucao: migration `fix_rls_store_pending_payment` aplicada — policies `orders_store_select` e `orders_store_update` agora incluem `status != pending_payment`.
+
+
 ### Documentacao de pagamentos
 
-* Pendencia: confirmar gateway oficial de pagamentos.
-* Prioridade: media.
-* Contexto: arquivo solicitado cita Mercado Pago, mas codigo auditado usa InfinitePay.
+* Pendencia: validar credenciais e webhook Mercado Pago em ambiente de teste.
+* Prioridade: alta.
+* Contexto: gateway oficial definido como Mercado Pago Checkout Transparente; InfinitePay nao sera usado.
 * Responsavel: A definir.
-* Proximo passo: validar com negocio se Mercado Pago sera integrado ou se InfinitePay e definitivo.
+* Proximo passo: configurar `VITE_MERCADO_PAGO_PUBLIC_KEY`, `MERCADO_PAGO_ACCESS_TOKEN` e webhook no painel Mercado Pago.
 * Status: aberto.
+
+### Validacao de assinatura do webhook — MERCADO_PAGO_WEBHOOK_SECRET
+
+* Pendencia: garantir que o secret esteja configurado como secret da Edge Function no Supabase antes do go-live.
+* Prioridade: alta.
+* Contexto: a Edge Function webhook-mercado-pago agora exige o secret obrigatoriamente; sem ele retorna 500.
+* Proximo passo: configurar MERCADO_PAGO_WEBHOOK_SECRET no painel Supabase > Edge Functions > Secrets.
+* Status: correcao deployada em 2026-06-04; configuracao do secret em producao pendente de validacao.
 
 ### Migrations Supabase
 

@@ -1,46 +1,65 @@
-# Pagamentos
+# Pagamentos Mercado Pago
 
 ## Objetivo
 
-Registrar integracoes e regras de pagamento. O nome do arquivo referencia
-Mercado Pago por solicitacao, mas a integracao observada no projeto atualmente
-e InfinitePay.
+Registrar a decisao e o fluxo oficial de pagamentos do Meu-Cosechas com
+Mercado Pago Checkout Transparente, mantendo a experiencia dentro do app.
 
 ## Contexto
 
-O codigo atual possui Edge Functions relacionadas a InfinitePay:
-
-* `supabase/functions/create-infinite-checkout/index.ts`
-* `supabase/functions/verify-infinite-payment/index.ts`
-* `supabase/functions/webhook-infinitepay/index.ts`
-
-Nao foi encontrada integracao Mercado Pago no codigo auditado.
+Decisao tecnica atual: nao usar InfinitePay porque o fluxo direciona o cliente
+para checkout externo/hospedado. O gateway oficial passa a ser Mercado Pago com
+checkout transparente/in-app.
 
 ## Informacoes atuais
 
-### InfinitePay
+### Diretriz principal
 
-* Checkout criado por Edge Function `create-infinite-checkout`.
-* Verificacao de pagamento por `verify-infinite-payment`.
-* Webhook recebido em `webhook-infinitepay`.
-* Variaveis observadas:
-  * `INFINITEPAY_HANDLE`
-  * `APP_URL`
-  * `SUPABASE_URL`
+* Nao usar Checkout Pro, link de pagamento ou redirecionamento externo.
+* Usar Public Key somente no frontend.
+* Usar Access Token somente em Supabase Edge Functions.
+* Tokenizar cartao no frontend com MercadoPago.js antes de chamar o backend.
+* Confirmacao final deve vir por webhook ou consulta backend sincronizada.
 
-### Mercado Pago
+### Variaveis
 
-* A definir.
-* Necessita validacao: confirmar se Mercado Pago sera usado no futuro ou se o
-  nome deste arquivo deve ser migrado para `pagamentos-infinitepay.md`.
+Frontend Vite:
+
+* `VITE_MERCADO_PAGO_PUBLIC_KEY`
+
+Backend/Supabase Edge Functions (todas obrigatorias):
+
+* `MERCADO_PAGO_ACCESS_TOKEN`
+* `MERCADO_PAGO_WEBHOOK_SECRET` — obrigatorio; ausencia retorna 500 e rejeita webhook
+* `SUPABASE_URL`
+* `SUPABASE_ANON_KEY`
+* `SUPABASE_SERVICE_ROLE_KEY`
+* `APP_URL`
+
+### Edge Functions
+
+* `create-mercado-pago-payment`: cria pedido `pending_payment`, cria pagamento
+  Pix/cartao no Mercado Pago e salva referencia em `order_payments`.
+* `get-mercado-pago-payment`: consulta pagamento no Mercado Pago e sincroniza
+  `orders.payment_status` e `orders.status`.
+* `webhook-mercado-pago`: recebe notificacoes, valida assinatura quando segredo
+  estiver configurado, consulta o pagamento na API e atualiza o pedido.
+
+### Status
+
+* Pedido antes do pagamento: `pending_payment`.
+* Pagamento aprovado: `payment_status = paid` e `status = new`.
+* Pagamento recusado/cancelado: `payment_status = failed` e
+  `status = payment_failed`.
+* Pagamento pendente: permanece `pending_payment`.
 
 ## Pendencias
 
-* Necessita validacao: gateway oficial de pagamento.
-* Necessita validacao: fluxo completo de webhook e reconciliacao.
-* Necessita validacao: tratamento de falha, estorno e pagamentos pendentes.
-* A definir: politica de auditoria financeira.
+* Necessita validacao: credenciais reais de teste Mercado Pago.
+* Necessita validacao: payload final de webhook no ambiente configurado.
+* Necessita validacao: politica de estorno/refund.
+* A definir: expiracao operacional de Pix pendente.
 
 ## Historico de atualizacao
 
-* 2026-06-03: template inicial criado; observado uso de InfinitePay, nao Mercado Pago.
+* 2026-06-03: decisao atualizada para Mercado Pago Checkout Transparente.

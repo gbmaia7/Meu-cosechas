@@ -27,10 +27,11 @@ cliente, loja e entregador.
 
 * Cliente Supabase: `src/lib/supabase.ts`.
 * SQL e politicas: pasta `supabase/`.
-* Edge Functions:
-  * `create-infinite-checkout`
-  * `verify-infinite-payment`
-  * `webhook-infinitepay`
+* Edge Functions Mercado Pago:
+  * `create-mercado-pago-payment`
+  * `get-mercado-pago-payment`
+  * `webhook-mercado-pago`
+* Edge Functions InfinitePay removidas em 2026-06-04 (arquivos locais excluidos; remover do Supabase Dashboard se ainda aparecerem).
 * Regras de loja e entregador observadas em `supabase/store_mvp_schema.sql`.
 * Confirmacao segura de entrega por PIN observada em
   `supabase/confirm_delivery_pin.sql`.
@@ -51,3 +52,4 @@ cliente, loja e entregador.
 ## Historico de atualizacao
 
 * 2026-06-03: template inicial criado a partir da auditoria tecnica.
+* 2026-06-03: adicionada camada Mercado Pago Checkout Transparente.

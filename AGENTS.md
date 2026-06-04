@@ -40,6 +40,33 @@ docs/pagamentos-mercado-pago.md
 Fluxo de pedidos:
 docs/fluxo-pedidos.md
 
+Seguranca:
+docs/security.md
+
+Threat Model:
+docs/threat-model.md
+
+Permissoes:
+docs/auth-permissions.md
+
+Privacidade:
+docs/data-privacy.md
+
+Testes:
+docs/testing.md
+
+Deploy:
+docs/deployment.md
+
+Ambientes:
+docs/environments.md
+
+Banco:
+docs/database.md
+
+Modelo de Dados:
+docs/data-model.md
+
 ## Processo Antes de Implementar
 
 1. Entender a tarefa.
@@ -88,3 +115,229 @@ Antes de mudancas relevantes:
 * evitar refactors nao relacionados
 * rodar lint, build e testes quando disponiveis
 * revisar o diff antes de finalizar
+
+Checklist de revisao:
+
+* impacto em seguranca
+* impacto em autenticacao
+* impacto em permissoes
+* exposicao de dados
+* impacto em banco de dados
+* impacto em deploy
+* impacto em ambientes
+* cobertura de testes
+* risco de regressão
+
+
+## Agent Operating Principles
+
+
+
+\- Entender antes de alterar.
+
+\- Planejar antes de implementar.
+
+\- Preferir simplicidade.
+
+\- Fazer a menor mudança funcional possível.
+
+\- Reutilizar padrões existentes antes de criar novos.
+
+\- Evitar overengineering.
+
+\- Não fazer refactors não relacionados à tarefa.
+
+\- Consultar documentação oficial para APIs, SDKs e bibliotecas externas.
+
+\- Validar impacto em segurança, dados, testes e deploy.
+
+\- Atualizar docs/ e memory/ quando a mudança alterar regras, arquitetura, fluxos, pagamentos, segurança, banco ou decisões importantes.
+
+
+## Quando Usar Playbooks
+
+
+
+\- Para novas features: playbooks/implement-feature.md
+
+\- Para revisão: playbooks/review-code.md
+
+\- Para bugs: playbooks/debug-production.md
+
+\- Para segurança: playbooks/security-review.md
+
+\- Para dependências: playbooks/dependency-audit.md
+
+\- Para pagamentos: playbooks/payment-security.md
+
+\- Para testes: playbooks/test-feature.md e playbooks/regression-check.md
+
+\- Para deploy: playbooks/release-checklist.md
+
+
+## Skills Obrigatórias e Princípios Herdados
+
+
+
+Mesmo quando uma skill não for executada formalmente, seus princípios devem ser aplicados.
+
+
+
+\### karpathy-guidelines
+
+
+
+Aplicar em toda implementação.
+
+
+
+Regras obrigatórias:
+
+
+
+\- preferir simplicidade
+
+\- evitar overengineering
+
+\- evitar abstrações prematuras
+
+\- fazer a menor mudança funcional possível
+
+\- reutilizar código existente antes de criar novo
+
+\- entender o fluxo antes de alterar
+
+\- não fazer refactors não relacionados
+
+\- manter código legível e direto
+
+
+
+Antes de codar, o agente deve responder internamente:
+
+
+
+1\. Esta é a solução mais simples?
+
+2\. Existe implementação parecida no projeto?
+
+3\. Estou criando abstração desnecessária?
+
+4\. Estou alterando mais arquivos do que preciso?
+
+
+
+\### codebase-recon
+
+
+
+Usar quando:
+
+
+
+\- o agente não entender a arquitetura
+
+\- a tarefa envolver área desconhecida
+
+\- houver risco de impacto em múltiplos módulos
+
+
+
+Antes de alterar código desconhecido:
+
+
+
+\- mapear arquivos relevantes
+
+\- entender fluxo atual
+
+\- identificar dependências
+
+\- só então implementar
+
+
+
+\### create-plan
+
+
+
+Usar antes de tarefas médias ou grandes.
+
+
+
+O plano deve conter:
+
+
+
+\- objetivo
+
+\- arquivos prováveis
+
+\- riscos
+
+\- passos de execução
+
+\- validações
+
+
+
+\### codex-review
+
+
+
+Aplicar antes de finalizar qualquer alteração relevante.
+
+
+
+Checklist:
+
+
+
+\- mudança mínima?
+
+\- sem overengineering?
+
+\- sem quebra de fluxo existente?
+
+\- segurança revisada?
+
+\- testes/validação definidos?
+
+\- docs/memory atualizados se necessário?
+
+
+
+\### openai-docs
+
+
+
+Usar documentação oficial quando a tarefa envolver:
+
+
+
+\- OpenAI API
+
+\- SDKs
+
+\- modelos
+
+\- integrações externas
+
+\- comportamento que pode ter mudado
+
+
+
+\### Regra de Execução
+
+
+
+Se uma tarefa envolver código, o agente deve declarar no plano quais princípios/skills serão aplicados.
+
+
+
+Exemplo:
+
+
+
+"Vou aplicar karpathy-guidelines, codebase-recon e codex-review nesta tarefa."
+
