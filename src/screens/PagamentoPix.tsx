@@ -14,6 +14,8 @@ export default function PagamentoPix() {
   const [copied, setCopied] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Aguardando confirmacao do pagamento.');
   const [statusError, setStatusError] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
+  const [checkWarning, setCheckWarning] = useState('');
 
   const qrImage = useMemo(() => {
     if (qrCodeBase64) return `data:image/png;base64,${qrCodeBase64}`;
@@ -80,6 +82,38 @@ export default function PagamentoPix() {
     };
   }, [location.state, navigate, orderId]);
 
+  const handleCheckPayment = async () => {
+    if (isChecking || !orderId) return;
+    setIsChecking(true);
+    setCheckWarning('');
+
+    const { data, error } = await supabase.functions.invoke('get-mercado-pago-payment', {
+      body: { order_id: orderId },
+    });
+
+    if (error) {
+      setCheckWarning('Nao foi possivel verificar agora. Tente novamente em alguns segundos.');
+      setIsChecking(false);
+      return;
+    }
+
+    if (data?.payment_status === 'paid') {
+      navigate('/pagamento-confirmado', {
+        state: { ...location.state, existingOrder: true, orderId, paymentMethod: 'pix' },
+      });
+      return;
+    }
+
+    if (data?.payment_status === 'failed') {
+      setStatusError('Pagamento recusado ou cancelado. Tente novamente.');
+      setIsChecking(false);
+      return;
+    }
+
+    setCheckWarning('Pagamento ainda nao identificado. Aguarde alguns segundos e tente novamente.');
+    setIsChecking(false);
+  };
+
   const handleCopy = async () => {
     if (!qrCode) return;
     await navigator.clipboard.writeText(qrCode);
@@ -134,11 +168,20 @@ export default function PagamentoPix() {
         </div>
 
         <button
-          onClick={() => navigate('/validando-pagamento', { state: location.state })}
-          className="w-full flex items-center justify-center gap-2 py-4 bg-[#bd002a] text-white rounded-full font-display font-bold shadow-lg shadow-[#bd002a]/20 active:scale-95 transition-transform"
+          onClick={handleCheckPayment}
+          disabled={isChecking}
+          className="w-full flex items-center justify-center gap-2 py-4 bg-[#bd002a] text-white rounded-full font-display font-bold shadow-lg shadow-[#bd002a]/20 active:scale-95 transition-transform disabled:opacity-70"
         >
-          Ja realizei o pagamento
+          {isChecking ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+          {isChecking ? 'Verificando...' : 'Ja realizei o pagamento'}
         </button>
+
+        {checkWarning && (
+          <div className="w-full rounded-xl px-4 py-3 flex items-center gap-3 bg-amber-50 border border-amber-200">
+            <AlertCircle className="w-5 h-5 shrink-0 text-amber-600" />
+            <p className="text-xs font-medium text-amber-800 leading-relaxed">{checkWarning}</p>
+          </div>
+        )}
       </main>
     </div>
   );
