@@ -53,6 +53,7 @@ Deno.serve(async (req) => {
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
     const searchData = await searchRes.json();
+    console.error('[save-card] customer search:', JSON.stringify(searchData));
     customerId = searchData?.results?.[0]?.id;
 
     if (!customerId) {
@@ -62,6 +63,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ email: userEmail }),
       });
       const createData = await createRes.json();
+      console.error('[save-card] customer create:', JSON.stringify(createData));
       if (!createData.id) return jsonResponse({ error: 'Failed to create MP customer', details: createData }, 502);
       customerId = createData.id;
     }
@@ -76,7 +78,10 @@ Deno.serve(async (req) => {
     body: JSON.stringify({ token: body.token }),
   });
   const cardData = await cardRes.json();
-  if (!cardRes.ok || !cardData.id) return jsonResponse({ error: 'Failed to save card to MP', details: cardData }, 502);
+  if (!cardRes.ok || !cardData.id) {
+    console.error('[save-card] MP card save failed:', JSON.stringify(cardData));
+    return jsonResponse({ error: 'Failed to save card to MP', details: cardData }, 502);
+  }
 
   // Avoid duplicates
   const { data: existing } = await serviceClient

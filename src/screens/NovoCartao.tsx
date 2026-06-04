@@ -161,7 +161,10 @@ export default function NovoCartao() {
                 <input
                   type="text"
                   value={expiry}
-                  onChange={(e) => setExpiry(e.target.value.replace(/[^\d/]/g, '').slice(0, 5))}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    setExpiry(digits.length >= 3 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits);
+                  }}
                   placeholder="MM/AA"
                   className={`w-full bg-white border ${errors.expiry ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
                 />
