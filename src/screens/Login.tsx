@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Mail, Lock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { PhoneInput } from 'react-international-phone';
@@ -20,6 +20,9 @@ const phoneDropdownStyle = `
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = location.state?.returnTo as string | undefined;
+  const returnState = location.state?.returnState;
   const [loginMode, setLoginMode] = useState<'phone' | 'email'>('phone');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -71,7 +74,7 @@ export default function Login() {
       return;
     }
 
-    navigate('/HomeComSacola', { replace: true });
+    navigate(returnTo || '/HomeComSacola', { state: returnState, replace: true });
   };
 
   return (

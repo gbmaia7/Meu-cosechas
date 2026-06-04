@@ -770,6 +770,10 @@ export default function Sacola() {
               setShowPhoneAlert(true);
             } else if (totalPrice === 0) {
               setShowFreeCheckoutConfirm(true);
+            } else if (!isAuthenticated) {
+              navigate('/login', {
+                state: { returnTo: '/pagamento', returnState: { modality, address, couponDiscount, referrerId } },
+              });
             } else {
               navigate('/pagamento', { state: { modality, address, couponDiscount, referrerId } });
             }
