@@ -307,6 +307,19 @@ export const EXTRA_ESPECIAIS: Extra[] = [
 
 export const ESPECIAIS: Product[] = [
   {
+    id: '0',
+    name: "N'amora?",
+    category: 'Especial',
+    description: 'Amora, romã, cereja, banana e pitaia batidos com sorvete e iogurte grego. Uma edição especial cremosa e intensa feita para celebrar cada forma de amor.',
+    priceDisplay: 'R$ 30,00',
+    points: 1,
+    image: 'https://i.imgur.com/22JzGkQ.png',
+    sizes: [
+      { label: 'M', price: 30.00, volume: '500ml' },
+    ],
+    extras: EXTRA_ESPECIAIS,
+  },
+  {
     id: 'shake-special-1',
     name: 'Shaketive',
     category: 'Especial',
