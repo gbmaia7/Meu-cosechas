@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { X, Utensils, ShoppingBag, User, Phone, CheckCircle2, AlertCircle, MapPin, Heart, LogOut, ChevronRight, Crown, Mail, Lock } from 'lucide-react';
+import { X, Utensils, ShoppingBag, User, Phone, CheckCircle2, AlertCircle, MapPin, Heart, LogOut, ChevronRight, Crown, Mail, Lock, CreditCard } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 
@@ -298,6 +298,22 @@ export default function PerfilLogado() {
                 <div className="text-left">
                   <p className="font-display font-bold text-sm text-[#1c1b1b]">Meus Endereços</p>
                   <p className="text-xs text-[#5d3f3e]">Gerencie seus locais de entrega</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#a8a29e]" />
+            </button>
+
+            <button
+              onClick={() => navigate('/perfil/cartoes')}
+              className="w-full flex items-center justify-between p-5 hover:bg-[#fcf9f8] transition-colors"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-[#f6f3f2] flex items-center justify-center shrink-0">
+                  <CreditCard className="w-5 h-5 text-[#5d3f3e]" />
+                </div>
+                <div className="text-left">
+                  <p className="font-display font-bold text-sm text-[#1c1b1b]">Meus Cartões</p>
+                  <p className="text-xs text-[#5d3f3e]">Gerencie seus cartões salvos</p>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-[#a8a29e]" />

@@ -11,6 +11,7 @@ import PerfilNaoLogado from '../screens/PerfilNaoLogado';
 import VerificarTelefone from '../screens/VerificarTelefone';
 import MeusEnderecos from '../screens/MeusEnderecos';
 import Favoritos from '../screens/Favoritos';
+import GerenciarCartoes from '../screens/GerenciarCartoes';
 import Login from '../screens/Login';
 import Cadastro from '../screens/Cadastro';
 import EsqueceuSenha from '../screens/EsqueceuSenha';
@@ -44,6 +45,7 @@ export function AppRoutes() {
       <Route path="/perfil/verificar-telefone" element={<VerificarTelefone />} />
       <Route path="/perfil/enderecos" element={<MeusEnderecos />} />
       <Route path="/perfil/favoritos" element={<Favoritos />} />
+      <Route path="/perfil/cartoes" element={<GerenciarCartoes />} />
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Cadastro />} />
       <Route path="/esqueceu-senha" element={<EsqueceuSenha />} />
