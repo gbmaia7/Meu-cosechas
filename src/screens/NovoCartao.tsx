@@ -125,7 +125,7 @@ export default function NovoCartao() {
           <h2 className="font-display text-2xl font-extrabold tracking-tight mb-1">
             {type === 'debit_card' ? 'Cartão de débito' : 'Cartão de crédito'}
           </h2>
-          <p className="text-[#5d3f3e] text-sm">Dados tokenizados pelo Mercado Pago. Nunca armazenamos o número completo.</p>
+          <p className="text-[#5d3f3e] text-sm">Só guardamos os últimos 4 números para você identificar o cartão. Os dados completos ficam protegidos com o Mercado Pago.</p>
         </div>
 
         {error && (

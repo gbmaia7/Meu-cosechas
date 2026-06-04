@@ -300,7 +300,7 @@ export default function Pagamento() {
               </div>
               <div>
                 <p className="font-display font-bold">Pix</p>
-                <p className="text-xs font-medium text-[#5d3f3e]">QR Code e copia-e-cola no app</p>
+                <p className="text-xs font-medium text-[#5d3f3e]">QR Code gerado com segurança — expira automaticamente</p>
               </div>
             </div>
             {selectedMethod === 'pix' && <CheckCircle2 className="text-[#bd002a] w-6 h-6" />}
@@ -317,7 +317,7 @@ export default function Pagamento() {
               </div>
               <div>
                 <p className="font-display font-bold">Cartao de credito</p>
-                <p className="text-xs font-medium text-[#5d3f3e]">Tokenizacao segura Mercado Pago</p>
+                <p className="text-xs font-medium text-[#5d3f3e]">Seus dados ficam 100% com o Mercado Pago</p>
               </div>
             </div>
             {selectedMethod === 'credit_card' && <CheckCircle2 className="text-[#bd002a] w-6 h-6" />}
@@ -334,7 +334,7 @@ export default function Pagamento() {
               </div>
               <div>
                 <p className="font-display font-bold">Cartao de debito</p>
-                <p className="text-xs font-medium text-[#5d3f3e]">Pagamento in-app com token seguro</p>
+                <p className="text-xs font-medium text-[#5d3f3e]">Pague direto pelo app com segurança</p>
               </div>
             </div>
             {selectedMethod === 'debit_card' && <CheckCircle2 className="text-[#bd002a] w-6 h-6" />}
@@ -388,7 +388,7 @@ export default function Pagamento() {
               </div>
               <input value={identificationNumber} onChange={(event) => setIdentificationNumber(event.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="CPF do titular" className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]" />
               <p className="text-[11px] text-[#5d3f3e] leading-relaxed">
-                Os dados do cartao sao tokenizados pelo MercadoPago.js antes de chegar ao backend.
+                🔒 Seus dados de cartão nunca passam pelos nossos servidores. O Mercado Pago processa tudo de forma criptografada — a mesma tecnologia usada por milhões de lojas no Brasil.
               </p>
             </div>
           )}

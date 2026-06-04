@@ -146,7 +146,7 @@ export default function PagamentoPix() {
             )}
           </div>
           <p className="text-xs text-[#a8a29e] text-center mt-2">
-            O QR Code expira conforme a regra do Mercado Pago.
+            O Pix é regulamentado pelo Banco Central do Brasil e tem a mesma segurança de uma transferência bancária.
           </p>
         </div>
 

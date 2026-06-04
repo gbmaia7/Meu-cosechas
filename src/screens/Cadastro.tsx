@@ -215,6 +215,10 @@ export default function Cadastro() {
           >
             {loading ? 'Criando conta...' : 'CRIAR E VERIFICAR TELEFONE'}
           </button>
+
+          <p style={{ textAlign: 'center', fontSize: '11px', color: '#a8a29e', marginTop: '8px' }}>
+            🔒 Seus dados são protegidos e nunca compartilhados com terceiros.
+          </p>
         </form>
 
         <p style={{ textAlign: 'center', marginTop: '32px', fontSize: '14px', color: '#5d3f3e' }}>
