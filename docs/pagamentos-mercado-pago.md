@@ -7,59 +7,122 @@ Mercado Pago Checkout Transparente, mantendo a experiencia dentro do app.
 
 ## Contexto
 
-Decisao tecnica atual: nao usar InfinitePay porque o fluxo direciona o cliente
-para checkout externo/hospedado. O gateway oficial passa a ser Mercado Pago com
-checkout transparente/in-app.
+Gateway oficial: Mercado Pago Checkout Transparente.
+InfinitePay descartado por redirecionar para checkout externo.
 
-## Informacoes atuais
-
-### Diretriz principal
+## Diretriz principal
 
 * Nao usar Checkout Pro, link de pagamento ou redirecionamento externo.
-* Usar Public Key somente no frontend.
-* Usar Access Token somente em Supabase Edge Functions.
-* Tokenizar cartao no frontend com MercadoPago.js antes de chamar o backend.
-* Confirmacao final deve vir por webhook ou consulta backend sincronizada.
+* `VITE_MERCADO_PAGO_PUBLIC_KEY` somente no frontend.
+* `MERCADO_PAGO_ACCESS_TOKEN` somente em Supabase Edge Functions.
+* Tokenizar cartao no frontend com Secure Fields antes de chamar o backend.
+* Confirmacao final via webhook ou consulta backend sincronizada.
 
-### Variaveis
+## Variaveis de ambiente
 
-Frontend Vite:
+Frontend Vite (obrigatorio no Vercel para Secure Fields funcionarem):
 
-* `VITE_MERCADO_PAGO_PUBLIC_KEY`
+* `VITE_MERCADO_PAGO_PUBLIC_KEY` — chave publica de producao (`APP_USR-...`)
 
 Backend/Supabase Edge Functions (todas obrigatorias):
 
 * `MERCADO_PAGO_ACCESS_TOKEN`
-* `MERCADO_PAGO_WEBHOOK_SECRET` — obrigatorio; ausencia retorna 500 e rejeita webhook
+* `MERCADO_PAGO_WEBHOOK_SECRET`
 * `SUPABASE_URL`
 * `SUPABASE_ANON_KEY`
 * `SUPABASE_SERVICE_ROLE_KEY`
-* `APP_URL`
 
-### Edge Functions
+## Fluxo de cartao (Secure Fields)
+
+1. `App.tsx` inicializa `new MercadoPago(key, { locale: 'pt-BR' })` no mount
+   e armazena em `window.__mpGlobal`.
+2. `useSecureCardFields` reutiliza `window.__mpGlobal` (nunca cria segunda
+   instancia).
+3. Campos de cartao sao iframes do MP (`cardNumber`, `expirationDate`,
+   `securityCode`). Dados nunca transitam pelo backend do app.
+4. No submit: `mp.fields.createCardToken({ cardholderName, CPF })` → token.
+5. Frontend envia token + `payment_method_id` + `device_session_id` para
+   `create-mercado-pago-payment`.
+6. Edge Function chama `POST /v1/payments` com header `X-meli-session-id`.
+
+### Regras criticas de Secure Fields
+
+* Containers dos campos NAO podem ter `overflow: hidden` (bloqueia iframes
+  no iOS/Safari).
+* Usar altura minima de `52px` nos containers.
+* Apenas UMA instancia MercadoPago por sessao (`window.__mpGlobal`).
+* Cartoes de teste (ex: `5031 4332 1540 6351`) so funcionam com credenciais
+  sandbox (`TEST-...`). Em producao usar cartao real.
+
+## Fluxo Pix
+
+1. Frontend envia payload (sem token) para `create-mercado-pago-payment`.
+2. Edge Function cria pagamento Pix no MP e retorna `qr_code` e `ticket_url`.
+3. Frontend exibe QR e/ou copia-e-cola.
+4. Webhook ou polling via `get-mercado-pago-payment` atualiza status.
+
+### Email do pagador Pix
+
+O MP rejeita quando o email do pagador e igual ao email do recebedor. Solucao:
+usar alias `cliente+{userId_slice}@meucosechas.app` para pagamentos Pix.
+
+## Device Fingerprinting
+
+* `window.MP_DEVICE_SESSION_ID` e definido pelo SDK apos inicializacao.
+* Enviado pelo frontend como `device_session_id` no body do pagamento.
+* Edge Function repassa como header `X-meli-session-id` na chamada ao MP.
+* Obrigatorio para aprovacao no Avaliar Qualidade (items: SDK do frontend +
+  Identificador do dispositivo).
+
+## Edge Functions
 
 * `create-mercado-pago-payment`: cria pedido `pending_payment`, cria pagamento
-  Pix/cartao no Mercado Pago e salva referencia em `order_payments`.
-* `get-mercado-pago-payment`: consulta pagamento no Mercado Pago e sincroniza
-  `orders.payment_status` e `orders.status`.
-* `webhook-mercado-pago`: recebe notificacoes, valida assinatura quando segredo
-  estiver configurado, consulta o pagamento na API e atualiza o pedido.
+  Pix/cartao no Mercado Pago via fetch raw e salva em `order_payments`.
+* `get-mercado-pago-payment`: consulta pagamento no MP e sincroniza status.
+* `webhook-mercado-pago`: recebe notificacoes, valida assinatura, atualiza pedido.
 
-### Status
+### Incompatibilidade de SDK no backend
 
-* Pedido antes do pagamento: `pending_payment`.
-* Pagamento aprovado: `payment_status = paid` e `status = new`.
-* Pagamento recusado/cancelado: `payment_status = failed` e
-  `status = payment_failed`.
-* Pagamento pendente: permanece `pending_payment`.
+`npm:mercadopago` e `https://esm.sh/mercadopago` sao incompativeis com o
+bundler do Supabase/Deno. Usar `fetch` raw para chamar a API do MP e suficiente
+e recomendado.
+
+## Payload de pagamento (campos obrigatorios)
+
+```
+transaction_amount, description, statement_descriptor: 'Cosechas',
+payment_method_id, external_reference, additional_info.items[],
+payer.{ email, first_name, last_name, identification },
+notification_url
+```
+
+Para cartao: tambem `token`, `installments`, `issuer_id` (se disponivel).
+
+## Status de pedido
+
+| Evento | orders.status | orders.payment_status |
+|---|---|---|
+| Criado | pending_payment | pending |
+| Aprovado | new | paid |
+| Recusado/cancelado | payment_failed | failed |
+| Pendente | pending_payment | pending |
+
+## Avaliar Qualidade (resultado)
+
+* Score obtido: **92/100** (2026-06-05, producao).
+* Threshold necessario para cartao em producao: 73.
+* Para reavaliar: usar payment ID de pagamento com **cartao de credito** real
+  (nao Pix). Checks de SDK do frontend e Identificador do dispositivo so
+  passam com tokenizacao de cartao.
 
 ## Pendencias
 
-* Necessita validacao: credenciais reais de teste Mercado Pago.
-* Necessita validacao: payload final de webhook no ambiente configurado.
-* Necessita validacao: politica de estorno/refund.
-* A definir: expiracao operacional de Pix pendente.
+* A definir: politica de estorno/refund.
+* A definir: expiracao operacional de Pix pendente (pg_cron configurado para
+  40 minutos).
 
 ## Historico de atualizacao
 
 * 2026-06-03: decisao atualizada para Mercado Pago Checkout Transparente.
+* 2026-06-05: adicionados Secure Fields, device fingerprinting, regras de
+  producao, resultado Avaliar Qualidade 92/100, incompatibilidade SDK/Deno.

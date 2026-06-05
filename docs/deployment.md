@@ -20,7 +20,7 @@ Sempre respeitar esta ordem quando houver mudancas em mais de uma camada:
 3. Frontend (git push → Vercel)
 ```
 
-**Motivo:** o frontend depende das Edge Functions, que dependem do banco. Deployar na ordem inversa causa janela de indisponibilidade.
+**Motivo:** o frontend depende das Edge Functions, que dependem do banco.
 
 ---
 
@@ -38,21 +38,21 @@ apply_migration (project_id, name, query)
 supabase db push --project-ref hfpqynfqtgpnvaopstun
 ```
 
-Os arquivos de migration ficam em `supabase/migrations/` com prefixo de timestamp.
-
 ### Edge Functions
 
-**Via MCP:**
-```
-deploy_edge_function (project_id, name, files, verify_jwt)
-```
-
-**Via CLI:**
+**Via CLI (preferencial — MCP pode dar 502 esporadicamente):**
 ```bash
-supabase functions deploy <nome-da-funcao> --project-ref hfpqynfqtgpnvaopstun
+npx supabase functions deploy <nome> --project-ref hfpqynfqtgpnvaopstun
 ```
 
-Funcoes disponiveis: `create-mercado-pago-payment`, `get-mercado-pago-payment`, `webhook-mercado-pago`.
+Funcoes disponiveis:
+* `create-mercado-pago-payment`
+* `get-mercado-pago-payment`
+* `webhook-mercado-pago`
+* `save-card`
+
+**Atencao:** `npm:mercadopago` e `esm.sh/mercadopago` sao incompativeis com
+o bundler do Supabase/Deno. Usar fetch raw para chamar a API do MP.
 
 ### Frontend
 
@@ -60,29 +60,30 @@ Funcoes disponiveis: `create-mercado-pago-payment`, `get-mercado-pago-payment`, 
 git push origin main
 ```
 
-Vercel detecta o push e inicia o deploy automaticamente. Aguardar o build concluir antes de validar.
-
-**Secrets necessarios no Vercel:**
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_MERCADO_PAGO_PUBLIC_KEY`
+Vercel detecta o push e inicia o deploy automaticamente. Aguardar ~2 minutos
+antes de validar.
 
 ---
 
-## Secrets obrigatorios antes do primeiro deploy em producao
+## Secrets e variaveis de ambiente
 
-| Secret | Onde configurar | Status |
+### Vercel (Frontend)
+
+| Variavel | Status | Observacao |
 | --- | --- | --- |
-| `MERCADO_PAGO_ACCESS_TOKEN` | Supabase Edge Functions Secrets | Configurado (sandbox) |
-| `MERCADO_PAGO_WEBHOOK_SECRET` | Supabase Edge Functions Secrets | Configurado |
-| `SUPABASE_URL` | Auto-injetado pela Supabase | OK |
-| `SUPABASE_ANON_KEY` | Auto-injetado pela Supabase | OK |
-| `SUPABASE_SERVICE_ROLE_KEY` | Auto-injetado pela Supabase | OK |
-| `VITE_SUPABASE_URL` | Vercel Environment Variables | A configurar |
-| `VITE_SUPABASE_ANON_KEY` | Vercel Environment Variables | A configurar |
-| `VITE_MERCADO_PAGO_PUBLIC_KEY` | Vercel Environment Variables | A configurar (producao) |
+| `VITE_SUPABASE_URL` | Configurado | |
+| `VITE_SUPABASE_ANON_KEY` | Configurado | |
+| `VITE_MERCADO_PAGO_PUBLIC_KEY` | **Configurado** | Chave publica producao `APP_USR-...`. Obrigatoria para Secure Fields. Sem ela os campos de cartao ficam vazios. |
 
-Ao trocar para credenciais de producao do Mercado Pago, atualizar `MERCADO_PAGO_ACCESS_TOKEN` no Supabase e `VITE_MERCADO_PAGO_PUBLIC_KEY` no Vercel.
+### Supabase Edge Functions Secrets
+
+| Secret | Status | Observacao |
+| --- | --- | --- |
+| `MERCADO_PAGO_ACCESS_TOKEN` | Configurado (producao) | Chave de producao |
+| `MERCADO_PAGO_WEBHOOK_SECRET` | Configurado | |
+| `SUPABASE_URL` | Auto-injetado | |
+| `SUPABASE_ANON_KEY` | Auto-injetado | |
+| `SUPABASE_SERVICE_ROLE_KEY` | Auto-injetado | |
 
 ---
 
@@ -90,45 +91,36 @@ Ao trocar para credenciais de producao do Mercado Pago, atualizar `MERCADO_PAGO_
 
 ### Frontend
 
-Vercel mantem todas as versoes anteriores.
-
-1. Acessar Vercel Dashboard → projeto → Deployments
+Vercel mantem todas as versoes anteriores:
+1. Vercel Dashboard → projeto → Deployments
 2. Localizar o ultimo deploy estavel
 3. Clicar em "..." → **Promote to Production**
 
 ### Edge Functions
 
-Cada funcao tem versoes anteriores no Supabase. Para reverter:
-
-1. Localizar o codigo anterior (Git ou `supabase/functions/`)
-2. Redeploy via MCP ou CLI com o codigo antigo
-3. Validar o comportamento apos o redeploy
+1. Localizar o codigo anterior no Git
+2. Redeploy via CLI com o codigo antigo
+3. Validar apos o redeploy
 
 ### Banco de dados
 
-Migrations sao permanentes por padrao. Para reverter:
-
-**Mudancas nao-destrutivas** (ADD COLUMN, CREATE TABLE, CREATE FUNCTION):
-- Escrever e aplicar uma migration reversa (`DROP COLUMN`, `DROP TABLE`, `DROP FUNCTION`)
-
-**Mudancas destrutivas** (DROP COLUMN, DROP TABLE):
-- Nunca aplicar sem backup verificado
-- Restaurar via Supabase Dashboard → Backups (disponivel no plano Pro)
-
-**Regra pratica:** se a migration pode ser revertida com um DROP simples e sem perda de dados, e segura. Se envolve remocao de dados, exige plano de backup antes.
+Migrations sao permanentes. Para reverter:
+* **Nao-destrutivas** (ADD COLUMN, CREATE TABLE): escrever migration reversa.
+* **Destrutivas** (DROP): nunca aplicar sem backup verificado. Restaurar via
+  Supabase Dashboard → Backups (plano Pro).
 
 ---
 
 ## Checklist pre-deploy em producao
 
-Antes de qualquer deploy em producao:
-
 - [ ] `npm run lint` sem erros
 - [ ] `npm run build` sem erros
-- [ ] Migrations testadas em sandbox antes de aplicar em producao
-- [ ] Secrets de producao configurados (MP Access Token real, nao TEST-)
-- [ ] Webhook URL do Mercado Pago apontando para a URL de producao
+- [ ] Migrations testadas antes de aplicar em producao
+- [ ] `VITE_MERCADO_PAGO_PUBLIC_KEY` configurada no Vercel (chave producao)
+- [ ] `MERCADO_PAGO_ACCESS_TOKEN` e chave de producao (nao `TEST-`)
+- [ ] Webhook URL do Mercado Pago apontando para URL de producao
 - [ ] Fluxo Pix testado manualmente apos o deploy
+- [ ] Fluxo cartao testado manualmente (Secure Fields interagiveis)
 - [ ] Rollback planejado para cada camada alterada
 
 ---
@@ -136,4 +128,7 @@ Antes de qualquer deploy em producao:
 ## Historico de atualizacao
 
 * 2026-06-03: documento inicial criado.
-* 2026-06-04: processo completo documentado com ordem de deploy, rollback e checklist.
+* 2026-06-04: processo completo documentado.
+* 2026-06-05: atualizados status de secrets (todos producao), adicionada
+  observacao critica sobre VITE_MERCADO_PAGO_PUBLIC_KEY, incompatibilidade
+  npm:mercadopago/Deno, funcao save-card.
