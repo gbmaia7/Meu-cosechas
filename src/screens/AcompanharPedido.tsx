@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
+import { useCart, ActiveOrder } from '../context/CartContext';
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { 
@@ -54,6 +54,24 @@ export default function AcompanharPedido() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    if (!activeOrder?.id) return;
+
+    const channel = supabase
+      .channel(`order-status-${activeOrder.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${activeOrder.id}` },
+        (payload) => {
+          const newStatus = (payload.new as { status: string })?.status as ActiveOrder['status'];
+          if (newStatus) updateActiveOrderStatus(activeOrder.id, newStatus);
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [activeOrder?.id]);
 
   const progressPercentage = Math.min((userPoints / 12) * 100, 100);
 
