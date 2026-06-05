@@ -72,29 +72,56 @@ export default function NovoCartao() {
       const MercadoPago = await loadMercadoPago();
       const mp = new MercadoPago(publicKey);
 
-      const methods = await mp.getPaymentMethods({ bin: cleanCard.slice(0, 6) });
+      let methods: any;
+      try {
+        methods = await mp.getPaymentMethods({ bin: cleanCard.slice(0, 6) });
+      } catch (e: unknown) {
+        console.error('[NovoCartao] getPaymentMethods error:', e);
+        const msg = e instanceof Error ? e.message : (e as any)?.message || JSON.stringify(e);
+        throw new Error(`Erro ao identificar bandeira: ${msg}`);
+      }
       const paymentMethodId = methods?.results?.[0]?.id || methods?.[0]?.id;
-      if (!paymentMethodId) throw new Error('Bandeira não identificada.');
+      if (!paymentMethodId) {
+        console.error('[NovoCartao] getPaymentMethods result:', methods);
+        throw new Error('Bandeira não identificada. Verifique o número do cartão.');
+      }
 
-      const token = await mp.createCardToken({
-        cardNumber: cleanCard,
-        cardholderName: cardHolder,
-        cardExpirationMonth: month,
-        cardExpirationYear: year,
-        securityCode: cvv,
-        identificationType: 'CPF',
-        identificationNumber: cleanCpf,
-      });
-      if (!token?.id) throw new Error('Não foi possível tokenizar o cartão.');
+      let token: any;
+      try {
+        token = await mp.createCardToken({
+          cardNumber: cleanCard,
+          cardholderName: cardHolder,
+          cardExpirationMonth: month,
+          cardExpirationYear: year,
+          securityCode: cvv,
+          identificationType: 'CPF',
+          identificationNumber: cleanCpf,
+        });
+      } catch (e: unknown) {
+        console.error('[NovoCartao] createCardToken error:', e);
+        const msg = e instanceof Error ? e.message : (e as any)?.message || JSON.stringify(e);
+        throw new Error(`Erro ao tokenizar cartão: ${msg}`);
+      }
+      if (!token?.id) {
+        console.error('[NovoCartao] createCardToken result:', token);
+        throw new Error('Não foi possível tokenizar o cartão. Verifique os dados.');
+      }
 
       const { error: fnError } = await supabase.functions.invoke('save-card', {
         body: { token: token.id },
       });
-      if (fnError) throw new Error('Não foi possível salvar o cartão. Tente novamente.');
+      if (fnError) {
+        console.error('[NovoCartao] save-card function error:', fnError);
+        throw new Error(`Não foi possível salvar o cartão: ${fnError.message || fnError}`);
+      }
 
       navigate(-1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar cartão.');
+    } catch (err: unknown) {
+      console.error('[NovoCartao] handleSave caught:', err);
+      const msg = err instanceof Error
+        ? err.message
+        : (err as any)?.message || (err as any)?.cause?.message || JSON.stringify(err);
+      setError(msg || 'Erro ao salvar cartão.');
     } finally {
       setSaving(false);
     }
