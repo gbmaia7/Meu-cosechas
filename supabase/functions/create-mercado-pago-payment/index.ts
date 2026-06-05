@@ -207,13 +207,15 @@ Deno.serve(async (req) => {
     statement_descriptor: 'Cosechas',
     payment_method_id: mpPaymentMethod,
     external_reference: savedOrder.id,
-    items: items.map((item) => ({
-      id: item.productId,
-      title: cleanName(item.name),
-      description: cleanName(item.name),
-      quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
-      unit_price: roundMoney(Number(item.price) || 0),
-    })),
+    additional_info: {
+      items: items.map((item) => ({
+        id: item.productId,
+        title: cleanName(item.name),
+        description: cleanName(item.name),
+        quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
+        unit_price: roundMoney(Number(item.price) || 0),
+      })),
+    },
     payer: {
       email: payerEmail,
       first_name: payerFirstName,
