@@ -147,7 +147,9 @@ export default function Pagamento() {
 
     const orderState = {
       items,
+      orderSnapshot: items,
       totalPrice,
+      totalPriceSnapshot: totalPrice,
       modality,
       address,
       couponDiscount,
