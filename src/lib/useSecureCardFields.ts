@@ -44,7 +44,12 @@ export function useSecureCardFields(
     loadSdk().then(() => {
       if (!active) return;
       try {
-        const mp = new window.MercadoPago!(publicKey, { locale: 'pt-BR' });
+        // Reuse global instance created in App.tsx to avoid multiple SDK instances
+        const mp: any = (window as any).__mpGlobal || (() => {
+          const instance = new window.MercadoPago!(publicKey, { locale: 'pt-BR' });
+          (window as any).__mpGlobal = instance;
+          return instance;
+        })();
         mpRef.current = mp;
 
         const numField = mp.fields.create('cardNumber', { placeholder: '0000 0000 0000 0000', style: FIELD_STYLE });
@@ -65,8 +70,12 @@ export function useSecureCardFields(
         });
 
         mp._secureFields = { numField, expField, cvvField };
-      } catch { /* ignore mount errors */ }
-    }).catch(() => { /* ignore SDK load errors */ });
+      } catch (e) {
+        console.error('[useSecureCardFields] Erro ao montar campos:', e);
+      }
+    }).catch((e) => {
+      console.error('[useSecureCardFields] Erro ao carregar SDK:', e);
+    });
 
     return () => {
       active = false;
