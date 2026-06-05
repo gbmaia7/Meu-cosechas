@@ -161,6 +161,7 @@ export default function Pagamento() {
             : undefined,
         },
         installments: 1,
+        device_session_id: (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID || undefined,
         ...cardPayload,
       },
     });

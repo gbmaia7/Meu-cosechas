@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.46.1';
+import MercadoPagoConfig, { Payment as MpPayment } from 'npm:mercadopago';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -34,6 +35,7 @@ type PaymentRequest = {
     email?: string;
     identification?: { type?: string; number?: string };
   };
+  device_session_id?: string;
 };
 
 const jsonResponse = (body: unknown, status = 200) =>
@@ -235,20 +237,25 @@ Deno.serve(async (req) => {
 
   mercadoPagoPayload.notification_url = `${supabaseUrl}/functions/v1/webhook-mercado-pago`;
 
-  const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      'X-Idempotency-Key': savedOrder.id,
-    },
-    body: JSON.stringify(mercadoPagoPayload),
-  });
+  const mpClient = new MercadoPagoConfig({ accessToken });
+  const paymentApi = new MpPayment(mpClient);
 
-  const mpData = await mpResponse.json().catch(() => null);
-  if (!mpResponse.ok) {
+  const requestOptions: { idempotencyKey: string; customHeaders?: Record<string, string> } = {
+    idempotencyKey: savedOrder.id,
+  };
+  if (payload.device_session_id) {
+    requestOptions.customHeaders = { 'x-meli-session-id': payload.device_session_id };
+  }
+
+  // deno-lint-ignore no-explicit-any
+  let mpData: Record<string, any>;
+  try {
+    // deno-lint-ignore no-explicit-any
+    mpData = await (paymentApi.create as any)({ body: mercadoPagoPayload, requestOptions });
+  } catch (mpError: unknown) {
     await serviceClient.from('orders').update({ status: 'payment_failed', payment_status: 'failed' }).eq('id', savedOrder.id);
-    return jsonResponse({ success: false, mp_status: mpResponse.status, mp_error: mpData, payer_email_used: payerEmail }, 200);
+    const errBody = mpError instanceof Error ? mpError.message : String(mpError);
+    return jsonResponse({ success: false, mp_error: errBody, payer_email_used: payerEmail }, 200);
   }
 
   const transactionData = mpData?.point_of_interaction?.transaction_data || {};
