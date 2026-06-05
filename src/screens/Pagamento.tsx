@@ -378,11 +378,11 @@ export default function Pagamento() {
 
           {isCardPayment && !selectedSavedCard && (
             <div className="bg-white border border-[#e5e2e1] rounded-lg p-5 space-y-4">
-              <div id="pg-card-number" className="h-[46px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl overflow-hidden" />
+              <div id="pg-card-number" className="h-[52px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl" />
               <input value={cardHolder} onChange={(event) => setCardHolder(event.target.value)} placeholder="Nome impresso no cartao" className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]" />
               <div className="grid grid-cols-2 gap-3">
-                <div id="pg-expiration" className="h-[46px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl overflow-hidden" />
-                <div id="pg-cvv" className="h-[46px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl overflow-hidden" />
+                <div id="pg-expiration" className="h-[52px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl" />
+                <div id="pg-cvv" className="h-[52px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl" />
               </div>
               <input value={identificationNumber} onChange={(event) => setIdentificationNumber(event.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="CPF do titular" className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]" />
               <p className="text-[11px] text-[#5d3f3e] leading-relaxed">

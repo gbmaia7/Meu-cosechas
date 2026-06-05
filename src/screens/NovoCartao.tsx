@@ -6,7 +6,7 @@ import { useSecureCardFields, CardInfo } from '../lib/useSecureCardFields';
 
 const PUBLIC_KEY = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY as string;
 
-const SF = 'h-[50px] bg-white border border-[#e5e2e1] rounded-xl overflow-hidden';
+const SF = 'h-[52px] bg-white border border-[#e5e2e1] rounded-xl';
 
 export default function NovoCartao() {
   const navigate = useNavigate();
