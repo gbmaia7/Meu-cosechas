@@ -28,7 +28,7 @@ export default function PagamentoConfirmado() {
   const isAllReward = orderSnapshot.every(
     i => i.name.startsWith('[CLUBE]')
   )
-  const deliveryFee = modality === 'delivery' ? 5.00 : 0
+  const deliveryFee = 0
   const computedTotal = isAllReward ? 0 : subtotalSnapshot + deliveryFee - couponDiscount
 
   const validItemsCount = orderSnapshot.reduce((sum, item) => sum + (item.name.startsWith('[CLUBE]') ? 0 : item.quantity), 0);
@@ -104,10 +104,7 @@ export default function PagamentoConfirmado() {
             {modality === 'delivery' && (
               <div className="flex justify-between text-sm">
                 <span className="text-[#5d3f3e]">Taxa de entrega</span>
-                {deliveryFee === 0
-                  ? <span className="text-[#00686c] font-bold">Grátis</span>
-                  : <span className="text-[#1c1b1b] font-medium">R$ {deliveryFee.toFixed(2).replace('.', ',')}</span>
-                }
+                <span className="text-[#00686c] font-bold">Grátis</span>
               </div>
             )}
             <div className="flex justify-between items-center pt-2">

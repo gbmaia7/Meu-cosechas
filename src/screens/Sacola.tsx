@@ -82,7 +82,7 @@ export default function Sacola() {
     }
   };
 
-  const deliveryFee = modality === 'counter' ? 0 : 5.00;
+  const deliveryFee = 0;
   const subtotal = totalPrice;
   const total = Math.max(0, subtotal + deliveryFee - couponDiscount);
 

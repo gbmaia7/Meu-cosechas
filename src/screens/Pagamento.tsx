@@ -51,7 +51,7 @@ export default function Pagamento() {
   const address = location.state?.address;
   const couponDiscount = location.state?.couponDiscount ?? 0;
   const referrerId = location.state?.referrerId ?? null;
-  const deliveryFee = modality === 'counter' ? 0 : 5.00;
+  const deliveryFee = 0;
   const finalTotal = Math.max(0, totalPrice + deliveryFee - couponDiscount);
   const isCardPayment = selectedMethod === 'credit_card' || selectedMethod === 'debit_card';
 
