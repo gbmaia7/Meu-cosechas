@@ -4,6 +4,27 @@ Este arquivo e o ponto de entrada para agentes de IA no projeto Meu-Cosechas.
 Ele complementa as skills e a documentacao, sem substituir instrucoes especificas
 do usuario ou o codigo-fonte.
 
+## PROTOCOLO DE INICIO DE SESSAO (automatico, sem precisar ser lembrado)
+
+Ao iniciar qualquer sessao neste projeto:
+
+1. Ler `AGENTS.md` se existir.
+2. Aplicar automaticamente: karpathy-guidelines, codebase-recon, create-plan,
+   codex-review.
+3. Para qualquer tarefa de codigo: declarar no plano quais principios serao
+   aplicados ANTES de implementar.
+4. Nao esperar o usuario pedir para seguir as skills — elas estao sempre ativas.
+
+## PROTOCOLO DE FIM DE SESSAO (automatico, sem precisar ser lembrado)
+
+Ao finalizar uma sessao que alterou codigo, arquitetura, fluxos, pagamentos,
+seguranca, banco de dados ou decisoes importantes:
+
+1. Atualizar automaticamente os documentos relevantes em `docs/`.
+2. Atualizar ou criar entradas em `.claude/projects/.../memory/`.
+3. Fazer commit das atualizacoes de documentacao junto com o codigo.
+4. Nao esperar o usuario pedir — a atualizacao e parte do fluxo normal.
+
 ## Visao Geral
 
 Meu-Cosechas e uma aplicacao React/Vite para cardapio, sacola, pagamentos,
