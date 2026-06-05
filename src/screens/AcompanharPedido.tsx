@@ -31,6 +31,13 @@ export default function AcompanharPedido() {
     activeOrder?.status === 'delivered'
       ? 'ready'
       : 'preparing';
+
+  const deliveryStep =
+    activeOrder?.modality !== 'delivery' ? 0
+    : activeOrder?.status === 'delivered' ? 3
+    : activeOrder?.status === 'out_for_delivery' || activeOrder?.status === 'ready' ? 2
+    : 1;
+
   const [deliveryWhatsapp, setDeliveryWhatsapp] = useState('5521995435384');
 
   useEffect(() => {
@@ -135,12 +142,20 @@ export default function AcompanharPedido() {
         <section className="relative overflow-hidden bg-gradient-to-br from-[#f6f3f2] to-[#f0eded] rounded-lg p-8 text-center space-y-6">
           <div className="space-y-2 relative z-10">
             <h2 className="text-xl font-extrabold text-[#1c1b1b] leading-tight font-display">
-                {orderStatus === 'preparing' ? 'Seu pedido está sendo preparado.' : (activeOrder?.modality === 'delivery' ? 'Seu pedido saiu para entrega!' : 'Seu pedido está pronto!')}
+                {activeOrder?.modality === 'delivery'
+                  ? deliveryStep === 3 ? 'Pedido entregue!'
+                    : deliveryStep === 2 ? 'Seu pedido saiu para entrega!'
+                    : 'Seu pedido está sendo preparado.'
+                  : orderStatus === 'preparing' ? 'Seu pedido está sendo preparado.' : 'Seu pedido está pronto!'}
             </h2>
             <p className="text-[#5d3f3e] text-sm">
-                {orderStatus === 'preparing' ? 'Você será notificado quando estiver pronto.' : (activeOrder?.modality === 'delivery' ? 'Aguarde no endereço selecionado.' : 'Retire no balcão da loja.')}
+                {activeOrder?.modality === 'delivery'
+                  ? deliveryStep === 3 ? 'Confirme o recebimento abaixo.'
+                    : deliveryStep === 2 ? 'Aguarde no endereço selecionado.'
+                    : 'Você será notificado quando estiver pronto.'
+                  : orderStatus === 'preparing' ? 'Você será notificado quando estiver pronto.' : 'Retire no balcão da loja.'}
             </p>
-            {activeOrder?.modality === 'delivery' && (
+            {activeOrder?.modality === 'delivery' && deliveryStep < 3 && (
               <div className="mt-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                 <p className="text-xs text-[#5d3f3e] font-medium leading-relaxed">
                   <span className="font-bold text-yellow-800">Atenção:</span> Fique atento ao seu WhatsApp, nosso colaborador entrará em contato por lá para finalizar a entrega.
@@ -150,32 +165,48 @@ export default function AcompanharPedido() {
           </div>
           
           {/* Horizontal Progress Bar */}
-          <div className="relative pt-4 pb-2 px-2">
-            <div className="flex justify-between items-center relative z-10">
-              {/* Step 1: Confirmed */}
-              <div className="flex flex-col items-center gap-2">
+          {activeOrder?.modality === 'delivery' ? (
+            <div className="relative pt-4 pb-2 px-2">
+              <div className="flex justify-between items-center relative z-10">
                 <div className="w-10 h-10 rounded-full bg-[#bd002a] flex items-center justify-center text-white shadow-lg shadow-[#bd002a]/20">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-              </div>
-              {/* Step 2: Preparing */}
-              <div className="flex flex-col items-center gap-2">
-                <div className={`w-12 h-12 rounded-full ${orderStatus === 'preparing' ? 'bg-[#e8173a] ring-4 ring-white shadow-xl animate-pulse cursor-default' : 'bg-[#bd002a]'} flex items-center justify-center text-white transition-colors duration-500`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white transition-colors duration-500 ${deliveryStep === 1 ? 'bg-[#e8173a] ring-4 ring-white shadow-xl animate-pulse' : 'bg-[#bd002a]'}`}>
                   <Utensils className="w-6 h-6" />
                 </div>
-              </div>
-              {/* Step 3: Ready */}
-              <div className="flex flex-col items-center gap-2">
-                <div className={`w-12 h-12 rounded-full ${orderStatus === 'ready' ? 'bg-[#e8173a] ring-4 ring-white shadow-xl animate-pulse cursor-default' : 'bg-[#e5e2e1]'} flex items-center justify-center ${orderStatus === 'ready' ? 'text-white' : 'text-[#5d3f3e]'} transition-colors duration-500`}>
-                  {activeOrder?.modality === 'delivery' ? <Bike className="w-6 h-6" /> : <ShoppingBag className="w-6 h-6" />}
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-500 ${deliveryStep === 2 ? 'bg-[#e8173a] ring-4 ring-white shadow-xl animate-pulse text-white' : deliveryStep === 3 ? 'bg-[#bd002a] text-white' : 'bg-[#e5e2e1] text-[#5d3f3e]'}`}>
+                  <Bike className="w-6 h-6" />
+                </div>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-500 ${deliveryStep === 3 ? 'bg-[#e8173a] ring-4 ring-white shadow-xl animate-pulse text-white' : 'bg-[#e5e2e1] text-[#5d3f3e]'}`}>
+                  <CheckCircle2 className="w-6 h-6" />
                 </div>
               </div>
+              <div className="absolute top-1/2 left-0 w-full h-1 bg-[#e5e2e1] -translate-y-1"></div>
+              <div className={`absolute top-1/2 left-0 h-1 bg-[#bd002a] -translate-y-1 transition-all duration-700 ease-in-out ${deliveryStep >= 3 ? 'w-full' : deliveryStep === 2 ? 'w-2/3' : 'w-1/3'}`}></div>
             </div>
-            
-            {/* Progress Line */}
-            <div className="absolute top-1/2 left-0 w-full h-1 bg-[#e5e2e1] -translate-y-1"></div>
-            <div className={`absolute top-1/2 left-0 ${orderStatus === 'ready' ? 'w-full' : 'w-1/2'} h-1 bg-[#bd002a] -translate-y-1 transition-all duration-700 ease-in-out`}></div>
-          </div>
+          ) : (
+            <div className="relative pt-4 pb-2 px-2">
+              <div className="flex justify-between items-center relative z-10">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-[#bd002a] flex items-center justify-center text-white shadow-lg shadow-[#bd002a]/20">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <div className={`w-12 h-12 rounded-full ${orderStatus === 'preparing' ? 'bg-[#e8173a] ring-4 ring-white shadow-xl animate-pulse cursor-default' : 'bg-[#bd002a]'} flex items-center justify-center text-white transition-colors duration-500`}>
+                    <Utensils className="w-6 h-6" />
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  <div className={`w-12 h-12 rounded-full ${orderStatus === 'ready' ? 'bg-[#e8173a] ring-4 ring-white shadow-xl animate-pulse cursor-default' : 'bg-[#e5e2e1]'} flex items-center justify-center ${orderStatus === 'ready' ? 'text-white' : 'text-[#5d3f3e]'} transition-colors duration-500`}>
+                    <ShoppingBag className="w-6 h-6" />
+                  </div>
+                </div>
+              </div>
+              <div className="absolute top-1/2 left-0 w-full h-1 bg-[#e5e2e1] -translate-y-1"></div>
+              <div className={`absolute top-1/2 left-0 ${orderStatus === 'ready' ? 'w-full' : 'w-1/2'} h-1 bg-[#bd002a] -translate-y-1 transition-all duration-700 ease-in-out`}></div>
+            </div>
+          )}
         </section>
 
         {/* Pickup Code — counter */}
@@ -302,7 +333,9 @@ export default function AcompanharPedido() {
           <div className="flex justify-between items-center mb-6">
             <span className="text-xs font-bold text-[#5d3f3e] uppercase tracking-widest font-display">Pedido #82931</span>
             <span className="text-[#bd002a] font-bold text-sm font-display">
-                {orderStatus === 'preparing' ? 'Em andamento' : (activeOrder?.modality === 'delivery' ? 'Saiu para entrega' : 'Pronto para retirar')}
+                {activeOrder?.modality === 'delivery'
+                  ? deliveryStep === 3 ? 'Entregue' : deliveryStep === 2 ? 'Saiu para entrega' : 'Em andamento'
+                  : orderStatus === 'preparing' ? 'Em andamento' : 'Pronto para retirar'}
             </span>
           </div>
           
@@ -373,7 +406,7 @@ export default function AcompanharPedido() {
 
         {/* Action Button */}
         <div className="pt-4 pb-6 flex flex-col gap-3">
-          {orderStatus === 'ready' ? (
+          {(activeOrder?.modality === 'delivery' ? deliveryStep === 3 : orderStatus === 'ready') ? (
              <button
                 onClick={() => {
                     removeActiveOrder(activeOrder.id);
