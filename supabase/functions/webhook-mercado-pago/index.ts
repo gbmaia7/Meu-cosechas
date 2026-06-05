@@ -52,6 +52,55 @@ const validateSignature = async (secret: string, signature: string | null, reque
   return expected === parts.v1;
 };
 
+const creditPointsForOnlinePayment = async (
+  client: ReturnType<typeof createClient>,
+  orderId: string,
+  userId: string,
+) => {
+  const { count } = await client
+    .from('loyalty_points_ledger')
+    .select('*', { count: 'exact', head: true })
+    .eq('order_id', orderId);
+  if ((count || 0) > 0) return;
+
+  const { data: items } = await client
+    .from('order_items')
+    .select('product_name, points_cost')
+    .eq('order_id', orderId);
+  const paidItems = (items || []).filter((i: { points_cost: number | null }) => !((i.points_cost || 0) > 0));
+  if (paidItems.length === 0) return;
+
+  const productNames = paidItems.map((i: { product_name: string }) => i.product_name).join(', ');
+
+  const { data: sub } = await client
+    .from('subscriptions')
+    .select('double_points')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .maybeSingle();
+  const bonusPoints = sub?.double_points ? 1 : 0;
+
+  await client.from('loyalty_points_ledger').insert({
+    user_id: userId, order_id: orderId, points: 1, reason: 'purchase', description: productNames,
+  });
+  if (bonusPoints > 0) {
+    await client.from('loyalty_points_ledger').insert({
+      user_id: userId, order_id: orderId, points: 1, reason: 'double_points', description: productNames,
+    });
+  }
+
+  const { data: profile } = await client
+    .from('profiles')
+    .select('points, total_orders')
+    .eq('id', userId)
+    .single();
+  await client.from('profiles').update({
+    points: (profile?.points || 0) + 1 + bonusPoints,
+    total_orders: (profile?.total_orders || 0) + 1,
+    last_purchase_at: new Date().toISOString(),
+  }).eq('id', userId);
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
@@ -102,7 +151,7 @@ Deno.serve(async (req) => {
   const mapped = mapOrderStatus(mpData.status);
   const { data: order } = await serviceClient
     .from('orders')
-    .select('status')
+    .select('id, status, user_id')
     .eq('id', orderId)
     .single();
   const safeStatus = getSafeOrderStatus(order?.status, mapped.status);
@@ -128,6 +177,10 @@ Deno.serve(async (req) => {
     .eq('provider', 'mercado_pago')
     .eq('provider_payment_id', providerPaymentId)
     .is('processed_at', null);
+
+  if (mapped.status === 'new' && order?.user_id) {
+    await creditPointsForOnlinePayment(serviceClient, orderId, order.user_id);
+  }
 
   return jsonResponse({ success: true, order_id: orderId, provider_status: mpData.status });
 });

@@ -467,6 +467,10 @@ export default function Loja() {
       reason: reason || null,
     });
 
+    if (nextStatus === 'delivered' && ['cash', 'machine', 'vr'].includes(order.payment_method || '')) {
+      await supabase.rpc('credit_order_points', { p_order_id: order.id });
+    }
+
     await loadOrders();
   };
 

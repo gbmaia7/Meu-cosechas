@@ -325,6 +325,10 @@ export default function Entregador() {
       return;
     }
 
+    if (['cash', 'machine', 'vr'].includes(order.payment_method || '')) {
+      await supabase.rpc('credit_order_points', { p_order_id: order.id });
+    }
+
     setPinByOrderId((current) => {
       const next = { ...current };
       delete next[order.id];
