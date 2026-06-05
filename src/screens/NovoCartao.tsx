@@ -1,142 +1,54 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, CreditCard, Calendar, Lock, Loader2 } from 'lucide-react';
+import { ChevronLeft, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useSecureCardFields, CardInfo } from '../lib/useSecureCardFields';
 
-declare global {
-  interface Window {
-    MercadoPago?: new (publicKey: string) => any;
-  }
-}
+const PUBLIC_KEY = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY as string;
 
-const loadMercadoPago = async () => {
-  if (window.MercadoPago) return window.MercadoPago;
-  await new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>('script[src="https://sdk.mercadopago.com/js/v2"]');
-    if (existing) {
-      existing.addEventListener('load', () => resolve(), { once: true });
-      existing.addEventListener('error', () => reject(new Error('Erro ao carregar MercadoPago.js')), { once: true });
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://sdk.mercadopago.com/js/v2';
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Erro ao carregar MercadoPago.js'));
-    document.body.appendChild(script);
-  });
-  if (!window.MercadoPago) throw new Error('MercadoPago.js indisponível.');
-  return window.MercadoPago;
-};
+const SF = 'h-[50px] bg-white border border-[#e5e2e1] rounded-xl overflow-hidden';
 
 export default function NovoCartao() {
   const navigate = useNavigate();
   const location = useLocation();
   const type = location.state?.type || 'credit_card';
-  const selecting = location.state?.selecting;
 
-  const [cardNumber, setCardNumber] = useState('');
   const [cardHolder, setCardHolder] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
   const [cpf, setCpf] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [cardInfo, setCardInfo] = useState<CardInfo>({ paymentMethodId: '' });
 
-  useEffect(() => { window.scrollTo(0, 0); }, []);
-
-  const validate = () => {
-    const next: Record<string, string> = {};
-    if (cardNumber.replace(/\D/g, '').length < 13) next.cardNumber = 'Número inválido';
-    if (cardHolder.trim().split(' ').length < 2) next.cardHolder = 'Nome completo';
-    if (expiry.length < 5) next.expiry = 'Data inválida';
-    if (cvv.length < 3) next.cvv = 'CVV inválido';
-    if (cpf.replace(/\D/g, '').length !== 11) next.cpf = 'CPF inválido';
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
+  const { createToken } = useSecureCardFields(
+    PUBLIC_KEY,
+    { cardNumber: 'nc-card-number', expiration: 'nc-expiration', cvv: 'nc-cvv' },
+    setCardInfo,
+  );
 
   const handleSave = async () => {
-    if (!validate()) return;
-    setSaving(true);
     setError('');
+    if (cardHolder.trim().split(' ').length < 2) {
+      setError('Informe o nome completo do titular.');
+      return;
+    }
+    if (cpf.replace(/\D/g, '').length !== 11) {
+      setError('CPF inválido.');
+      return;
+    }
+    setSaving(true);
     try {
-      const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
-      if (!publicKey) throw new Error('Public Key não configurada.');
-
-      const cleanCard = cardNumber.replace(/\D/g, '');
-      const cleanCpf = cpf.replace(/\D/g, '');
-      const [month, shortYear] = expiry.split('/');
-      const year = shortYear?.length === 2 ? `20${shortYear}` : shortYear;
-
-      const MercadoPago = await loadMercadoPago();
-      const mp = new MercadoPago(publicKey);
-
-      let methods: any;
-      try {
-        methods = await mp.getPaymentMethods({ bin: cleanCard.slice(0, 6) });
-      } catch (e: unknown) {
-        console.error('[NovoCartao] getPaymentMethods error:', e);
-        const msg = e instanceof Error ? e.message : (e as any)?.message || JSON.stringify(e);
-        throw new Error(`Erro ao identificar bandeira: ${msg}`);
-      }
-      const paymentMethodId = methods?.results?.[0]?.id || methods?.[0]?.id;
-      if (!paymentMethodId) {
-        console.error('[NovoCartao] getPaymentMethods result:', methods);
-        throw new Error('Bandeira não identificada. Verifique o número do cartão.');
-      }
-
-      let token: any;
-      try {
-        token = await mp.createCardToken({
-          cardNumber: cleanCard,
-          cardholderName: cardHolder,
-          cardExpirationMonth: month,
-          cardExpirationYear: year,
-          securityCode: cvv,
-          identificationType: 'CPF',
-          identificationNumber: cleanCpf,
-        });
-      } catch (e: unknown) {
-        console.error('[NovoCartao] createCardToken error:', e);
-        const msg = e instanceof Error ? e.message : (e as any)?.message || JSON.stringify(e);
-        throw new Error(`Erro ao tokenizar cartão: ${msg}`);
-      }
-      if (!token?.id) {
-        console.error('[NovoCartao] createCardToken result:', token);
-        throw new Error('Não foi possível tokenizar o cartão. Verifique os dados.');
-      }
-
+      const tokenId = await createToken(cardHolder, cpf);
       const { error: fnError } = await supabase.functions.invoke('save-card', {
-        body: { token: token.id },
+        body: { token: tokenId, payment_method_id: cardInfo.paymentMethodId, issuer_id: cardInfo.issuerId },
       });
-      if (fnError) {
-        console.error('[NovoCartao] save-card function error:', fnError);
-        throw new Error(`Não foi possível salvar o cartão: ${fnError.message || fnError}`);
-      }
-
+      if (fnError) throw new Error(fnError.message || 'Não foi possível salvar o cartão.');
       navigate(-1);
     } catch (err: unknown) {
-      console.error('[NovoCartao] handleSave caught:', err);
-      const msg = err instanceof Error
-        ? err.message
-        : (err as any)?.message || (err as any)?.cause?.message || JSON.stringify(err);
-      setError(msg || 'Erro ao salvar cartão.');
+      setError(err instanceof Error ? err.message : 'Erro ao salvar cartão.');
     } finally {
       setSaving(false);
     }
   };
-
-  const field = (label: string, children: React.ReactNode, err?: string) => (
-    <div className="space-y-1">
-      <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">{label}</label>
-      {children}
-      {err && <p className="text-[#e8173a] text-[10px] font-bold px-1">{err}</p>}
-    </div>
-  );
-
-  const inputClass = (hasError?: boolean) =>
-    `w-full bg-white border ${hasError ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`;
 
   return (
     <div className="bg-[#fcf9f8] min-h-screen text-[#1c1b1b] font-body">
@@ -152,7 +64,9 @@ export default function NovoCartao() {
           <h2 className="font-display text-2xl font-extrabold tracking-tight mb-1">
             {type === 'debit_card' ? 'Cartão de débito' : 'Cartão de crédito'}
           </h2>
-          <p className="text-[#5d3f3e] text-sm">Só guardamos os últimos 4 números para você identificar o cartão. Os dados completos ficam protegidos com o Mercado Pago.</p>
+          <p className="text-[#5d3f3e] text-sm">
+            Só guardamos os últimos 4 números. Os dados ficam protegidos com o Mercado Pago.
+          </p>
         </div>
 
         {error && (
@@ -162,67 +76,43 @@ export default function NovoCartao() {
         )}
 
         <div className="space-y-4">
-          {field('Número do cartão',
-            <div className="relative">
-              <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a8a29e]" />
-              <input
-                type="text"
-                value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value.replace(/[^\d ]/g, '').slice(0, 19))}
-                placeholder="0000 0000 0000 0000"
-                className={`w-full bg-white border ${errors.cardNumber ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
-              />
-            </div>,
-            errors.cardNumber,
-          )}
-
-          {field('Nome do titular',
-            <input type="text" value={cardHolder} onChange={(e) => setCardHolder(e.target.value)} placeholder="Como está no cartão" className={inputClass(!!errors.cardHolder)} />,
-            errors.cardHolder,
-          )}
-
-          <div className="grid grid-cols-2 gap-3">
-            {field('Validade',
-              <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a8a29e]" />
-                <input
-                  type="text"
-                  value={expiry}
-                  onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
-                    setExpiry(digits.length >= 3 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits);
-                  }}
-                  placeholder="MM/AA"
-                  className={`w-full bg-white border ${errors.expiry ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
-                />
-              </div>,
-              errors.expiry,
-            )}
-            {field('CVV',
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a8a29e]" />
-                <input
-                  type="text"
-                  value={cvv}
-                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  placeholder="123"
-                  className={`w-full bg-white border ${errors.cvv ? 'border-[#e8173a]' : 'border-[#e5e2e1]'} rounded-xl py-3.5 pl-12 pr-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a] focus:border-transparent transition-all`}
-                />
-              </div>,
-              errors.cvv,
-            )}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">Número do cartão</label>
+            <div id="nc-card-number" className={SF} />
           </div>
 
-          {field('CPF do titular',
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">Nome do titular</label>
+            <input
+              type="text"
+              value={cardHolder}
+              onChange={(e) => setCardHolder(e.target.value)}
+              placeholder="Como está no cartão"
+              className="w-full bg-white border border-[#e5e2e1] rounded-xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a]"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">Validade</label>
+              <div id="nc-expiration" className={SF} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">CVV</label>
+              <div id="nc-cvv" className={SF} />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">CPF do titular</label>
             <input
               type="text"
               value={cpf}
               onChange={(e) => setCpf(e.target.value.replace(/\D/g, '').slice(0, 11))}
               placeholder="000.000.000-00"
-              className={inputClass(!!errors.cpf)}
-            />,
-            errors.cpf,
-          )}
+              className="w-full bg-white border border-[#e5e2e1] rounded-xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a]"
+            />
+          </div>
         </div>
 
         <button

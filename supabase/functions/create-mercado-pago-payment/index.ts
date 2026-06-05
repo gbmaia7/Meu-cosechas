@@ -197,13 +197,27 @@ Deno.serve(async (req) => {
       ? 'pix'
       : payload.payment_method_id;
 
+  const nameParts = (profile?.name || '').trim().split(/\s+/);
+  const payerFirstName = nameParts[0] || '';
+  const payerLastName = nameParts.slice(1).join(' ') || payerFirstName;
+
   const mercadoPagoPayload: Record<string, unknown> = {
     transaction_amount: total,
     description: `Pedido Meu Cosechas ${savedOrder.pickup_code || savedOrder.id}`,
+    statement_descriptor: 'Cosechas',
     payment_method_id: mpPaymentMethod,
     external_reference: savedOrder.id,
+    items: items.map((item) => ({
+      id: item.productId,
+      title: cleanName(item.name),
+      description: cleanName(item.name),
+      quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
+      unit_price: roundMoney(Number(item.price) || 0),
+    })),
     payer: {
       email: payerEmail,
+      first_name: payerFirstName,
+      last_name: payerLastName,
       identification: payload.payer?.identification,
     },
   };

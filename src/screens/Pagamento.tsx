@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Banknote, CheckCircle2, ChevronLeft, CreditCard, Loader2, Wallet, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
+import { useSecureCardFields } from '../lib/useSecureCardFields';
 
 type PaymentMethod = 'pix' | 'credit_card' | 'debit_card' | 'cash' | 'machine';
 
@@ -15,12 +16,6 @@ type SavedCard = {
   exp_month: number;
   exp_year: number;
 };
-
-declare global {
-  interface Window {
-    MercadoPago?: new (publicKey: string) => any;
-  }
-}
 
 export default function Pagamento() {
   const navigate = useNavigate();
@@ -36,16 +31,15 @@ export default function Pagamento() {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(initialMethod);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
   const [cardHolder, setCardHolder] = useState('');
+  const [identificationNumber, setIdentificationNumber] = useState('');
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedSavedCard, setSelectedSavedCard] = useState<SavedCard | null>(
     location.state?.savedCard || null,
   );
   const [savedCardCvv, setSavedCardCvv] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [securityCode, setSecurityCode] = useState('');
-  const [identificationNumber, setIdentificationNumber] = useState('');
+  const [paymentMethodId, setPaymentMethodId] = useState('');
+  const [issuerId, setIssuerId] = useState<string | number | undefined>();
 
   const modality = location.state?.modality || 'delivery';
   const address = location.state?.address;
@@ -54,6 +48,13 @@ export default function Pagamento() {
   const deliveryFee = 0;
   const finalTotal = Math.max(0, totalPrice + deliveryFee - couponDiscount);
   const isCardPayment = selectedMethod === 'credit_card' || selectedMethod === 'debit_card';
+
+  const { createToken: createTokenFromFields } = useSecureCardFields(
+    import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY as string,
+    { cardNumber: 'pg-card-number', expiration: 'pg-expiration', cvv: 'pg-cvv' },
+    (info) => { setPaymentMethodId(info.paymentMethodId); setIssuerId(info.issuerId); },
+    isCardPayment && !selectedSavedCard,
+  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -96,14 +97,12 @@ export default function Pagamento() {
   };
 
   const getCardToken = async () => {
-    const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
-    if (!publicKey) throw new Error('Public Key do Mercado Pago nao configurada.');
-
-    const MercadoPago = await loadMercadoPago();
-    const mp = new MercadoPago(publicKey);
-
     if (selectedSavedCard) {
       if (!savedCardCvv || savedCardCvv.length < 3) throw new Error('Digite o CVV do cartao salvo.');
+      const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
+      if (!publicKey) throw new Error('Public Key do Mercado Pago nao configurada.');
+      const MercadoPago = await loadMercadoPago();
+      const mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
       const token = await mp.createCardToken({
         cardId: selectedSavedCard.mp_card_id,
         securityCode: savedCardCvv,
@@ -112,33 +111,11 @@ export default function Pagamento() {
       return { token: token.id, payment_method_id: selectedSavedCard.brand };
     }
 
-    const cleanCardNumber = cardNumber.replace(/\D/g, '');
-    const cleanDocument = identificationNumber.replace(/\D/g, '');
-    const [month, shortYear] = expiry.split('/');
-    const year = shortYear?.length === 2 ? `20${shortYear}` : shortYear;
+    if (!cardHolder.trim()) throw new Error('Informe o nome do titular do cartao.');
+    if (!identificationNumber.replace(/\D/g, '')) throw new Error('Informe o CPF do titular.');
 
-    if (!cleanCardNumber || !cardHolder.trim() || !month || !year || !securityCode || !cleanDocument) {
-      throw new Error('Preencha todos os dados do cartao.');
-    }
-
-    const bin = cleanCardNumber.slice(0, 6);
-    const methods = await mp.getPaymentMethods({ bin });
-    const paymentMethodId = methods?.results?.[0]?.id || methods?.[0]?.id;
-
-    if (!paymentMethodId) throw new Error('Nao foi possivel identificar a bandeira do cartao.');
-
-    const token = await mp.createCardToken({
-      cardNumber: cleanCardNumber,
-      cardholderName: cardHolder,
-      cardExpirationMonth: month,
-      cardExpirationYear: year,
-      securityCode,
-      identificationType: 'CPF',
-      identificationNumber: cleanDocument,
-    });
-
-    if (!token?.id) throw new Error('Nao foi possivel tokenizar o cartao.');
-    return { token: token.id, payment_method_id: paymentMethodId };
+    const tokenId = await createTokenFromFields(cardHolder, identificationNumber);
+    return { token: tokenId, payment_method_id: paymentMethodId, issuer_id: issuerId };
   };
 
   const createMercadoPagoPayment = async (paymentMethod: PaymentMethod) => {
@@ -400,11 +377,11 @@ export default function Pagamento() {
 
           {isCardPayment && !selectedSavedCard && (
             <div className="bg-white border border-[#e5e2e1] rounded-lg p-5 space-y-4">
-              <input value={cardNumber} onChange={(event) => setCardNumber(event.target.value.replace(/[^\d ]/g, '').slice(0, 19))} placeholder="Numero do cartao" className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]" />
+              <div id="pg-card-number" className="h-[46px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl overflow-hidden" />
               <input value={cardHolder} onChange={(event) => setCardHolder(event.target.value)} placeholder="Nome impresso no cartao" className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]" />
               <div className="grid grid-cols-2 gap-3">
-                <input value={expiry} onChange={(event) => { const d = event.target.value.replace(/\D/g, '').slice(0, 4); setExpiry(d.length >= 3 ? `${d.slice(0, 2)}/${d.slice(2)}` : d); }} placeholder="MM/AA" className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]" />
-                <input value={securityCode} onChange={(event) => setSecurityCode(event.target.value.replace(/\D/g, '').slice(0, 4))} placeholder="CVV" className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]" />
+                <div id="pg-expiration" className="h-[46px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl overflow-hidden" />
+                <div id="pg-cvv" className="h-[46px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl overflow-hidden" />
               </div>
               <input value={identificationNumber} onChange={(event) => setIdentificationNumber(event.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="CPF do titular" className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]" />
               <p className="text-[11px] text-[#5d3f3e] leading-relaxed">
