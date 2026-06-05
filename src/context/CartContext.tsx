@@ -51,7 +51,7 @@ interface CartContextType {
   totalPrice: number;
   clearCart: () => void;
   activeOrders: ActiveOrder[];
-  addActiveOrder: (order: Omit<ActiveOrder, 'id'>) => Promise<void> | void;
+  addActiveOrder: (order: Omit<ActiveOrder, 'id'>) => Promise<ActiveOrder | null>;
   trackActiveOrder: (order: ActiveOrder) => void;
   updateActiveOrderStatus: (id: string, status: ActiveOrder['status']) => void;
   removeActiveOrder: (id: string) => void;
@@ -129,7 +129,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('productFrequency', JSON.stringify(productFrequency));
   }, [productFrequency]);
 
-  const addActiveOrder = async (order: Omit<ActiveOrder, 'id'>) => {
+  const addActiveOrder = async (order: Omit<ActiveOrder, 'id'>): Promise<ActiveOrder | null> => {
     console.log('[addActiveOrder] items recebidos:',
       JSON.stringify(order.items.map(i => ({
         name: i.name,
@@ -148,13 +148,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     clearCart();
 
     if (!session || !phoneVerified) {
-      setActiveOrders((prev) => [...prev, {
+      const guestOrder: ActiveOrder = {
         ...order,
         id: crypto.randomUUID(),
         pickup_code: null,
         delivery_pin: null,
-      }]);
-      return;
+      };
+      setActiveOrders((prev) => [...prev, guestOrder]);
+      return guestOrder;
     }
 
     const userId = session.user.id;
@@ -254,7 +255,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     if (orderError) {
       console.error('[CartContext] Erro ao salvar pedido:', orderError);
-      return;
+      return null;
     }
 
     const newOrder: ActiveOrder = {
@@ -286,7 +287,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     if (itemError) {
       console.error('[CartContext] Erro ao salvar itens do pedido:', itemError);
-      return;
+      return null;
     }
 
     const extras = order.items.flatMap((item, index) =>
@@ -363,6 +364,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         })
         .eq('id', userId);
     }
+
+    return newOrder;
   };
 
   const updateActiveOrderStatus = (id: string, status: ActiveOrder['status']) => {

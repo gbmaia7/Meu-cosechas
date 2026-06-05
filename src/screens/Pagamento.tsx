@@ -25,7 +25,7 @@ declare global {
 export default function Pagamento() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items, totalPrice, session, clearCart } = useCart();
+  const { items, totalPrice, session, clearCart, addActiveOrder } = useCart();
 
   const preSelected = location.state?.preSelectedMethod;
   const initialMethod: PaymentMethod =
@@ -218,13 +218,30 @@ export default function Pagamento() {
     setIsCreatingPayment(true);
 
     try {
-      if (selectedMethod === 'cash') {
-        navigate('/pagamento-confirmado', { state: { modality, address, paymentMethod: 'cash', couponDiscount, referrerId } });
-        return;
-      }
-
-      if (selectedMethod === 'machine') {
-        navigate('/pagamento-confirmado', { state: { modality, address, paymentMethod: 'machine', couponDiscount, referrerId } });
+      if (selectedMethod === 'cash' || selectedMethod === 'machine') {
+        const order = await addActiveOrder({
+          items,
+          totalPrice,
+          status: 'new',
+          modality,
+          address,
+          payment_method: selectedMethod,
+        });
+        navigate('/pagamento-confirmado', {
+          state: {
+            modality,
+            address,
+            paymentMethod: selectedMethod,
+            couponDiscount,
+            referrerId,
+            existingOrder: !!order,
+            orderId: order?.id,
+            pickupCode: order?.pickup_code,
+            deliveryPin: order?.delivery_pin,
+            orderSnapshot: items,
+            totalPriceSnapshot: totalPrice,
+          },
+        });
         return;
       }
 
