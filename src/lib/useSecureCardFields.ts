@@ -38,7 +38,11 @@ export function useSecureCardFields(
   const mpRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!enabled || !publicKey) return;
+    if (!enabled) return;
+    if (!publicKey) {
+      console.error('[useSecureCardFields] VITE_MERCADO_PAGO_PUBLIC_KEY não está definida.');
+      return;
+    }
     let active = true;
 
     loadSdk().then(() => {
