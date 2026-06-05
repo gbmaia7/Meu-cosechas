@@ -185,8 +185,12 @@ Deno.serve(async (req) => {
     if (extrasError) return jsonResponse({ error: 'Unable to create order extras', details: extrasError }, 500);
   }
 
-  const payerEmail = payload.payer?.email || profile?.email || userData.user.email;
-  if (!payerEmail) return jsonResponse({ error: 'Payer email is required' }, 400);
+  const rawEmail = payload.payer?.email || profile?.email || userData.user.email;
+  if (!rawEmail) return jsonResponse({ error: 'Payer email is required' }, 400);
+  // Pix rejects when payer email equals collector email; use a scoped alias to avoid it
+  const payerEmail = payload.paymentMethod === 'pix'
+    ? `cliente+${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`
+    : rawEmail;
 
   const mpPaymentMethod =
     payload.paymentMethod === 'pix'
@@ -228,7 +232,7 @@ Deno.serve(async (req) => {
   const mpData = await mpResponse.json().catch(() => null);
   if (!mpResponse.ok) {
     await serviceClient.from('orders').update({ status: 'payment_failed', payment_status: 'failed' }).eq('id', savedOrder.id);
-    return jsonResponse({ error: 'Unable to create Mercado Pago payment', details: mpData }, 502);
+    return jsonResponse({ success: false, mp_status: mpResponse.status, mp_error: mpData, payer_email_used: payerEmail }, 200);
   }
 
   const transactionData = mpData?.point_of_interaction?.transaction_data || {};

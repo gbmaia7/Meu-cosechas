@@ -311,11 +311,11 @@ export const ESPECIAIS: Product[] = [
     name: "N'amora?",
     category: 'Especial',
     description: 'Amora, romã, cereja, banana e pitaia batidos com sorvete e iogurte grego. Uma edição especial cremosa e intensa feita para celebrar cada forma de amor.',
-    priceDisplay: 'R$ 30,00',
+    priceDisplay: 'R$ 1,00',
     points: 1,
     image: 'https://i.imgur.com/22JzGkQ.png',
     sizes: [
-      { label: 'M', price: 30.00, volume: '500ml' },
+      { label: 'M', price: 1.00, volume: '500ml' },
     ],
     extras: EXTRA_ESPECIAIS,
   },

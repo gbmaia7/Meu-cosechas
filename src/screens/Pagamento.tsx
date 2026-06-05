@@ -187,6 +187,7 @@ export default function Pagamento() {
     });
 
     if (error) throw error;
+    if (data?.success === false) throw new Error(`MP ${data.mp_status}: ${JSON.stringify(data.mp_error)}, email: ${data.payer_email_used}`);
 
     sessionStorage.setItem('mercadoPagoPendingOrder', JSON.stringify({
       ...orderState,
