@@ -14,14 +14,17 @@ type SavedCard = {
   nickname?: string;
 };
 
-const brandLabel: Record<string, string> = {
-  visa: 'Visa',
-  master: 'Mastercard',
-  mastercard: 'Mastercard',
-  elo: 'Elo',
-  amex: 'Amex',
-  hipercard: 'Hipercard',
+const brandInfo: Record<string, { label: string; bg: string }> = {
+  visa:       { label: 'Visa',       bg: 'bg-[#1a1f71]' },
+  master:     { label: 'Mastercard', bg: 'bg-gradient-to-br from-[#eb001b] to-[#f79e1b]' },
+  mastercard: { label: 'Mastercard', bg: 'bg-gradient-to-br from-[#eb001b] to-[#f79e1b]' },
+  elo:        { label: 'Elo',        bg: 'bg-[#00a4e0]' },
+  amex:       { label: 'Amex',       bg: 'bg-[#2e77bc]' },
+  hipercard:  { label: 'Hipercard',  bg: 'bg-[#c3002f]' },
 };
+
+const getBrand = (raw: string) =>
+  brandInfo[raw?.toLowerCase()] ?? { label: 'Cartão', bg: 'bg-[#5d3f3e]' };
 
 export default function GerenciarCartoes() {
   const navigate = useNavigate();
@@ -101,7 +104,7 @@ export default function GerenciarCartoes() {
         </h1>
       </header>
 
-      <main className="pt-24 px-6 max-w-md mx-auto space-y-4 pb-12">
+      <main className="pt-24 px-6 max-w-md mx-auto space-y-3 pb-12">
         <p className="text-[#5d3f3e] text-sm">
           {selecting
             ? 'Escolha um cartão salvo ou adicione um novo.'
@@ -123,16 +126,20 @@ export default function GerenciarCartoes() {
             Nenhum cartão salvo.
           </div>
         ) : (
-          cards.map((card) => (
-            <div
-              key={card.id}
-              onClick={() => handleCardClick(card)}
-              className={`bg-white rounded-xl p-5 shadow-sm border border-[#e5e2e1] flex items-center justify-between gap-4 ${selecting ? 'cursor-pointer hover:bg-[#f6f3f2]' : ''}`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#f6f3f2] rounded-full flex items-center justify-center text-[#5d3f3e]">
-                  <CreditCard className="w-5 h-5" />
+          cards.map((card) => {
+            const brand = getBrand(card.brand);
+            return (
+              <div
+                key={card.id}
+                onClick={() => handleCardClick(card)}
+                className={`bg-white rounded-2xl p-4 shadow-sm border border-[#e5e2e1] flex items-center gap-4 ${selecting ? 'cursor-pointer active:bg-[#f6f3f2]' : ''}`}
+              >
+                {/* Card icon */}
+                <div className={`w-14 h-10 ${brand.bg} rounded-xl flex items-center justify-center shrink-0 shadow-sm`}>
+                  <CreditCard className="w-5 h-5 text-white/90" />
                 </div>
+
+                {/* Card info */}
                 <div className="flex-1 min-w-0">
                   {editingId === card.id ? (
                     <input
@@ -140,42 +147,47 @@ export default function GerenciarCartoes() {
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
                       onBlur={() => saveNickname(card.id)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') saveNickname(card.id); if (e.key === 'Escape') setEditingId(null); }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') saveNickname(card.id);
+                        if (e.key === 'Escape') setEditingId(null);
+                      }}
                       onClick={(e) => e.stopPropagation()}
                       placeholder="Apelido do cartão"
                       className="w-full font-display font-bold text-sm bg-transparent border-b border-[#bd002a] outline-none pb-0.5"
                     />
                   ) : (
                     <p className="font-display font-bold text-sm truncate">
-                      {card.nickname || `${brandLabel[card.brand.toLowerCase()] || card.brand} •••• ${card.last_four}`}
+                      {card.nickname || `${brand.label} •••• ${card.last_four}`}
                     </p>
                   )}
-                  <p className="text-xs text-[#5d3f3e]">
-                    {brandLabel[card.brand.toLowerCase()] || card.brand} •••• {card.last_four} · Expira {String(card.exp_month).padStart(2, '0')}/{String(card.exp_year).slice(-2)}
+                  <p className="text-xs text-[#5d3f3e] mt-0.5">
+                    {brand.label} •••• {card.last_four} · Expira {String(card.exp_month).padStart(2, '0')}/{String(card.exp_year).slice(-2)}
                   </p>
                 </div>
+
+                {/* Actions */}
+                {!selecting && (
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); startEdit(card); }}
+                      className="text-[#a8a29e] hover:text-[#5d3f3e] transition-colors p-2 rounded-lg hover:bg-[#f6f3f2]"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleRemove(card); }}
+                      disabled={deletingId === card.id}
+                      className="text-[#a8a29e] hover:text-[#e8173a] transition-colors p-2 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {deletingId === card.id
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <Trash2 className="w-4 h-4" />}
+                    </button>
+                  </div>
+                )}
               </div>
-              {!selecting && (
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); startEdit(card); }}
-                    className="text-[#a8a29e] hover:text-[#5d3f3e] transition-colors p-1"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleRemove(card); }}
-                    disabled={deletingId === card.id}
-                    className="text-[#a8a29e] hover:text-[#e8173a] transition-colors p-1 disabled:opacity-50"
-                  >
-                    {deletingId === card.id
-                      ? <Loader2 className="w-5 h-5 animate-spin" />
-                      : <Trash2 className="w-5 h-5" />}
-                  </button>
-                </div>
-              )}
-            </div>
-          ))
+            );
+          })
         )}
 
         <button
