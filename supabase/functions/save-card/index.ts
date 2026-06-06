@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     .insert({
       user_id: userId,
       mp_card_id: cardData.id,
-      brand: cardData.payment_method_id || 'unknown',
+      brand: cardData.payment_method_id || body.payment_method_id || 'unknown',
       holder_name: cardData.cardholder?.name || '',
       last_four: cardData.last_four_digits || '0000',
       exp_month: cardData.expiration_month,

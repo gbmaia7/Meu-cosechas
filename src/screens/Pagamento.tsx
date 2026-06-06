@@ -111,7 +111,21 @@ export default function Pagamento() {
         securityCode: savedCardCvv,
       });
       if (!token?.id) throw new Error('Nao foi possivel tokenizar o cartao salvo.');
-      return { token: token.id, payment_method_id: selectedSavedCard.brand };
+
+      // Prefer payment_method_id from token response; fall back to stored brand
+      let pmId: string = (token as any).payment_method_id ||
+        (selectedSavedCard.brand !== 'unknown' ? selectedSavedCard.brand : '');
+
+      // If still unknown, detect via BIN (first 6 digits from token)
+      if (!pmId && (token as any).first_six_digits) {
+        try {
+          const methods = await mp.getPaymentMethods({ bin: (token as any).first_six_digits });
+          const m = methods?.results?.[0] || methods?.[0];
+          if (m?.id) pmId = m.id;
+        } catch { /* ignore */ }
+      }
+
+      return { token: token.id, payment_method_id: pmId || selectedSavedCard.brand };
     }
 
     if (!cardHolder.trim()) throw new Error('Informe o nome do titular do cartao.');

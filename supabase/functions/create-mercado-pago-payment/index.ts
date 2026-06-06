@@ -186,12 +186,11 @@ Deno.serve(async (req) => {
     if (extrasError) return jsonResponse({ error: 'Unable to create order extras', details: extrasError }, 500);
   }
 
-  const rawEmail = payload.payer?.email || profile?.email || userData.user.email;
-  if (!rawEmail) return jsonResponse({ error: 'Payer email is required' }, 400);
-  // Pix rejects when payer email equals collector email; use a scoped alias to avoid it
-  const payerEmail = payload.paymentMethod === 'pix'
-    ? `cliente+${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`
-    : rawEmail;
+  if (!payload.payer?.email && !profile?.email && !userData.user.email) {
+    return jsonResponse({ error: 'Payer email is required' }, 400);
+  }
+  // Always use scoped alias: avoids conflict when user's real email is an MP account
+  const payerEmail = `cliente${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`;
 
   const mpPaymentMethod =
     payload.paymentMethod === 'pix'
