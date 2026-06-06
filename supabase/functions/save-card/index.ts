@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
   if (!userData.user.email) return jsonResponse({ error: 'User email required' }, 400);
 
   // Use scoped alias to avoid conflicts with real MP accounts registered with the user's email
-  const mpEmail = `cliente+${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`;
+  const mpEmail = `cliente${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`;
 
   // Get or create MP Customer
   const { data: profile } = await serviceClient
@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
     const searchData = await searchRes.json();
+    console.log('[save-card] search status:', searchRes.status, 'results:', searchData?.results?.length ?? 0);
     customerId = searchData?.results?.[0]?.id;
 
     if (!customerId) {
@@ -64,14 +65,18 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ email: mpEmail }),
       });
       const createData = await createRes.json();
+      console.log('[save-card] create customer status:', createRes.status, 'id:', createData?.id, 'error:', createData?.message || createData?.error);
       if (!createData.id) return jsonResponse({ error: 'Failed to create MP customer', details: createData }, 502);
       customerId = createData.id;
     }
 
     await serviceClient.from('profiles').update({ mp_customer_id: customerId }).eq('id', userId);
+  } else {
+    console.log('[save-card] using existing customerId from profile:', customerId);
   }
 
   // Save card token to MP Customer
+  console.log('[save-card] saving card to customerId:', customerId);
   const cardRes = await fetch(`https://api.mercadopago.com/v1/customers/${customerId}/cards`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
@@ -79,7 +84,7 @@ Deno.serve(async (req) => {
   });
   const cardData = await cardRes.json();
   if (!cardRes.ok || !cardData.id) {
-    console.error('[save-card] MP card save failed:', JSON.stringify(cardData));
+    console.error('[save-card] MP card save failed status:', cardRes.status, JSON.stringify(cardData));
     return jsonResponse({ error: 'Failed to save card to MP', details: cardData }, 502);
   }
 
