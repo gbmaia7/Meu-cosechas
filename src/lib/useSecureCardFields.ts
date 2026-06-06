@@ -89,9 +89,12 @@ export function useSecureCardFields(
     };
   }, [enabled, publicKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const createToken = useCallback(async (cardholderName: string): Promise<string> => {
+  const createToken = useCallback(async (cardholderName: string, identificationNumber?: string): Promise<string> => {
     if (!mpRef.current?.fields) throw new Error('Campos do cartão não carregados. Aguarde e tente novamente.');
-    const result = await mpRef.current.fields.createCardToken({ cardholderName });
+    const payload: Record<string, string> = { cardholderName };
+    const cpf = identificationNumber?.replace(/\D/g, '');
+    if (cpf) { payload.identificationType = 'CPF'; payload.identificationNumber = cpf; }
+    const result = await mpRef.current.fields.createCardToken(payload);
     if (!result?.id) throw new Error('Não foi possível tokenizar o cartão. Verifique os dados e tente novamente.');
     return result.id as string;
   }, []);
