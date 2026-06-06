@@ -32,7 +32,6 @@ export default function Pagamento() {
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [cardHolder, setCardHolder] = useState('');
-  const [identificationNumber, setIdentificationNumber] = useState('');
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedSavedCard, setSelectedSavedCard] = useState<SavedCard | null>(
     location.state?.savedCard || null,
@@ -101,8 +100,12 @@ export default function Pagamento() {
       if (!savedCardCvv || savedCardCvv.length < 3) throw new Error('Digite o CVV do cartao salvo.');
       const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
       if (!publicKey) throw new Error('Public Key do Mercado Pago nao configurada.');
-      const MercadoPago = await loadMercadoPago();
-      const mp = new MercadoPago(publicKey, { locale: 'pt-BR' });
+      await loadMercadoPago();
+      const mp = (window as any).__mpGlobal || (() => {
+        const instance = new window.MercadoPago!(publicKey, { locale: 'pt-BR' });
+        (window as any).__mpGlobal = instance;
+        return instance;
+      })();
       const token = await mp.createCardToken({
         cardId: selectedSavedCard.mp_card_id,
         securityCode: savedCardCvv,
@@ -112,9 +115,8 @@ export default function Pagamento() {
     }
 
     if (!cardHolder.trim()) throw new Error('Informe o nome do titular do cartao.');
-    if (!identificationNumber.replace(/\D/g, '')) throw new Error('Informe o CPF do titular.');
 
-    const tokenId = await createTokenFromFields(cardHolder, identificationNumber);
+    const tokenId = await createTokenFromFields(cardHolder);
     return { token: tokenId, payment_method_id: paymentMethodId, issuer_id: issuerId };
   };
 
@@ -156,9 +158,6 @@ export default function Pagamento() {
         paymentMethod,
         payer: {
           email: session.user.email,
-          identification: identificationNumber
-            ? { type: 'CPF', number: identificationNumber.replace(/\D/g, '') }
-            : undefined,
         },
         installments: 1,
         device_session_id: (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID || undefined,
@@ -384,7 +383,6 @@ export default function Pagamento() {
                 <div id="pg-expiration" className="h-[52px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl" />
                 <div id="pg-cvv" className="h-[52px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl" />
               </div>
-              <input value={identificationNumber} onChange={(event) => setIdentificationNumber(event.target.value.replace(/\D/g, '').slice(0, 11))} placeholder="CPF do titular" className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]" />
               <p className="text-[11px] text-[#5d3f3e] leading-relaxed">
                 🔒 Seus dados de cartão nunca passam pelos nossos servidores. O Mercado Pago processa tudo de forma criptografada — a mesma tecnologia usada por milhões de lojas no Brasil.
               </p>
