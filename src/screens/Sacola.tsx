@@ -31,7 +31,7 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
 
 export default function Sacola() {
   const navigate = useNavigate();
-  const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, phoneVerified } = useCart();
+  const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, phoneVerified, addActiveOrder } = useCart();
   const [modality, setModality] = useState<'counter' | 'delivery'>('counter');
   const [coupon, setCoupon] = useState('');
   const [couponError, setCouponError] = useState(false);
@@ -880,10 +880,29 @@ export default function Sacola() {
               </p>
               
               <div className="flex flex-col gap-3">
-                <button 
-                  onClick={() => {
+                <button
+                  onClick={async () => {
                     setShowFreeCheckoutConfirm(false);
-                    navigate('/validando-pagamento', { state: { isFree: true, modality, address } });
+                    const order = await addActiveOrder({
+                      items,
+                      totalPrice: 0,
+                      status: 'new',
+                      modality,
+                      address: modality === 'delivery' ? address : undefined,
+                      payment_method: 'subscription',
+                    });
+                    navigate('/pagamento-confirmado', {
+                      state: {
+                        modality,
+                        address,
+                        isReward: true,
+                        couponDiscount,
+                        referrerId,
+                        orderId: order?.id,
+                        pickupCode: order?.pickup_code,
+                        deliveryPin: order?.delivery_pin,
+                      },
+                    });
                   }}
                   className="w-full py-4 rounded-xl font-bold text-sm bg-[#bd002a] text-white hover:opacity-95 active:scale-[0.98] transition-all"
                 >
