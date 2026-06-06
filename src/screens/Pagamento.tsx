@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Banknote, CheckCircle2, ChevronLeft, CreditCard, Loader2, Wallet, X } from 'lucide-react';
+import { Banknote, CheckCircle2, ChevronLeft, CreditCard, Loader2, Lock, Wallet, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { useSecureCardFields } from '../lib/useSecureCardFields';
@@ -358,12 +358,23 @@ export default function Pagamento() {
                 </button>
               ))}
               {selectedSavedCard && (
-                <input
-                  value={savedCardCvv}
-                  onChange={(e) => setSavedCardCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  placeholder="CVV"
-                  className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]"
-                />
+                <div className="bg-[#fdf5f6] border border-[#bd002a]/20 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-3.5 h-3.5 text-[#bd002a]" />
+                    <p className="text-xs font-bold text-[#bd002a] uppercase tracking-wider">Código de segurança</p>
+                  </div>
+                  <p className="text-xs text-[#5d3f3e] -mt-1">
+                    3 dígitos no verso do cartão terminado em {selectedSavedCard.last_four}
+                  </p>
+                  <input
+                    value={savedCardCvv}
+                    onChange={(e) => setSavedCardCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="• • •"
+                    inputMode="numeric"
+                    maxLength={4}
+                    className="w-28 bg-white border border-[#e5e2e1] rounded-xl px-4 py-3 text-base font-bold tracking-[0.3em] text-center outline-none focus:border-[#bd002a] focus:ring-1 focus:ring-[#bd002a]/30"
+                  />
+                </div>
               )}
               <button
                 type="button"
