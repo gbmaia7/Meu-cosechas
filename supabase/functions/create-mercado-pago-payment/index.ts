@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
 
   const { data: profile } = await serviceClient
     .from('profiles')
-    .select('name, phone, email')
+    .select('name, phone, email, mp_customer_id')
     .eq('id', userId)
     .single();
 
@@ -231,6 +231,11 @@ Deno.serve(async (req) => {
     mercadoPagoPayload.token = payload.token;
     mercadoPagoPayload.installments = Math.max(1, Number(payload.installments) || 1);
     if (payload.issuer_id) mercadoPagoPayload.issuer_id = payload.issuer_id;
+    // Required for saved card payments: MP needs customer reference to find the card
+    if (profile?.mp_customer_id) {
+      (mercadoPagoPayload.payer as Record<string, unknown>).type = 'customer';
+      (mercadoPagoPayload.payer as Record<string, unknown>).id = profile.mp_customer_id;
+    }
   }
 
   mercadoPagoPayload.notification_url = `${supabaseUrl}/functions/v1/webhook-mercado-pago`;
