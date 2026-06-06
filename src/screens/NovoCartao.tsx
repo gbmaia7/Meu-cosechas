@@ -14,7 +14,6 @@ export default function NovoCartao() {
   const type = location.state?.type || 'credit_card';
 
   const [cardHolder, setCardHolder] = useState('');
-  const [cpf, setCpf] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [cardInfo, setCardInfo] = useState<CardInfo>({ paymentMethodId: '' });
@@ -33,7 +32,7 @@ export default function NovoCartao() {
     }
     setSaving(true);
     try {
-      const tokenId = await createToken(cardHolder, cpf);
+      const tokenId = await createToken(cardHolder);
       const { error: fnError } = await supabase.functions.invoke('save-card', {
         body: { token: tokenId, payment_method_id: cardInfo.paymentMethodId, issuer_id: cardInfo.issuerId },
       });
@@ -84,17 +83,6 @@ export default function NovoCartao() {
               value={cardHolder}
               onChange={(e) => setCardHolder(e.target.value)}
               placeholder="Como está no cartão"
-              className="w-full bg-white border border-[#e5e2e1] rounded-xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a]"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider pl-1">CPF do titular</label>
-            <input
-              type="text"
-              value={cpf}
-              onChange={(e) => setCpf(e.target.value.replace(/\D/g, '').slice(0, 11))}
-              placeholder="000.000.000-00"
               className="w-full bg-white border border-[#e5e2e1] rounded-xl py-3.5 px-4 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#bd002a]"
             />
           </div>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Trash2, CreditCard, Loader2 } from 'lucide-react';
+import { ChevronLeft, Trash2, CreditCard, Loader2, Pencil } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 type SavedCard = {
@@ -11,6 +11,7 @@ type SavedCard = {
   holder_name: string;
   exp_month: number;
   exp_year: number;
+  nickname?: string;
 };
 
 const brandLabel: Record<string, string> = {
@@ -31,6 +32,8 @@ export default function GerenciarCartoes() {
   const [cards, setCards] = useState<SavedCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -45,7 +48,7 @@ export default function GerenciarCartoes() {
 
     const { data, error } = await supabase
       .from('saved_cards')
-      .select('id, mp_card_id, brand, last_four, holder_name, exp_month, exp_year')
+      .select('id, mp_card_id, brand, last_four, holder_name, exp_month, exp_year, nickname')
       .eq('user_id', session.user.id)
       .not('mp_card_id', 'is', null)
       .order('created_at', { ascending: false });
@@ -66,6 +69,18 @@ export default function GerenciarCartoes() {
       setCards((prev) => prev.filter((c) => c.id !== card.id));
     }
     setDeletingId(null);
+  };
+
+  const startEdit = (card: SavedCard) => {
+    setEditingId(card.id);
+    setEditValue(card.nickname || '');
+  };
+
+  const saveNickname = async (cardId: string) => {
+    const trimmed = editValue.trim();
+    setCards((prev) => prev.map((c) => c.id === cardId ? { ...c, nickname: trimmed || undefined } : c));
+    setEditingId(null);
+    await supabase.from('saved_cards').update({ nickname: trimmed || null }).eq('id', cardId);
   };
 
   const handleCardClick = (card: SavedCard) => {
@@ -118,25 +133,46 @@ export default function GerenciarCartoes() {
                 <div className="w-10 h-10 bg-[#f6f3f2] rounded-full flex items-center justify-center text-[#5d3f3e]">
                   <CreditCard className="w-5 h-5" />
                 </div>
-                <div>
-                  <p className="font-display font-bold text-sm">
-                    {brandLabel[card.brand.toLowerCase()] || card.brand} •••• {card.last_four}
-                  </p>
+                <div className="flex-1 min-w-0">
+                  {editingId === card.id ? (
+                    <input
+                      autoFocus
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={() => saveNickname(card.id)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') saveNickname(card.id); if (e.key === 'Escape') setEditingId(null); }}
+                      onClick={(e) => e.stopPropagation()}
+                      placeholder="Apelido do cartão"
+                      className="w-full font-display font-bold text-sm bg-transparent border-b border-[#bd002a] outline-none pb-0.5"
+                    />
+                  ) : (
+                    <p className="font-display font-bold text-sm truncate">
+                      {card.nickname || `${brandLabel[card.brand.toLowerCase()] || card.brand} •••• ${card.last_four}`}
+                    </p>
+                  )}
                   <p className="text-xs text-[#5d3f3e]">
-                    {card.holder_name} · Expira {String(card.exp_month).padStart(2, '0')}/{String(card.exp_year).slice(-2)}
+                    {brandLabel[card.brand.toLowerCase()] || card.brand} •••• {card.last_four} · Expira {String(card.exp_month).padStart(2, '0')}/{String(card.exp_year).slice(-2)}
                   </p>
                 </div>
               </div>
               {!selecting && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleRemove(card); }}
-                  disabled={deletingId === card.id}
-                  className="text-[#a8a29e] hover:text-[#e8173a] transition-colors p-1 disabled:opacity-50"
-                >
-                  {deletingId === card.id
-                    ? <Loader2 className="w-5 h-5 animate-spin" />
-                    : <Trash2 className="w-5 h-5" />}
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); startEdit(card); }}
+                    className="text-[#a8a29e] hover:text-[#5d3f3e] transition-colors p-1"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleRemove(card); }}
+                    disabled={deletingId === card.id}
+                    className="text-[#a8a29e] hover:text-[#e8173a] transition-colors p-1 disabled:opacity-50"
+                  >
+                    {deletingId === card.id
+                      ? <Loader2 className="w-5 h-5 animate-spin" />
+                      : <Trash2 className="w-5 h-5" />}
+                  </button>
+                </div>
               )}
             </div>
           ))
