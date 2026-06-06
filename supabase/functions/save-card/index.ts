@@ -35,8 +35,10 @@ Deno.serve(async (req) => {
 
   const serviceClient = createClient(supabaseUrl, serviceRoleKey);
   const userId = userData.user.id;
-  const userEmail = userData.user.email;
-  if (!userEmail) return jsonResponse({ error: 'User email required' }, 400);
+  if (!userData.user.email) return jsonResponse({ error: 'User email required' }, 400);
+
+  // Use scoped alias to avoid conflicts with real MP accounts registered with the user's email
+  const mpEmail = `cliente+${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`;
 
   // Get or create MP Customer
   const { data: profile } = await serviceClient
@@ -49,21 +51,19 @@ Deno.serve(async (req) => {
 
   if (!customerId) {
     const searchRes = await fetch(
-      `https://api.mercadopago.com/v1/customers/search?email=${encodeURIComponent(userEmail)}`,
+      `https://api.mercadopago.com/v1/customers/search?email=${encodeURIComponent(mpEmail)}`,
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
     const searchData = await searchRes.json();
-    console.error('[save-card] customer search:', JSON.stringify(searchData));
     customerId = searchData?.results?.[0]?.id;
 
     if (!customerId) {
       const createRes = await fetch('https://api.mercadopago.com/v1/customers', {
         method: 'POST',
         headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail }),
+        body: JSON.stringify({ email: mpEmail }),
       });
       const createData = await createRes.json();
-      console.error('[save-card] customer create:', JSON.stringify(createData));
       if (!createData.id) return jsonResponse({ error: 'Failed to create MP customer', details: createData }, 502);
       customerId = createData.id;
     }
