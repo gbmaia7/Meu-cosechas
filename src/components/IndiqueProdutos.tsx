@@ -19,8 +19,12 @@ const allProducts: Product[] = Array.from(
 ).filter(p => !EXCLUDED.includes(p.category));
 
 const getBasePrice = (product: Product): number => {
-  if (product.sizes && product.sizes.length > 0) return Math.min(...product.sizes.map(s => s.price));
-  return parseFloat(product.priceDisplay.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+  if (product.sizes && product.sizes.length > 0) {
+    const prices = product.sizes.map(s => Number(s.price)).filter(p => p > 0);
+    if (prices.length > 0) return Math.min(...prices);
+  }
+  const raw = (product.priceDisplay || '').replace(/[^\d,]/g, '').replace(',', '.');
+  return parseFloat(raw) || 0;
 };
 
 const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -110,13 +114,18 @@ export default function IndiqueProdutos({ referralCreditId, onClose }: Props) {
                         <p className="text-[#5d3f3e] text-[10px] line-clamp-2 leading-tight mt-0.5">{product.description}</p>
                       </div>
                       <div className="flex items-center justify-between mt-1">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] text-[#a8a29e] line-through">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-xs text-[#a8a29e] line-through leading-none">
                             {hasMultipleSizes ? 'a partir de ' : ''}{fmt(base)}
                           </span>
-                          <span className="font-extrabold text-[#008388] text-sm">
-                            {hasMultipleSizes ? 'a partir de ' : ''}{fmt(discounted)}
-                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className="font-extrabold text-[#008388] text-sm leading-none">
+                              {hasMultipleSizes ? 'a partir de ' : ''}{fmt(discounted)}
+                            </span>
+                            <span className="text-[9px] font-black bg-[#008388] text-white px-1 py-0.5 rounded-sm leading-none">
+                              −R$5
+                            </span>
+                          </div>
                         </div>
                         <button
                           onClick={() => setSelectedProduct(product)}
