@@ -1,6 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { X, Utensils, ShoppingBag, User, Phone, CheckCircle2, AlertCircle, MapPin, Heart, LogOut, ChevronRight, Crown, Mail, Lock, CreditCard } from 'lucide-react';
+import { X, Utensils, ShoppingBag, User, Phone, CheckCircle2, AlertCircle, MapPin, Heart, LogOut, ChevronRight, Crown, Mail, Lock, CreditCard, UserPlus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 
@@ -428,13 +428,14 @@ export default function PerfilLogado() {
         {[
           { icon: Utensils, label: 'Menu', active: false, path: '/HomeComSacola' },
           { icon: Crown, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
+          { icon: UserPlus, label: 'Indique', active: false, path: isAuthenticated ? '/indique-ganhe/logado' : '/indique-ganhe' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
           { icon: User, label: 'Perfil', active: true, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
         ].map((item: any) => (
           <Link 
             key={item.label} 
             to={item.path} 
-            className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a] bg-[#e8173a]/10' : 'text-[#a8a29e]'} rounded-full px-4 py-2 transition-transform duration-300 ${item.active ? 'scale-105' : 'active:scale-95'}`}
+            className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a] bg-[#e8173a]/10' : 'text-[#a8a29e]'} rounded-full px-2 py-2 transition-transform duration-300 ${item.active ? 'scale-105' : 'active:scale-95'}`}
           >
             <div className="relative">
               <item.icon className="w-6 h-6" />

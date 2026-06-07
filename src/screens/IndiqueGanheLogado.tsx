@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { ChevronLeft, Copy, Check, Gift, Users, Utensils, Crown, ShoppingBag, User } from 'lucide-react'
+import { ChevronLeft, Copy, Check, Gift, Users, UserPlus, Utensils, Crown, ShoppingBag, User } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useCart } from '../context/CartContext'
 
@@ -52,7 +52,7 @@ export default function IndiqueGanheLogado() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const convertidos = referrals.filter(r => r.status === 'redeemed').length
+  const convertidos = referrals.filter(r => r.status === 'redeemed')
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fcf9f8', paddingBottom: '80px' }}>
@@ -133,8 +133,8 @@ export default function IndiqueGanheLogado() {
               gap: '12px', marginBottom: '24px'
             }}>
               {[
-                { label: 'Indicações feitas', valor: referrals.length, icon: <Users size={20} color="#bd002a" /> },
-                { label: 'Créditos ganhos', valor: `R$ ${(convertidos * 5).toFixed(2).replace('.', ',')}`, icon: <Gift size={20} color="#bd002a" /> },
+                { label: 'Amigos convertidos', valor: convertidos.length, icon: <Users size={20} color="#bd002a" /> },
+                { label: 'Créditos ganhos', valor: `R$ ${(convertidos.length * 5).toFixed(2).replace('.', ',')}`, icon: <Gift size={20} color="#bd002a" /> },
               ].map(card => (
                 <div key={card.label} style={{
                   backgroundColor: 'white', borderRadius: '16px',
@@ -148,24 +148,24 @@ export default function IndiqueGanheLogado() {
             </div>
 
             {/* Histórico */}
-            {referrals.length > 0 && (
+            {convertidos.length > 0 && (
               <div style={{
                 backgroundColor: 'white', borderRadius: '16px',
                 padding: '20px', border: '1px solid #e5e2e1'
               }}>
                 <p style={{ fontWeight: 800, fontSize: '15px', marginBottom: '16px', color: '#1a1a1a' }}>
-                  Histórico de indicações
+                  Amigos que compraram
                 </p>
-                {referrals.map((ref, i) => (
+                {convertidos.map((ref, i) => (
                   <div key={ref.id} style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    paddingBottom: i < referrals.length - 1 ? '12px' : 0,
-                    marginBottom: i < referrals.length - 1 ? '12px' : 0,
-                    borderBottom: i < referrals.length - 1 ? '1px solid #f5f5f5' : 'none'
+                    paddingBottom: i < convertidos.length - 1 ? '12px' : 0,
+                    marginBottom: i < convertidos.length - 1 ? '12px' : 0,
+                    borderBottom: i < convertidos.length - 1 ? '1px solid #f5f5f5' : 'none'
                   }}>
                     <div>
                       <p style={{ fontWeight: 700, fontSize: '14px', margin: '0 0 2px' }}>
-                        Indicação #{i + 1}
+                        Amigo #{i + 1}
                       </p>
                       <p style={{ fontSize: '12px', color: '#a8a29e', margin: 0 }}>
                         {new Date(ref.created_at).toLocaleDateString('pt-BR')}
@@ -174,20 +174,20 @@ export default function IndiqueGanheLogado() {
                     <span style={{
                       fontSize: '12px', fontWeight: 700, padding: '4px 10px',
                       borderRadius: '9999px',
-                      backgroundColor: ref.status === 'redeemed' ? '#d4edda' : '#fff3cd',
-                      color: ref.status === 'redeemed' ? '#1e7e34' : '#856404'
+                      backgroundColor: '#d4edda',
+                      color: '#1e7e34'
                     }}>
-                      {ref.status === 'redeemed' ? 'Convertido' : 'Pendente'}
+                      + R$5
                     </span>
                   </div>
                 ))}
               </div>
             )}
 
-            {referrals.length === 0 && (
+            {convertidos.length === 0 && (
               <div style={{ textAlign: 'center', padding: '40px 0', color: '#a8a29e' }}>
                 <Users size={40} style={{ marginBottom: '12px', opacity: 0.4 }} />
-                <p style={{ fontSize: '14px' }}>Nenhuma indicação ainda.</p>
+                <p style={{ fontSize: '14px' }}>Nenhum amigo convertido ainda.</p>
                 <p style={{ fontSize: '13px' }}>Compartilhe seu código e comece a ganhar!</p>
               </div>
             )}
@@ -200,13 +200,14 @@ export default function IndiqueGanheLogado() {
         {[
           { icon: Utensils, label: 'Menu', active: false, path: '/HomeComSacola' },
           { icon: Crown, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
+          { icon: UserPlus, label: 'Indique', active: true, path: isAuthenticated ? '/indique-ganhe/logado' : '/indique-ganhe' },
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
-          { icon: User, label: 'Perfil', active: true, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
+          { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
         ].map((item: any) => (
           <Link
             key={item.label}
             to={item.path}
-            className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a]' : 'text-[#a8a29e]'} rounded-full px-4 py-2 transition-transform duration-300 active:scale-95`}
+            className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a]' : 'text-[#a8a29e]'} rounded-full px-2 py-2 transition-transform duration-300 active:scale-95`}
           >
             <div className="relative">
               <item.icon className="w-6 h-6" />

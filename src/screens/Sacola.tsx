@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus, AlertCircle, Crown, CupSoda, Utensils, User } from 'lucide-react';
+import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus, AlertCircle, Crown, CupSoda, Utensils, User, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -269,13 +269,14 @@ export default function Sacola() {
           {[
             { icon: Utensils, label: 'Menu', active: false, path: '/HomeComSacola' },
             { icon: Crown, label: 'Clube', active: false, path: isAuthenticated ? '/clube/logado' : '/clube/nao-logado' },
+            { icon: UserPlus, label: 'Indique', active: false, path: isAuthenticated ? '/indique-ganhe/logado' : '/indique-ganhe' },
             { icon: ShoppingBag, label: 'Sacola', active: true, path: '/sacola' },
             { icon: User, label: 'Perfil', active: false, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
           ].map((item) => (
             <Link
               key={item.label}
               to={item.path}
-              className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a] bg-[#e8173a]/10' : 'text-[#a8a29e]'} rounded-full px-4 py-2 transition-transform duration-300 ${item.active ? 'scale-105' : 'active:scale-95'}`}
+              className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a] bg-[#e8173a]/10' : 'text-[#a8a29e]'} rounded-full px-2 py-2 transition-transform duration-300 ${item.active ? 'scale-105' : 'active:scale-95'}`}
             >
               <item.icon className="w-6 h-6" />
               <span className="font-display text-[10px] font-semibold mt-1">{item.label}</span>
