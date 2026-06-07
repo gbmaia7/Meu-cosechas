@@ -188,9 +188,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const hasDoublePoints = sub?.double_points === true;
 
-    // Verifica se há itens pagos (não resgate de clube/assinatura)
+    // Verifica se há itens pagos (não resgate de clube/assinatura/indique)
     const hasPaidItems = order.items.some(
-      item => !item.name.startsWith('[CLUBE]')
+      item => !item.name.startsWith('[CLUBE]') && !item.name.startsWith('[INDIQUE]')
     )
 
     console.log('[addActiveOrder] hasPaidItems:', hasPaidItems,
@@ -270,7 +270,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const orderItems = order.items.map(item => ({
       order_id: savedOrder.id,
       product_id: item.productId,
-      product_name: item.name,
+      product_name: item.name.replace(/^\[.*?\]\s*/, ''),
       unit_price: item.price,
       quantity: item.quantity,
       size_label: item.size || null,

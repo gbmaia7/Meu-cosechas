@@ -905,6 +905,12 @@ export default function Sacola() {
                       address: modality === 'delivery' ? address : undefined,
                       payment_method: 'subscription',
                     });
+                    if (referralCreditId) {
+                      await supabase.from('referrals')
+                        .update({ credit_redeemed_at: new Date().toISOString() })
+                        .eq('id', referralCreditId)
+                        .is('credit_redeemed_at', null);
+                    }
                     navigate('/pagamento-confirmado', {
                       state: {
                         modality,
