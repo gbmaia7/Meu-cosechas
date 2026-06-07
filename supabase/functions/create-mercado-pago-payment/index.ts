@@ -36,6 +36,8 @@ type PaymentRequest = {
     identification?: { type?: string; number?: string };
   };
   device_session_id?: string;
+  referrerId?: string;
+  referralCreditId?: string;
 };
 
 const jsonResponse = (body: unknown, status = 200) =>
@@ -147,6 +149,7 @@ Deno.serve(async (req) => {
       address_id: addressId,
       pickup_code: pickupCode,
       delivery_pin: deliveryPin,
+      referral_credit_id: payload.referralCreditId || null,
     })
     .select('id, pickup_code')
     .single();
@@ -312,6 +315,15 @@ Deno.serve(async (req) => {
     .single();
 
   if (paymentError) return jsonResponse({ error: 'Unable to save payment', details: paymentError }, 500);
+
+  // Mark referral credit as used on immediate approval (Pix pending → handled by webhook)
+  if (mpData.status === 'approved' && payload.referralCreditId) {
+    await serviceClient
+      .from('referrals')
+      .update({ credit_redeemed_at: new Date().toISOString() })
+      .eq('id', payload.referralCreditId)
+      .is('credit_redeemed_at', null);
+  }
 
   return jsonResponse({
     order_id: savedOrder.id,

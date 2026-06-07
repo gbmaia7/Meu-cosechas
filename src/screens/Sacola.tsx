@@ -7,7 +7,7 @@
 import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus, AlertCircle, Crown, CupSoda, Utensils, User, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE, FUNCIONAL, COMECE_BEM, BOA_DE_DIA } from '../data/products';
@@ -31,6 +31,7 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
 
 export default function Sacola() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, phoneVerified, addActiveOrder } = useCart();
   const [modality, setModality] = useState<'counter' | 'delivery'>('counter');
   const [coupon, setCoupon] = useState('');
@@ -39,6 +40,7 @@ export default function Sacola() {
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [couponSuccess, setCouponSuccess] = useState(false);
   const [referrerId, setReferrerId] = useState<string | null>(null);
+  const [referralCreditId] = useState<string | null>((location.state as any)?.referralCreditId ?? null);
   const [selectedProductForEdit, setSelectedProductForEdit] = useState<{ product: any, itemId: string } | null>(null);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
 
@@ -140,6 +142,17 @@ export default function Sacola() {
 
     const { data: { user } } = await supabase.auth.getUser()
     if (referrer.id === user?.id) {
+      setCouponError(true)
+      return
+    }
+
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('phone_verified')
+      .eq('id', user?.id)
+      .single()
+
+    if (!userProfile?.phone_verified) {
       setCouponError(true)
       return
     }
@@ -773,10 +786,10 @@ export default function Sacola() {
               setShowFreeCheckoutConfirm(true);
             } else if (!isAuthenticated) {
               navigate('/login', {
-                state: { returnTo: '/pagamento', returnState: { modality, address, couponDiscount, referrerId } },
+                state: { returnTo: '/pagamento', returnState: { modality, address, couponDiscount, referrerId, referralCreditId } },
               });
             } else {
-              navigate('/pagamento', { state: { modality, address, couponDiscount, referrerId } });
+              navigate('/pagamento', { state: { modality, address, couponDiscount, referrerId, referralCreditId } });
             }
           }}
           disabled={!isFormValid && false} // Keep enabled to show errors if clicked, OR follow prompt: "desabilitado (opacidade reduzida) enquanto estiverem vazios"

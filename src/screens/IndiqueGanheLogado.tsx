@@ -3,12 +3,14 @@ import { useNavigate, Link } from 'react-router-dom'
 import { ChevronLeft, Copy, Check, Gift, Users, UserPlus, Utensils, Crown, ShoppingBag, User } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useCart } from '../context/CartContext'
+import IndiqueProdutos from '../components/IndiqueProdutos'
 
 interface Referral {
   id: string
   status: string
   created_at: string
   referred_id: string
+  credit_redeemed_at: string | null
 }
 
 export default function IndiqueGanheLogado() {
@@ -18,6 +20,7 @@ export default function IndiqueGanheLogado() {
   const [referrals, setReferrals] = useState<Referral[]>([])
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [activeReferralId, setActiveReferralId] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
@@ -37,7 +40,7 @@ export default function IndiqueGanheLogado() {
 
     const { data: refs } = await supabase
       .from('referrals')
-      .select('id, status, created_at, referred_id')
+      .select('id, status, created_at, referred_id, credit_redeemed_at')
       .eq('referrer_id', user.id)
       .order('created_at', { ascending: false })
 
@@ -171,14 +174,28 @@ export default function IndiqueGanheLogado() {
                         {new Date(ref.created_at).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
-                    <span style={{
-                      fontSize: '12px', fontWeight: 700, padding: '4px 10px',
-                      borderRadius: '9999px',
-                      backgroundColor: '#d4edda',
-                      color: '#1e7e34'
-                    }}>
-                      + R$5
-                    </span>
+                    {ref.credit_redeemed_at ? (
+                      <span style={{
+                        fontSize: '12px', fontWeight: 700, padding: '4px 10px',
+                        borderRadius: '9999px',
+                        backgroundColor: '#f0eded',
+                        color: '#a8a29e'
+                      }}>
+                        Utilizado
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => setActiveReferralId(ref.id)}
+                        style={{
+                          fontSize: '12px', fontWeight: 800, padding: '6px 12px',
+                          borderRadius: '9999px', border: 'none', cursor: 'pointer',
+                          backgroundColor: '#008388',
+                          color: 'white'
+                        }}
+                      >
+                        Usar cupom de R$5
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -194,6 +211,13 @@ export default function IndiqueGanheLogado() {
           </>
         )}
       </main>
+
+      {activeReferralId && (
+        <IndiqueProdutos
+          referralCreditId={activeReferralId}
+          onClose={() => setActiveReferralId(null)}
+        />
+      )}
 
       {/* BottomNavBar */}
       <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/80 backdrop-blur-xl shadow-[0_-8px_30px_rgb(0,0,0,0.04)] rounded-t-[2.5rem]">

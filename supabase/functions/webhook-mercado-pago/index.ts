@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
   const mapped = mapOrderStatus(mpData.status);
   const { data: order } = await serviceClient
     .from('orders')
-    .select('id, status, user_id')
+    .select('id, status, user_id, referral_credit_id')
     .eq('id', orderId)
     .single();
   const safeStatus = getSafeOrderStatus(order?.status, mapped.status);
@@ -180,6 +180,14 @@ Deno.serve(async (req) => {
 
   if (mapped.status === 'new' && order?.user_id) {
     await creditPointsForOnlinePayment(serviceClient, orderId, order.user_id);
+  }
+
+  if (mapped.status === 'new' && (order as any)?.referral_credit_id) {
+    await serviceClient
+      .from('referrals')
+      .update({ credit_redeemed_at: new Date().toISOString() })
+      .eq('id', (order as any).referral_credit_id)
+      .is('credit_redeemed_at', null);
   }
 
   return jsonResponse({ success: true, order_id: orderId, provider_status: mpData.status });
