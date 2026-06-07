@@ -388,11 +388,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => {
       const existingIndex = prev.findIndex((i) => {
         const sameProduct = i.productId === itemData.productId;
+        const sameName = i.name === itemData.name;
         const sameSize = i.size === itemData.size;
         const sameBase = i.base === itemData.base;
         const sameNotes = i.notes === itemData.notes;
         const sameExtras = JSON.stringify(i.extras) === JSON.stringify(itemData.extras);
-        return sameProduct && sameSize && sameBase && sameNotes && sameExtras;
+        return sameProduct && sameName && sameSize && sameBase && sameNotes && sameExtras;
       });
 
       if (existingIndex !== -1) {

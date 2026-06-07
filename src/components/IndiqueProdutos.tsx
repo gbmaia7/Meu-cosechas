@@ -18,10 +18,11 @@ const allProducts: Product[] = Array.from(
   ).values()
 ).filter(p => !EXCLUDED.includes(p.category));
 
+// Use G size (default in ProductBottomSheet) so card price matches what gets added
 const getBasePrice = (product: Product): number => {
   if (product.sizes && product.sizes.length > 0) {
-    const prices = product.sizes.map(s => Number(s.price)).filter(p => p > 0);
-    if (prices.length > 0) return Math.min(...prices);
+    const gSize = product.sizes.find(s => s.label === 'G');
+    return Number((gSize ?? product.sizes[product.sizes.length - 1]).price) || 0;
   }
   const raw = (product.priceDisplay || '').replace(/[^\d,]/g, '').replace(',', '.');
   return parseFloat(raw) || 0;
@@ -116,11 +117,11 @@ export default function IndiqueProdutos({ referralCreditId, onClose }: Props) {
                       <div className="flex items-center justify-between mt-1">
                         <div className="flex flex-col gap-0.5">
                           <span className="text-xs text-[#a8a29e] line-through leading-none">
-                            {hasMultipleSizes ? 'a partir de ' : ''}{fmt(base)}
+                            {fmt(base)}
                           </span>
                           <div className="flex items-center gap-1">
                             <span className="font-extrabold text-[#008388] text-sm leading-none">
-                              {hasMultipleSizes ? 'a partir de ' : ''}{fmt(discounted)}
+                              {fmt(discounted)}
                             </span>
                             <span className="text-[9px] font-black bg-[#008388] text-white px-1 py-0.5 rounded-sm leading-none">
                               −R$5
