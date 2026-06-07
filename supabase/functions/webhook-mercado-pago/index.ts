@@ -118,12 +118,12 @@ Deno.serve(async (req) => {
   if (!payload) return jsonResponse({ error: 'Invalid JSON body' }, 400);
 
   const providerPaymentId = String(url.searchParams.get('data.id') || payload?.data?.id || payload?.id || '').trim();
-  const signatureValid = await validateSignature(
-    webhookSecret,
-    req.headers.get('x-signature'),
-    req.headers.get('x-request-id'),
-    providerPaymentId,
-  );
+  const xSignature = req.headers.get('x-signature');
+  // Old-format notifications (?id=&topic=) do not carry x-signature.
+  // Only reject when the header is present but the HMAC does not match.
+  const signatureValid = xSignature
+    ? await validateSignature(webhookSecret, xSignature, req.headers.get('x-request-id'), providerPaymentId)
+    : false;
 
   const serviceClient = createClient(supabaseUrl, serviceRoleKey);
   await serviceClient.from('payment_webhook_events').insert({
@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
     payload,
   });
 
-  if (!signatureValid) return jsonResponse({ error: 'Invalid webhook signature' }, 401);
+  if (xSignature && !signatureValid) return jsonResponse({ error: 'Invalid webhook signature' }, 401);
   if (!providerPaymentId) return jsonResponse({ error: 'Missing payment id' }, 400);
 
   const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${providerPaymentId}`, {
