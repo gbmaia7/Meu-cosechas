@@ -208,10 +208,17 @@ Deno.serve(async (req) => {
           { headers: { Authorization: `Bearer ${accessToken}` } },
         );
         const cardData = await cardRes.json();
-        if (cardData?.payment_method_id) {
-          mpPaymentMethod = cardData.payment_method_id;
+        const resolvedPmId = cardData?.payment_method?.id || cardData?.payment_method_id;
+        console.log('[payment] card lookup status:', cardRes.status, 'payment_method:', JSON.stringify(cardData?.payment_method), 'payment_method_id:', cardData?.payment_method_id);
+        if (resolvedPmId) {
+          mpPaymentMethod = resolvedPmId;
           if (cardData.issuer?.id) resolvedIssuerId = cardData.issuer.id;
-          console.log('[payment] payment_method_id resolved from customer card:', mpPaymentMethod);
+          serviceClient
+            .from('saved_cards')
+            .update({ brand: resolvedPmId })
+            .eq('mp_card_id', payload.mp_card_id)
+            .then(() => console.log('[payment] auto-healed saved_cards brand:', resolvedPmId))
+            .catch(() => {});
         }
       } catch {
         // validation below will reject if still unresolved
