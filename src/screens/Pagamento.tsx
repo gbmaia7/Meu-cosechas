@@ -125,7 +125,7 @@ export default function Pagamento() {
         } catch { /* ignore */ }
       }
 
-      return { token: token.id, payment_method_id: pmId || selectedSavedCard.brand };
+      return { token: token.id, payment_method_id: pmId || selectedSavedCard.brand, mp_card_id: selectedSavedCard.mp_card_id };
     }
 
     if (!cardHolder.trim()) throw new Error('Informe o nome do titular do cartao.');

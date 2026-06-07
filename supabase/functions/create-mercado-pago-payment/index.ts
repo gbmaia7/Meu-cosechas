@@ -30,6 +30,7 @@ type PaymentRequest = {
   payment_method_id?: string;
   issuer_id?: string;
   installments?: number;
+  mp_card_id?: string;
   payer?: {
     email?: string;
     identification?: { type?: string; number?: string };
@@ -192,10 +193,31 @@ Deno.serve(async (req) => {
   // Always use scoped alias: avoids conflict when user's real email is an MP account
   const payerEmail = `cliente${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`;
 
-  const mpPaymentMethod =
+  let mpPaymentMethod: string | undefined =
     payload.paymentMethod === 'pix'
       ? 'pix'
       : payload.payment_method_id;
+
+  // When payment_method_id is missing or 'unknown', resolve from the saved card on MP
+  let resolvedIssuerId: string | number | undefined = payload.issuer_id;
+  if (payload.paymentMethod !== 'pix' && (!mpPaymentMethod || mpPaymentMethod === 'unknown')) {
+    if (profile?.mp_customer_id && payload.mp_card_id) {
+      try {
+        const cardRes = await fetch(
+          `https://api.mercadopago.com/v1/customers/${profile.mp_customer_id}/cards/${payload.mp_card_id}`,
+          { headers: { Authorization: `Bearer ${accessToken}` } },
+        );
+        const cardData = await cardRes.json();
+        if (cardData?.payment_method_id) {
+          mpPaymentMethod = cardData.payment_method_id;
+          if (cardData.issuer?.id) resolvedIssuerId = cardData.issuer.id;
+          console.log('[payment] payment_method_id resolved from customer card:', mpPaymentMethod);
+        }
+      } catch {
+        // validation below will reject if still unresolved
+      }
+    }
+  }
 
   const nameParts = (profile?.name || '').trim().split(/\s+/);
   const payerFirstName = nameParts[0] || '';
@@ -225,12 +247,15 @@ Deno.serve(async (req) => {
   };
 
   if (payload.paymentMethod !== 'pix') {
-    if (!payload.token || !payload.payment_method_id) {
-      return jsonResponse({ error: 'Card token and payment method are required' }, 400);
+    if (!payload.token) {
+      return jsonResponse({ error: 'Card token is required' }, 400);
+    }
+    if (!mpPaymentMethod || mpPaymentMethod === 'unknown') {
+      return jsonResponse({ error: 'Could not determine payment method for this card' }, 400);
     }
     mercadoPagoPayload.token = payload.token;
     mercadoPagoPayload.installments = Math.max(1, Number(payload.installments) || 1);
-    if (payload.issuer_id) mercadoPagoPayload.issuer_id = payload.issuer_id;
+    if (resolvedIssuerId) mercadoPagoPayload.issuer_id = resolvedIssuerId;
     // Required for saved card payments: MP needs customer reference to find the card
     if (profile?.mp_customer_id) {
       (mercadoPagoPayload.payer as Record<string, unknown>).type = 'customer';
