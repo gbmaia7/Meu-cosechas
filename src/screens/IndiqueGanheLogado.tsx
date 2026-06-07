@@ -52,7 +52,7 @@ export default function IndiqueGanheLogado() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const convertidos = referrals.filter(r => r.status === 'redeemed')
+  const convertidos = referrals.filter(r => r.status === 'converted' || r.status === 'rewarded')
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fcf9f8', paddingBottom: '80px' }}>
