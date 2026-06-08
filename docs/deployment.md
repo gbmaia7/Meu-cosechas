@@ -50,6 +50,7 @@ Funcoes disponiveis:
 * `get-mercado-pago-payment`
 * `webhook-mercado-pago`
 * `save-card`
+* `teknisa-counter-sale`
 
 **Atencao:** `npm:mercadopago` e `esm.sh/mercadopago` sao incompativeis com
 o bundler do Supabase/Deno. Usar fetch raw para chamar a API do MP.
@@ -81,6 +82,7 @@ antes de validar.
 | --- | --- | --- |
 | `MERCADO_PAGO_ACCESS_TOKEN` | Configurado (producao) | Chave de producao |
 | `MERCADO_PAGO_WEBHOOK_SECRET` | Configurado | |
+| `TEKNISA_WEBHOOK_SECRET` | **A configurar** | Secret HMAC compartilhado com Teknisa para compras de balcao |
 | `SUPABASE_URL` | Auto-injetado | |
 | `SUPABASE_ANON_KEY` | Auto-injetado | |
 | `SUPABASE_SERVICE_ROLE_KEY` | Auto-injetado | |
@@ -119,6 +121,7 @@ Migrations sao permanentes. Para reverter:
 - [ ] `VITE_MERCADO_PAGO_PUBLIC_KEY` configurada no Vercel (chave producao)
 - [ ] `MERCADO_PAGO_ACCESS_TOKEN` e chave de producao (nao `TEST-`)
 - [ ] Webhook URL do Mercado Pago apontando para URL de producao
+- [ ] `TEKNISA_WEBHOOK_SECRET` configurado antes de homologar compras de balcao
 - [ ] Fluxo Pix testado manualmente apos o deploy
 - [ ] Fluxo cartao testado manualmente (Secure Fields interagiveis)
 - [ ] Rollback planejado para cada camada alterada
@@ -132,3 +135,5 @@ Migrations sao permanentes. Para reverter:
 * 2026-06-05: atualizados status de secrets (todos producao), adicionada
   observacao critica sobre VITE_MERCADO_PAGO_PUBLIC_KEY, incompatibilidade
   npm:mercadopago/Deno, funcao save-card.
+* 2026-06-08: adicionada funcao `teknisa-counter-sale` e secret
+  `TEKNISA_WEBHOOK_SECRET`.

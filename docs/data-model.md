@@ -60,7 +60,7 @@ Campos relevantes: `id`, `user_id`, `mp_card_id`, `brand`, `last_four`,
 
 Representa eventos recebidos de provedores de pagamento.
 
-### `counter_sale_point_events` (proposta)
+### `counter_sale_point_events`
 
 Representa eventos de compras de balcao enviados pelo Teknisa para credito de
 pontos do Clube Cosechas por telefone.
@@ -101,7 +101,8 @@ Status propostos: `pending`, `claimed`, `expired`, `cancelled`.
 
 * Necessita validacao: diagrama ER completo.
 * Necessita validacao: tabelas completas do Clube Cosechas.
-* Necessita validacao: modelo final da tabela `counter_sale_point_events`.
+* Necessita validacao: aplicar migration `20260608143000_create_counter_sale_point_events.sql`
+  em producao.
 * A definir: estrategia de arquivamento de pedidos antigos.
 
 ## Historico de atualizacao
@@ -112,3 +113,4 @@ Status propostos: `pending`, `claimed`, `expired`, `cancelled`.
   regra de expiracao de pedidos pendentes (40 min).
 * 2026-06-08: adicionada proposta de modelo para eventos de compras de balcao
   via Teknisa.
+* 2026-06-08: modelo implementado localmente em migration versionada.
