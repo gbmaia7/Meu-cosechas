@@ -49,86 +49,48 @@ Registrar pendencias operacionais, tecnicas e de produto.
 
 ### Integracao Teknisa - compras de balcao
 
-* Pendencia: aplicar e homologar contrato tecnico definido em `docs/integracao-teknisa.md`.
+* Pendencia: homologacao conjunta com equipe Teknisa.
 * Prioridade: alta.
 * Contexto: compras de balcao devem gerar pontos do Clube Cosechas pelo
   telefone informado no Teknisa.
-* Proximo passo: aplicar migration `20260608143000_create_counter_sale_point_events.sql`,
-  configurar `TEKNISA_WEBHOOK_SECRET` e deployar Edge Function
-  `teknisa-counter-sale`.
-* Status: implementado localmente; deploy/homologacao pendentes.
+* Status: **deployado e testado em 2026-06-08**. Todos os cenarios do checklist
+  validados com sucesso em producao.
+* Proximo passo: implementar claim automatico de eventos `pending` apos
+  verificacao de telefone via Twilio; depois criar documento externo para
+  Teknisa e agendar homologacao conjunta.
 
 ### Expiracao de creditos pendentes Teknisa
 
-* Pendencia: aplicar e validar expiracao/limpeza de creditos pendentes por
-  telefone.
-* Prioridade: alta.
+* Pendencia: monitorar cron em producao.
+* Prioridade: media.
 * Contexto: creditos pendentes nao devem ocupar banco indefinidamente.
-* Proximo passo: validar cron criado na migration
-  `20260608143000_create_counter_sale_point_events.sql`.
-* Status: implementado localmente; aplicacao em producao pendente.
+* Status: **aplicado em 2026-06-08**. Cron `expire-teknisa-counter-sale-credits`
+  agendado a cada hora via pg_cron. Limpeza fisica apos 90 dias de expirado.
 
 ### Handoff - proximos passos integracao Teknisa
 
-* Contexto: a documentacao da integracao Teknisa foi commitada em
-  `b21f89b document teknisa counter sales integration`.
-* Contexto: a implementacao local inicial foi criada, mas ainda nao foi
-  commitada nem deployada.
-* Arquivos locais implementados:
-  * `supabase/migrations/20260608143000_create_counter_sale_point_events.sql`
-  * `supabase/functions/teknisa-counter-sale/index.ts`
-  * `docs/deployment.md`
-  * `docs/data-model.md`
-  * `memory/pendencias.md`
-* Estado esperado do git antes de continuar:
-  * branch `main` esta `ahead 2` de `origin/main` por commits locais ja feitos;
-  * existe alteracao nao relacionada em `.claude/settings.local.json`;
-  * existem alteracoes locais da implementacao Teknisa ainda nao commitadas.
-* Validacoes ja executadas apos a implementacao local:
-  * `npm run lint` passou;
-  * `npm run build` passou.
-* Proximos passos recomendados, em ordem:
-  1. Revisar diff local da integracao Teknisa e manter `.claude/settings.local.json`
-     fora do commit.
-  2. Commitar a implementacao local da integracao Teknisa.
-  3. Fazer push dos commits locais para `origin/main`, se a decisao for publicar.
-  4. Configurar secret `TEKNISA_WEBHOOK_SECRET` no Supabase Edge Functions.
-  5. Aplicar migration `20260608143000_create_counter_sale_point_events.sql`
-     no projeto Supabase.
-  6. Deployar Edge Function `teknisa-counter-sale`.
-  7. Testar assinatura HMAC localmente ou em homologacao.
-  8. Testar venda paga com telefone ja verificado: deve criar evento `claimed`,
-     creditar 1 ponto, criar ledger `counter_purchase` e incrementar
-     `profiles.total_orders`.
-  9. Testar venda paga com telefone sem conta/verificacao: deve criar evento
-     `pending` com `expires_at` em 45 dias e nao creditar pontos ainda.
-  10. Testar reenvio identico da venda: deve retornar `already_processed` e nao
-      duplicar pontos.
-  11. Testar reenvio com mesmo `external_sale_id` e payload conflitante: deve
-      retornar `409`.
-  12. Testar cancelamento de venda `pending`: deve mudar status para
-      `cancelled` sem mexer em pontos.
-  13. Testar cancelamento de venda `claimed`: deve mudar status para
-      `cancelled`, criar ledger `counter_purchase_cancelled`, remover 1 ponto
-      e reduzir `total_orders` em 1.
-  14. Implementar a proxima etapa: claim automatico de eventos `pending` apos
-      verificacao de telefone via Twilio.
-  15. Criar documento externo final para Teknisa antes da homologacao conjunta.
-      Arquivo sugerido: `docs/teknisa-doc-externo.md`.
-  16. Depois do claim Twilio, atualizar `docs/integracao-teknisa.md`,
-      `docs/data-model.md` e este arquivo.
+* Estado em 2026-06-08:
+  * Migration `20260608143000_create_counter_sale_point_events.sql` aplicada.
+  * Migration `20260608150000_add_counter_purchase_reason_to_ledger.sql` aplicada
+    (correcao: `counter_purchase` e `counter_purchase_cancelled` adicionados ao
+    CHECK constraint de `loyalty_points_ledger.reason`).
+  * Edge Function `teknisa-counter-sale` deployada (v1, ACTIVE).
+  * Secret `TEKNISA_WEBHOOK_SECRET` configurado.
+  * Todos os testes do checklist passaram (T8-T13).
+* Proximos passos, em ordem:
+  1. Implementar claim automatico de eventos `pending` apos verificacao de
+     telefone via Twilio.
+  2. Criar documento externo para Teknisa (`docs/teknisa-doc-externo.md`).
+  3. Agendar homologacao conjunta com equipe Teknisa.
+  4. Depois do claim Twilio, atualizar `docs/integracao-teknisa.md`,
+     `docs/data-model.md` e este arquivo.
 * Pontos de atencao:
   * A Edge Function exige header `X-Teknisa-Timestamp` e
     `X-Teknisa-Signature`.
   * Assinatura esperada: `sha256=<hex>` de
     `HMAC_SHA256(secret, timestamp + "." + raw_body)`.
   * Timestamp tem tolerancia maxima de 5 minutos.
-  * O Teknisa nao deve escrever diretamente no Supabase.
   * O claim automatico pos-Twilio ainda nao foi implementado.
-  * O documento atual `docs/integracao-teknisa.md` e contrato interno/inicial.
-    Ainda falta gerar um documento externo, direto para a equipe Teknisa, depois
-    que a base tecnica estiver aplicada/testada e antes da homologacao conjunta.
-  * O documento externo deve conter: objetivo, URL real de producao/homologacao,
-    headers obrigatorios, algoritmo HMAC, exemplos `curl`, payloads finais,
-    respostas esperadas, tabela de erros, checklist de homologacao e o que
-    esperamos do time Teknisa.
+  * O documento externo deve conter: objetivo, URL real de producao,
+    headers obrigatorios, algoritmo HMAC, exemplos curl, payloads finais,
+    respostas esperadas, tabela de erros e checklist de homologacao.
