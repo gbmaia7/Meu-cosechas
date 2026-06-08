@@ -12,8 +12,17 @@ import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE, FUNCIONAL, COMECE_BEM, BOA_DE_DIA, ESPECIAIS, SALADA_DE_FRUTAS, COFFEE } from '../data/products';
 import ProductBottomSheet from '../components/ProductBottomSheet';
+import { calculateDeliveryFee, calculateDeliverySubtotal, FREE_DELIVERY_MINIMUM } from '../lib/deliveryFee';
 
 const ALL_PRODUCTS = [...PRODUCTS, ...LINHA_CARIBE, ...FUNCIONAL, ...COMECE_BEM, ...ESPECIAIS, ...SALADA_DE_FRUTAS, ...COFFEE, ...Object.values(BOA_DE_DIA)];
+
+const getOriginalProductPrice = (product: any, sizeLabel?: string) => {
+  if (product.sizes && product.sizes.length > 0) {
+    return product.sizes.find((size: any) => size.label === sizeLabel)?.price ?? product.sizes[0].price;
+  }
+
+  return parseFloat((product.priceDisplay || '').replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+};
 
 const ExtraIcon = ({ iconName }: { iconName: string }) => {
   switch (iconName) {
@@ -84,8 +93,10 @@ export default function Sacola() {
     }
   };
 
-  const deliveryFee = 0;
   const subtotal = totalPrice;
+  const deliverySubtotal = calculateDeliverySubtotal(items);
+  const deliveryFee = calculateDeliveryFee(deliverySubtotal, modality);
+  const remainingForFreeDelivery = Math.max(0, FREE_DELIVERY_MINIMUM - deliverySubtotal);
   const total = Math.max(0, subtotal + deliveryFee - couponDiscount);
 
   const isFormValid = useMemo(() => {
@@ -187,7 +198,10 @@ export default function Sacola() {
       updateItem(itemId, { 
         size: 'G', 
         price: item.price + diff,
-        name: `${prefix}${product.name} (G)`
+        name: `${prefix}${product.name} (G)`,
+        deliveryEligibilityPrice: item.deliveryEligibilityPrice !== undefined
+          ? item.deliveryEligibilityPrice + diff
+          : undefined,
       });
     }
   };
@@ -224,7 +238,10 @@ export default function Sacola() {
         extras: newExtras,
         notes: item.notes,
         quantity: 1,
-        pointsCost: item.pointsCost
+        pointsCost: item.pointsCost,
+        deliveryEligibilityPrice: item.deliveryEligibilityPrice !== undefined
+          ? item.deliveryEligibilityPrice + priceDiff
+          : undefined,
       });
     } else {
       // Single item: just update in place
@@ -236,7 +253,10 @@ export default function Sacola() {
 
       updateItem(itemId, { 
         extras: newExtras,
-        price: item.price + priceDiff
+        price: item.price + priceDiff,
+        deliveryEligibilityPrice: item.deliveryEligibilityPrice !== undefined
+          ? item.deliveryEligibilityPrice + priceDiff
+          : undefined,
       });
     }
   };
@@ -259,7 +279,10 @@ export default function Sacola() {
         size: options.sizeLabel,
         extras: options.extras,
         notes: options.notes,
-        quantity: options.quantity
+        quantity: options.quantity,
+        deliveryEligibilityPrice: isClube
+          ? getOriginalProductPrice(selectedProductForEdit.product, options.sizeLabel) + options.price
+          : originalItem?.deliveryEligibilityPrice,
       });
       setSelectedProductForEdit(null);
     }
@@ -767,6 +790,13 @@ export default function Sacola() {
                 <span>{deliveryFee.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
               )}
             </div>
+            {modality === 'delivery' && (
+              <p className={`text-[10px] font-bold ${deliveryFee === 0 ? 'text-[#008388]' : 'text-[#5d3f3e]'}`}>
+                {deliveryFee === 0
+                  ? 'Frete grátis liberado.'
+                  : `Faltam ${remainingForFreeDelivery.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} em produtos ou adicionais para frete grátis.`}
+              </p>
+            )}
             <div className="pt-4 flex justify-between items-center border-t border-[#f0eded] border-dashed">
               <span className="text-sm font-bold text-[#1c1b1b]">Total</span>
               <span className="text-xl font-black text-[#bd002a]">
@@ -785,7 +815,7 @@ export default function Sacola() {
               setShowAddressErrors(true);
             } else if (modality === 'delivery' && !phoneVerified) {
               setShowPhoneAlert(true);
-            } else if (totalPrice === 0) {
+            } else if (total === 0) {
               setShowFreeCheckoutConfirm(true);
             } else if (!isAuthenticated) {
               navigate('/login', {

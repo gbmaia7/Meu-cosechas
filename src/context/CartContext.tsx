@@ -19,6 +19,7 @@ interface CartItem {
   notes?: string;
   quantity: number;
   pointsCost?: number;
+  deliveryEligibilityPrice?: number;
 }
 
 export interface ActiveOrder {
@@ -392,8 +393,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const sameSize = i.size === itemData.size;
         const sameBase = i.base === itemData.base;
         const sameNotes = i.notes === itemData.notes;
+        const sameDeliveryEligibilityPrice = i.deliveryEligibilityPrice === itemData.deliveryEligibilityPrice;
         const sameExtras = JSON.stringify(i.extras) === JSON.stringify(itemData.extras);
-        return sameProduct && sameName && sameSize && sameBase && sameNotes && sameExtras;
+        return sameProduct && sameName && sameSize && sameBase && sameNotes && sameDeliveryEligibilityPrice && sameExtras;
       });
 
       if (existingIndex !== -1) {

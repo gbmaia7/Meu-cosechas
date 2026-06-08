@@ -24,6 +24,11 @@ tratada como "Necessita validacao".
 * Pedido online so entra na operacao quando pagamento for aprovado.
 * Retirada no balcao usa `pickup_code`.
 * Entrega usa PIN de seguranca exibido ao cliente e validado no backend.
+* Entrega tem frete gratis para subtotal de produtos maior ou igual a R$20,00.
+* Entrega com subtotal abaixo de R$20,00 cobra taxa de R$4,00.
+* Em resgates do Clube Cosechas, a elegibilidade de frete usa o valor original
+  do produto resgatado mais adicionais, mesmo que o produto seja cobrado como
+  gratis.
 * Loja nao deve visualizar PIN de entrega.
 * Entregador deve digitar o PIN informado pelo cliente para concluir entrega.
 
@@ -58,3 +63,4 @@ tratada como "Necessita validacao".
 ## Historico de atualizacao
 
 * 2026-06-03: template inicial criado com regras observadas no codigo.
+* 2026-06-08: adicionada politica de taxa de entrega por subtotal.

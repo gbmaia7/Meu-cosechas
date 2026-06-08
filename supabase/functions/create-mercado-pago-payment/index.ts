@@ -16,6 +16,7 @@ type CheckoutItem = {
   base?: string;
   notes?: string;
   pointsCost?: number;
+  deliveryEligibilityPrice?: number;
   extras?: Array<{ id: string; name: string; price: number }>;
 };
 
@@ -48,6 +49,10 @@ const jsonResponse = (body: unknown, status = 200) =>
 
 const cleanName = (name: string) => String(name || 'Item Cosechas').replace(/^\[.*?\]\s*/, '').slice(0, 120);
 const roundMoney = (value: number) => Math.max(0, Math.round(value * 100) / 100);
+const FREE_DELIVERY_MINIMUM = 20;
+const DELIVERY_FEE_BELOW_MINIMUM = 4;
+const calculateDeliveryFee = (deliverySubtotal: number, modality: 'counter' | 'delivery') =>
+  modality === 'counter' || deliverySubtotal >= FREE_DELIVERY_MINIMUM ? 0 : DELIVERY_FEE_BELOW_MINIMUM;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -129,7 +134,15 @@ Deno.serve(async (req) => {
   }
 
   const subtotal = roundMoney(items.reduce((sum, item) => sum + Number(item.price || 0) * Math.max(1, Number(item.quantity || 1)), 0));
-  const deliveryFee = payload.modality === 'counter' ? 0 : roundMoney(Number(payload.deliveryFee) || 0);
+  const deliverySubtotal = roundMoney(items.reduce((sum, item) => {
+    const quantity = Math.max(1, Number(item.quantity || 1));
+    const isClubReward = item.pointsCost && String(item.name || '').startsWith('[CLUBE]');
+    const eligibilityPrice = isClubReward
+      ? item.deliveryEligibilityPrice ?? Number(item.price || 0)
+      : Number(item.price || 0);
+    return sum + Number(eligibilityPrice || 0) * quantity;
+  }, 0));
+  const deliveryFee = calculateDeliveryFee(deliverySubtotal, payload.modality);
   const couponDiscount = roundMoney(Number(payload.couponDiscount) || 0);
   const total = roundMoney(subtotal + deliveryFee - couponDiscount);
   if (total <= 0) return jsonResponse({ error: 'Invalid checkout total' }, 400);

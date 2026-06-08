@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useEffect } from 'react';
 import { MoreVertical, Store, ArrowRight, Bike, MapPin, Wallet } from 'lucide-react';
+import { calculateDeliveryFee, calculateDeliverySubtotal } from '../lib/deliveryFee';
 
 export default function PagamentoConfirmadoVR() {
   const navigate = useNavigate();
@@ -10,6 +11,8 @@ export default function PagamentoConfirmadoVR() {
   
   const modality = location.state?.modality || 'counter';
   const address = location.state?.address;
+  const deliverySubtotal = calculateDeliverySubtotal(items);
+  const deliveryFee = calculateDeliveryFee(deliverySubtotal, modality);
   
   const validItemsCount = items.reduce((sum, item) => sum + (item.name.startsWith('[CLUBE]') ? 0 : item.quantity), 0);
 
@@ -96,12 +99,14 @@ export default function PagamentoConfirmadoVR() {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-[#5d3f3e]">Taxa de entrega</span>
-              <span className="text-[#00686c] font-bold">{modality === 'counter' ? 'Grátis' : 'R$ 5,00'}</span>
+              <span className="text-[#00686c] font-bold">
+                {deliveryFee === 0 ? 'Grátis' : `R$ ${deliveryFee.toFixed(2).replace('.', ',')}`}
+              </span>
             </div>
             <div className="flex justify-between items-center pt-2">
               <span className="text-[#1c1b1b] font-bold text-lg">Total</span>
               <span className="text-[#e8173a] font-display font-extrabold text-2xl">
-                 R$ {totalPrice > 0 ? (totalPrice + (modality === 'counter' ? 0 : 5)).toFixed(2).replace('.', ',') : '29,90'}
+                 R$ {totalPrice > 0 ? (totalPrice + deliveryFee).toFixed(2).replace('.', ',') : '29,90'}
               </span>
             </div>
           </div>
@@ -154,7 +159,7 @@ export default function PagamentoConfirmadoVR() {
             if (items.length > 0) {
               addActiveOrder({
                 items: [...items],
-                totalPrice: totalPrice,
+                totalPrice: totalPrice + deliveryFee,
                 status: 'preparing',
                 modality,
                 address,

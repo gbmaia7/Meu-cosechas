@@ -4,6 +4,7 @@ import { Banknote, CheckCircle2, ChevronLeft, CreditCard, Loader2, Lock, Wallet,
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
 import { useSecureCardFields } from '../lib/useSecureCardFields';
+import { calculateDeliveryFee, calculateDeliverySubtotal } from '../lib/deliveryFee';
 
 type PaymentMethod = 'pix' | 'credit_card' | 'debit_card' | 'cash' | 'machine';
 
@@ -45,7 +46,8 @@ export default function Pagamento() {
   const couponDiscount = location.state?.couponDiscount ?? 0;
   const referrerId = location.state?.referrerId ?? null;
   const referralCreditId = location.state?.referralCreditId ?? null;
-  const deliveryFee = 0;
+  const deliverySubtotal = calculateDeliverySubtotal(items);
+  const deliveryFee = calculateDeliveryFee(deliverySubtotal, modality);
   const finalTotal = Math.max(0, totalPrice + deliveryFee - couponDiscount);
   const isCardPayment = selectedMethod === 'credit_card' || selectedMethod === 'debit_card';
 
@@ -147,6 +149,7 @@ export default function Pagamento() {
       modality,
       address,
       couponDiscount,
+      deliveryFee,
       referrerId,
       referralCreditId,
       paymentMethod,
@@ -165,6 +168,7 @@ export default function Pagamento() {
           base: item.base,
           notes: item.notes,
           pointsCost: item.pointsCost,
+          deliveryEligibilityPrice: item.deliveryEligibilityPrice,
           extras: item.extras,
         })),
         modality,
@@ -218,7 +222,7 @@ export default function Pagamento() {
       if (selectedMethod === 'cash' || selectedMethod === 'machine') {
         const order = await addActiveOrder({
           items,
-          totalPrice,
+          totalPrice: finalTotal,
           status: 'new',
           modality,
           address,
@@ -230,6 +234,7 @@ export default function Pagamento() {
             address,
             paymentMethod: selectedMethod,
             couponDiscount,
+            deliveryFee,
             referrerId,
             existingOrder: !!order,
             orderId: order?.id,

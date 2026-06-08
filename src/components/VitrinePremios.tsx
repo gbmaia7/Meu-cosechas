@@ -50,6 +50,14 @@ export default function VitrinePremios({ tier, onClose }: VitrinePremiosProps) {
     setSelectedProduct(product);
   };
 
+  const getOriginalPrice = (product: Product, sizeLabel?: string) => {
+    if (product.sizes && product.sizes.length > 0) {
+      return product.sizes.find(size => size.label === sizeLabel)?.price ?? product.sizes[0].price;
+    }
+
+    return parseFloat(product.priceDisplay.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+  };
+
   const handleAddReward = async (options: { sizeLabel?: string; price: number; extras: any[]; notes: string; quantity: number; base?: string }) => {
     const eligibleEntry = eligibleIds.find(
       e => e.product_id === selectedProduct?.id
@@ -75,6 +83,7 @@ export default function VitrinePremios({ tier, onClose }: VitrinePremiosProps) {
       quantity: 1,
       base: options.base,
       pointsCost: tier,
+      deliveryEligibilityPrice: getOriginalPrice(selectedProduct!, options.sizeLabel) + options.price,
     });
 
     const newPoints = Math.max(0, userPoints - tier)

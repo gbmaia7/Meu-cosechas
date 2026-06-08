@@ -3,6 +3,7 @@ import { useCart } from '../context/CartContext';
 import { useEffect, useState } from 'react';
 import { MoreVertical, Store, ArrowRight, Bike, MapPin } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { calculateDeliveryFee, calculateDeliverySubtotal } from '../lib/deliveryFee';
 
 export default function PagamentoConfirmado() {
   const navigate = useNavigate();
@@ -28,8 +29,9 @@ export default function PagamentoConfirmado() {
   const isAllReward = orderSnapshot.every(
     i => i.name.startsWith('[CLUBE]')
   )
-  const deliveryFee = 0
-  const computedTotal = isAllReward ? 0 : subtotalSnapshot + deliveryFee - couponDiscount
+  const deliverySubtotal = calculateDeliverySubtotal(orderSnapshot)
+  const deliveryFee = location.state?.deliveryFee ?? calculateDeliveryFee(deliverySubtotal, modality)
+  const computedTotal = Math.max(0, subtotalSnapshot + deliveryFee - couponDiscount)
 
   const validItemsCount = orderSnapshot.reduce((sum, item) => sum + (item.name.startsWith('[CLUBE]') ? 0 : item.quantity), 0);
 
@@ -104,12 +106,14 @@ export default function PagamentoConfirmado() {
             {modality === 'delivery' && (
               <div className="flex justify-between text-sm">
                 <span className="text-[#5d3f3e]">Taxa de entrega</span>
-                <span className="text-[#00686c] font-bold">Grátis</span>
+                <span className="text-[#00686c] font-bold">
+                  {deliveryFee === 0 ? 'Grátis' : `R$ ${deliveryFee.toFixed(2).replace('.', ',')}`}
+                </span>
               </div>
             )}
             <div className="flex justify-between items-center pt-2">
               <span className="text-[#1c1b1b] font-bold text-lg">Total</span>
-              {isAllReward
+              {computedTotal === 0
                 ? <span className="text-red-600 font-display font-extrabold text-2xl">Grátis</span>
                 : <span className="text-[#e8173a] font-display font-extrabold text-2xl">R$ {computedTotal.toFixed(2).replace('.', ',')}</span>
               }
@@ -183,7 +187,7 @@ export default function PagamentoConfirmado() {
               trackActiveOrder({
                 id: orderId,
                 items: [...orderSnapshot],
-                totalPrice: isReward ? 0 : subtotalSnapshot,
+                totalPrice: computedTotal,
                 status: 'new',
                 modality,
                 address,
@@ -195,7 +199,7 @@ export default function PagamentoConfirmado() {
             } else if (orderSnapshot.length > 0) {
               await addActiveOrder({
                 items: [...orderSnapshot],
-                totalPrice: isReward ? 0 : subtotalSnapshot,
+                totalPrice: computedTotal,
                 status: 'preparing',
                 modality,
                 address,
