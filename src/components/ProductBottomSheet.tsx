@@ -15,6 +15,8 @@ interface ProductBottomSheetProps {
   onAdd: (options: { sizeLabel?: string; price: number; extras: Extra[]; notes: string; quantity: number; base?: string }) => void;
   isReward?: boolean;
   rewardType?: 'clube';
+  discountAmount?: number;
+  discountLabel?: string;
 }
 
 const ExtraIcon = ({ iconName }: { iconName: string }) => {
@@ -33,7 +35,7 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
   }
 };
 
-export default function ProductBottomSheet({ product, onClose, onAdd, isReward, rewardType }: ProductBottomSheetProps) {
+export default function ProductBottomSheet({ product, onClose, onAdd, isReward, rewardType, discountAmount = 0, discountLabel }: ProductBottomSheetProps) {
   const [selectedSizeIndex, setSelectedSizeIndex] = useState(0);
   const [selectedExtras, setSelectedExtras] = useState<Extra[]>([]);
   const [selectedBase, setSelectedBase] = useState<string>('');
@@ -65,8 +67,8 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
     if (!product) return 0;
     const basePrice = isReward ? 0 : originalProductPrice;
     const extrasPrice = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
-    return basePrice + extrasPrice;
-  }, [product, isReward, originalProductPrice, selectedExtras]);
+    return Math.max(0, basePrice + extrasPrice - discountAmount);
+  }, [product, isReward, originalProductPrice, selectedExtras, discountAmount]);
 
   const originalTotalPrice = useMemo(() => {
     const extrasPrice = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
@@ -181,9 +183,23 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
                         )}
                       </div>
                     ) : (
-                      <span className="text-[#e8173a] font-extrabold text-lg">
-                        {baseUnitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </span>
+                      <div className="flex flex-col items-start gap-1">
+                        {discountAmount > 0 && (
+                          <span className="text-[#a8a29e] line-through text-xs font-bold leading-tight">
+                            {originalTotalPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <span className="text-[#e8173a] font-extrabold text-lg">
+                            {baseUnitPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                          {discountLabel && (
+                            <span className="text-[9px] font-black bg-[#008388] text-white px-1.5 py-0.5 rounded-sm leading-none">
+                              {discountLabel}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -218,7 +234,7 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
                           <span className="font-black text-sm">{size.label}</span>
                           <span className="opacity-40 text-xs font-light">|</span>
                           <span className="font-bold text-xs">
-                            {size.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            {Math.max(0, size.price - discountAmount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                           </span>
                         </div>
                         {size.volume && (

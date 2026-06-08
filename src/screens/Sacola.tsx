@@ -10,10 +10,10 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
-import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE, FUNCIONAL, COMECE_BEM, BOA_DE_DIA } from '../data/products';
+import { PRODUCTS, EXTRA_FITNESS, EXTRA_ACAI, EXTRA_CARIBE, Extra, CATEGORY_COLORS, LINHA_CARIBE, FUNCIONAL, COMECE_BEM, BOA_DE_DIA, ESPECIAIS, SALADA_DE_FRUTAS, COFFEE } from '../data/products';
 import ProductBottomSheet from '../components/ProductBottomSheet';
 
-const ALL_PRODUCTS = [...PRODUCTS, ...Object.values(BOA_DE_DIA)];
+const ALL_PRODUCTS = [...PRODUCTS, ...LINHA_CARIBE, ...FUNCIONAL, ...COMECE_BEM, ...ESPECIAIS, ...SALADA_DE_FRUTAS, ...COFFEE, ...Object.values(BOA_DE_DIA)];
 
 const ExtraIcon = ({ iconName }: { iconName: string }) => {
   switch (iconName) {
@@ -183,10 +183,11 @@ export default function Sacola() {
     
     if (gSize && mSize) {
       const diff = gSize.price - mSize.price;
+      const prefix = item.name.startsWith('[INDIQUE]') ? '[INDIQUE] ' : item.name.startsWith('[CLUBE]') ? '[CLUBE] ' : '';
       updateItem(itemId, { 
         size: 'G', 
         price: item.price + diff,
-        name: `${product.name} (G)`
+        name: `${prefix}${product.name} (G)`
       });
     }
   };
@@ -244,9 +245,11 @@ export default function Sacola() {
     if (selectedProductForEdit) {
       const originalItem = items.find(i => i.id === selectedProductForEdit.itemId);
       const isClube = originalItem?.name.startsWith('[CLUBE]');
+      const isIndique = originalItem?.name.startsWith('[INDIQUE]');
 
       let displayName = selectedProductForEdit.product.name;
       if (isClube) displayName = `[CLUBE] ${displayName}`;
+      if (isIndique) displayName = `[INDIQUE] ${displayName}`;
       
       if (options.sizeLabel) displayName += ` (${options.sizeLabel})`;
       
@@ -819,6 +822,22 @@ export default function Sacola() {
               if (item?.name.startsWith('[CLUBE]')) return 'clube' as const;
               return undefined;
             })() 
+          : undefined
+        }
+        discountAmount={
+          selectedProductForEdit ?
+            (() => {
+              const item = items.find(i => i.id === selectedProductForEdit.itemId);
+              return item?.name.startsWith('[INDIQUE]') ? 5 : 0;
+            })()
+          : 0
+        }
+        discountLabel={
+          selectedProductForEdit ?
+            (() => {
+              const item = items.find(i => i.id === selectedProductForEdit.itemId);
+              return item?.name.startsWith('[INDIQUE]') ? '-R$5' : undefined;
+            })()
           : undefined
         }
       />

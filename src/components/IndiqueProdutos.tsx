@@ -44,7 +44,7 @@ export default function IndiqueProdutos({ referralCreditId, onClose }: Props) {
     addToCart({
       productId: selectedProduct!.id,
       name: `[INDIQUE] ${selectedProduct!.name}`,
-      price: Math.max(0, options.price - 5),
+      price: options.price,
       size: options.sizeLabel,
       extras: options.extras,
       notes: options.notes,
@@ -149,6 +149,8 @@ export default function IndiqueProdutos({ referralCreditId, onClose }: Props) {
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
           onAdd={handleAdd}
+          discountAmount={5}
+          discountLabel="-R$5"
         />
       )}
     </>
