@@ -32,8 +32,8 @@ export default function FloatingOrderTracker() {
     return (
       <div className={`fixed ${bottomClass} left-4 right-4 z-40 transition-all duration-300`}>
         <Link to={`/acompanhar-pedido?id=${singleOrder.id}`} className={`${singleOrder.status === 'ready' ? 'bg-[#b60026]' : 'bg-[#E8173A]'} text-white px-5 py-4 rounded-3xl flex items-center justify-between shadow-[0_12px_40px_rgba(232,23,58,0.3)] transition-all active:scale-95 cursor-pointer block`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex w-full items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-4">
               <div className="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center">
                 {singleOrder.status === 'ready' ? (
                     <ShoppingBag className="text-white w-6 h-6 animate-bounce" />
@@ -41,14 +41,14 @@ export default function FloatingOrderTracker() {
                     <Bike className="text-white w-6 h-6 animate-pulse" />
                 )}
               </div>
-              <div className="flex flex-col">
+              <div className="flex min-w-0 flex-col">
                 <span className="text-sm font-bold tracking-tight">Acompanhar pedido</span>
                 <span className="text-xs text-white/90">
                     {singleOrder.status === 'ready' ? 'Pronto para retirar!' : 'Em preparação...'}
                 </span>
               </div>
             </div>
-            <button className="bg-white/10 border border-white/30 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider">Detalhes</button>
+            <button className="shrink-0 bg-white/10 border border-white/30 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider">Detalhes</button>
           </div>
         </Link>
       </div>
@@ -65,19 +65,19 @@ export default function FloatingOrderTracker() {
           onClick={() => setShowMultipleMenu(!showMultipleMenu)} 
           className="px-5 py-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform"
         >
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between w-full gap-3">
+            <div className="flex min-w-0 items-center gap-4">
               <div className="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center">
                 <ShoppingBag className="text-white w-6 h-6" />
               </div>
-              <div className="flex flex-col">
+              <div className="flex min-w-0 flex-col">
                 <span className="text-sm font-bold tracking-tight">Acompanhar pedidos</span>
                 <span className="text-xs text-white/90">
                     Você tem {activeOrders.length} pedidos em andamento
                 </span>
               </div>
             </div>
-            <button className="bg-white/10 border border-white/30 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
+            <button className="shrink-0 bg-white/10 border border-white/30 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center gap-1">
               Detalhes
               {showMultipleMenu ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
             </button>
