@@ -16,7 +16,17 @@ Registrar decisoes de negocio, produto e operacao.
 * Motivo: evitar que pedido desapareca sem feedback apos conclusao.
 * Impacto no produto: entregador ve abas de pendentes, em rota e concluidos hoje.
 
+### 2026-06-08
+
+* Decisao: compras de balcao poderao gerar pontos do Clube Cosechas pelo
+  telefone informado no Teknisa.
+* Motivo: permitir que clientes que compram no caixa participem do Clube sem
+  precisar fazer o pedido pelo app.
+* Impacto no produto: se o telefone ja estiver verificado, pontos entram na
+  hora; se nao estiver, ficam pendentes por prazo limitado ate verificacao.
+
 ## Pendencias
 
 * Necessita validacao: regra para tentativa repetida de PIN errado.
 * A definir: indicadores operacionais para entregas concluidas.
+* Definir prazo final de validade dos creditos pendentes de compras de balcao.

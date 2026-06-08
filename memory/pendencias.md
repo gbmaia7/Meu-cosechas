@@ -46,3 +46,23 @@ Registrar pendencias operacionais, tecnicas e de produto.
 * Responsavel: A definir.
 * Proximo passo: decidir ferramenta e cobertura inicial.
 * Status: aberto.
+
+### Integracao Teknisa - compras de balcao
+
+* Pendencia: implementar contrato tecnico definido em `docs/integracao-teknisa.md`.
+* Prioridade: alta.
+* Contexto: compras de balcao devem gerar pontos do Clube Cosechas pelo
+  telefone informado no Teknisa.
+* Proximo passo: criar migration da tabela de eventos e Edge Function
+  `teknisa-counter-sale`.
+* Status: aberto.
+
+### Expiracao de creditos pendentes Teknisa
+
+* Pendencia: definir e implementar expiracao/limpeza de creditos pendentes por
+  telefone.
+* Prioridade: alta.
+* Contexto: creditos pendentes nao devem ocupar banco indefinidamente.
+* Proximo passo: usar prazo inicial sugerido de 45 dias para claim e limpeza
+  fisica apos 90 dias de expirado, salvo decisao contraria.
+* Status: aberto.

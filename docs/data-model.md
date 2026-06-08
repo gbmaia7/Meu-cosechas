@@ -60,11 +60,24 @@ Campos relevantes: `id`, `user_id`, `mp_card_id`, `brand`, `last_four`,
 
 Representa eventos recebidos de provedores de pagamento.
 
+### `counter_sale_point_events` (proposta)
+
+Representa eventos de compras de balcao enviados pelo Teknisa para credito de
+pontos do Clube Cosechas por telefone.
+
+Campos propostos: `source`, `external_sale_id`, `store_id`, `phone_e164`,
+`user_id`, `amount`, `points`, `status`, `paid_at`, `expires_at`,
+`claimed_at`, `cancelled_at`, `raw_payload`.
+
+Status propostos: `pending`, `claimed`, `expired`, `cancelled`.
+
 ## Relacionamentos
 
 * `profiles` 1:N `orders`.
 * `profiles` 1:N `addresses`.
 * `profiles` 1:N `saved_cards`.
+* `profiles` 1:N `counter_sale_point_events` (quando telefone ja foi
+  vinculado a usuario).
 * `orders` 1:N `order_items`.
 * `order_items` 1:N `order_item_extras`.
 * `orders` 1:N `order_payments`.
@@ -80,11 +93,15 @@ Representa eventos recebidos de provedores de pagamento.
   loja/entregador.
 * `provider_payment_id` em `order_payments` e o ID do pagamento no MP
   (usado para Avaliar Qualidade e consultas).
+* Eventos Teknisa devem ser idempotentes por `external_sale_id`.
+* Creditos pendentes por telefone devem expirar; sugestao inicial: 45 dias para
+  claim e limpeza fisica apos 90 dias de expirado.
 
 ## Pendencias
 
 * Necessita validacao: diagrama ER completo.
 * Necessita validacao: tabelas completas do Clube Cosechas.
+* Necessita validacao: modelo final da tabela `counter_sale_point_events`.
 * A definir: estrategia de arquivamento de pedidos antigos.
 
 ## Historico de atualizacao
@@ -93,3 +110,5 @@ Representa eventos recebidos de provedores de pagamento.
 * 2026-06-05: adicionadas tabelas `saved_cards`, `order_item_extras`, campo
   `mp_customer_id` em profiles, campo `raw_response` em order_payments,
   regra de expiracao de pedidos pendentes (40 min).
+* 2026-06-08: adicionada proposta de modelo para eventos de compras de balcao
+  via Teknisa.

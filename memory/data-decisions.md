@@ -21,7 +21,19 @@ Registrar decisoes de modelagem e mudancas estruturais.
 * Arquivos afetados: `supabase/mercado_pago_payments.sql`,
   `supabase/functions/webhook-mercado-pago/index.ts`.
 
+### 2026-06-08
+
+* Decisao: modelar compras de balcao do Teknisa como eventos idempotentes por
+  `external_sale_id`, com status `pending`, `claimed`, `expired` ou
+  `cancelled`.
+* Motivo: evitar duplicidade de pontos, permitir claim posterior por telefone e
+  manter trilha de auditoria.
+* Impacto: sera necessaria tabela para eventos de venda de balcao e rotina de
+  expiracao/limpeza de creditos pendentes.
+* Arquivos afetados: `docs/integracao-teknisa.md`, `docs/data-model.md`.
+
 ## Pendencias
 
 * A definir: padrao de migrations versionadas.
 * Necessita validacao: politica de retencao de eventos de webhook.
+* Definir migration da tabela `counter_sale_point_events`.

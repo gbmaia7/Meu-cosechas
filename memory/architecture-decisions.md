@@ -32,6 +32,17 @@ Registrar decisoes tecnicas relevantes para evitar redescoberta e inconsistencia
 * Impacto: arquivos locais excluidos. Funcoes remotas devem ser deletadas no Supabase Dashboard.
 * Arquivos afetados: `supabase/functions/create-infinite-checkout`, `verify-infinite-payment`, `webhook-infinitepay`.
 
+### 2026-06-08
+
+* Decisao: integrar compras de balcao do Teknisa via Supabase Edge Function do
+  Meu-Cosechas, nao por escrita direta no banco.
+* Motivo: manter idempotencia, seguranca, normalizacao de telefone, auditoria e
+  regra de pontuacao dentro do Meu-Cosechas.
+* Impacto: Teknisa devera enviar eventos assinados de venda paga/cancelada; o
+  Meu-Cosechas decide se credita imediatamente ou cria credito pendente.
+* Arquivos afetados: `docs/integracao-teknisa.md`, `docs/regras-negocio.md`,
+  `docs/data-model.md`.
+
 ## Pendencias
 
 * A definir: padrao oficial de migrations. (resolvido em 2026-06-04 — ver docs/database.md)

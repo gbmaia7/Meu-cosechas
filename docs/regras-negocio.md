@@ -44,6 +44,14 @@ tratada como "Necessita validacao".
 ### Clube Cosechas
 
 * Existe conceito de pontos, assinatura e resgate.
+* Compras de balcao enviadas pelo Teknisa podem gerar pontos pelo telefone do
+  cliente.
+* Se o telefone ja pertencer a usuario verificado, os pontos sao creditados
+  imediatamente.
+* Se o telefone ainda nao estiver verificado no app, os pontos ficam pendentes
+  por prazo limitado e sao creditados apos verificacao do telefone.
+* Creditos pendentes de compras de balcao devem expirar para evitar crescimento
+  indefinido de dados.
 * A regra detalhada de pontuacao necessita validacao.
 
 ## Expiracao de pedidos
@@ -57,6 +65,8 @@ tratada como "Necessita validacao".
 * Necessita validacao: regra completa de cancelamento.
 * Necessita validacao: regra de estorno/refund.
 * Necessita validacao: validade dos pontos do Clube Cosechas.
+* Necessita validacao: prazo final de expiracao dos creditos pendentes Teknisa
+  (sugestao inicial: 45 dias).
 * A definir: SLA de preparo e entrega.
 * A definir: regra para multiplos pedidos simultaneos por cliente.
 
@@ -64,3 +74,5 @@ tratada como "Necessita validacao".
 
 * 2026-06-03: template inicial criado com regras observadas no codigo.
 * 2026-06-08: adicionada politica de taxa de entrega por subtotal.
+* 2026-06-08: adicionada regra proposta para pontos de compras de balcao via
+  Teknisa.
