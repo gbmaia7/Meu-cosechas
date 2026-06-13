@@ -33,6 +33,7 @@ export default function Pagamento() {
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [cardHolder, setCardHolder] = useState('');
+  const [cardCpf, setCardCpf] = useState('');
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedSavedCard, setSelectedSavedCard] = useState<SavedCard | null>(
     location.state?.savedCard || null,
@@ -77,6 +78,16 @@ export default function Pagamento() {
   const formatCurrency = (value: number) =>
     value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+  const getDeviceSessionId = async () => {
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      const deviceSessionId = (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID;
+      if (deviceSessionId?.trim()) return deviceSessionId;
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
+    throw new Error('Nao foi possivel validar a seguranca do pagamento. Recarregue a pagina e tente novamente.');
+  };
+
   const loadMercadoPago = async () => {
     if (window.MercadoPago) return window.MercadoPago;
 
@@ -100,6 +111,9 @@ export default function Pagamento() {
   };
 
   const getCardToken = async () => {
+    const cpf = cardCpf.replace(/\D/g, '');
+    if (cpf.length !== 11) throw new Error('Informe um CPF valido para o pagamento.');
+
     if (selectedSavedCard) {
       if (!savedCardCvv || savedCardCvv.length < 3) throw new Error('Digite o CVV do cartao salvo.');
       const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
@@ -134,7 +148,7 @@ export default function Pagamento() {
 
     if (!cardHolder.trim()) throw new Error('Informe o nome do titular do cartao.');
 
-    const tokenId = await createTokenFromFields(cardHolder);
+    const tokenId = await createTokenFromFields(cardHolder, cpf);
     return { token: tokenId, payment_method_id: paymentMethodId, issuer_id: issuerId };
   };
 
@@ -157,6 +171,10 @@ export default function Pagamento() {
     };
 
     const cardPayload = isCardPayment ? await getCardToken() : {};
+    const cpf = cardCpf.replace(/\D/g, '');
+    const deviceSessionId = isCardPayment
+      ? await getDeviceSessionId()
+      : (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID || undefined;
 
     const { data, error } = await supabase.functions.invoke('create-mercado-pago-payment', {
       body: {
@@ -181,9 +199,10 @@ export default function Pagamento() {
         paymentMethod,
         payer: {
           email: session.user.email,
+          identification: isCardPayment ? { type: 'CPF', number: cpf } : undefined,
         },
         installments: 1,
-        device_session_id: (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID || undefined,
+        device_session_id: deviceSessionId,
         ...cardPayload,
       },
     });
@@ -422,6 +441,17 @@ export default function Pagamento() {
                 🔒 Seus dados de cartão nunca passam pelos nossos servidores. O Mercado Pago processa tudo de forma criptografada — a mesma tecnologia usada por milhões de lojas no Brasil.
               </p>
             </div>
+          )}
+
+          {isCardPayment && (
+            <input
+              value={cardCpf}
+              onChange={(event) => setCardCpf(event.target.value.replace(/\D/g, '').slice(0, 11))}
+              placeholder="CPF do titular"
+              inputMode="numeric"
+              maxLength={11}
+              className="w-full bg-white border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]"
+            />
           )}
 
 

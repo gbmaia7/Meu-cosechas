@@ -41,9 +41,14 @@ Backend/Supabase Edge Functions (todas obrigatorias):
 3. Campos de cartao sao iframes do MP (`cardNumber`, `expirationDate`,
    `securityCode`). Dados nunca transitam pelo backend do app.
 4. No submit: `mp.fields.createCardToken({ cardholderName, CPF })` → token.
-5. Frontend envia token + `payment_method_id` + `device_session_id` para
+5. Frontend exige CPF valido e aguarda `MP_DEVICE_SESSION_ID` antes de criar
+   pagamento com cartao.
+6. Frontend envia token + `payment_method_id` + `device_session_id` para
    `create-mercado-pago-payment`.
-6. Edge Function chama `POST /v1/payments` com header `X-meli-session-id`.
+7. Edge Function chama `POST /v1/payments` com header `X-meli-session-id`.
+8. Para cartao, Edge Function usa email real do usuario como sinal antifraude.
+   Para Pix, mantem alias `cliente{userId}@meucosechas.app` para evitar
+   conflito com email do recebedor.
 
 ### Regras criticas de Secure Fields
 
@@ -129,3 +134,5 @@ Para cartao: tambem `token`, `installments`, `issuer_id` (se disponivel).
 * 2026-06-05: adicionados Secure Fields, device fingerprinting, regras de
   producao, resultado Avaliar Qualidade 92/100, incompatibilidade SDK/Deno.
 * 2026-06-13: explicitado uso de `security.js` para gerar o device session id.
+* 2026-06-13: cartao passou a exigir CPF, aguardar device id e usar email real
+  do usuario no payload antifraude.

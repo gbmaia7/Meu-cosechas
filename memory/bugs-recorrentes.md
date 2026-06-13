@@ -26,7 +26,7 @@ Registrar bugs recorrentes, causa provavel, prevencao e status.
 * Evidencia: `order_payments.raw_response.status_detail = cc_rejected_high_risk`.
 * Local: `index.html`, `src/screens/Pagamento.tsx`, Edge Function `create-mercado-pago-payment`.
 * Causa provavel: device fingerprint ausente/intermitente quando `security.js` do Mercado Pago nao era carregado explicitamente.
-* Prevencao: manter `https://www.mercadopago.com/v2/security.js` com `view="checkout"` e enviar `MP_DEVICE_SESSION_ID` como `X-meli-session-id`.
+* Prevencao: manter `https://www.mercadopago.com/v2/security.js` com `view="checkout"`, aguardar `MP_DEVICE_SESSION_ID`, enviar `X-meli-session-id`, usar CPF e email real em cartao.
 * Status: mitigado em 2026-06-13; recusa antifraude ainda pode ocorrer por decisao do Mercado Pago/cartao.
 
 ## Pendencias

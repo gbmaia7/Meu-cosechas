@@ -206,8 +206,12 @@ Deno.serve(async (req) => {
   if (!payload.payer?.email && !profile?.email && !userData.user.email) {
     return jsonResponse({ error: 'Payer email is required' }, 400);
   }
-  // Always use scoped alias: avoids conflict when user's real email is an MP account
-  const payerEmail = `cliente${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`;
+  // Pix rejects payments when payer and collector share the same email, so keep
+  // the scoped alias there. Card payments benefit from the real customer email
+  // as an antifraud signal.
+  const payerAliasEmail = `cliente${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`;
+  const customerEmail = payload.payer?.email || profile?.email || userData.user.email || payerAliasEmail;
+  const payerEmail = payload.paymentMethod === 'pix' ? payerAliasEmail : customerEmail;
 
   let mpPaymentMethod: string | undefined =
     payload.paymentMethod === 'pix'
@@ -293,6 +297,7 @@ Deno.serve(async (req) => {
     'Content-Type': 'application/json',
     'X-Idempotency-Key': savedOrder.id,
   };
+  const hasDeviceSessionId = typeof payload.device_session_id === 'string' && payload.device_session_id.trim().length > 0;
   if (payload.device_session_id) {
     mpHeaders['X-meli-session-id'] = payload.device_session_id;
   }
@@ -304,6 +309,15 @@ Deno.serve(async (req) => {
   });
 
   const mpData = await mpResponse.json().catch(() => null);
+  const appDiagnostics = {
+    has_device_session_id: hasDeviceSessionId,
+    payment_method: payload.paymentMethod,
+    amount: total,
+    mp_http_status: mpResponse.status,
+    mp_status: mpData?.status || null,
+    mp_status_detail: mpData?.status_detail || null,
+  };
+  console.log('[create-mercado-pago-payment] diagnostics', JSON.stringify(appDiagnostics));
   if (!mpResponse.ok) {
     await serviceClient.from('orders').update({ status: 'payment_failed', payment_status: 'failed' }).eq('id', savedOrder.id);
     return jsonResponse({ success: false, mp_status: mpResponse.status, mp_error: mpData, payer_email_used: payerEmail }, 200);
@@ -322,7 +336,7 @@ Deno.serve(async (req) => {
       qr_code: transactionData.qr_code || null,
       qr_code_base64: transactionData.qr_code_base64 || null,
       ticket_url: transactionData.ticket_url || null,
-      raw_response: mpData,
+      raw_response: { ...mpData, _app_diagnostics: appDiagnostics },
     })
     .select('id')
     .single();
