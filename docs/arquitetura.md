@@ -32,7 +32,11 @@ cliente, loja e entregador.
 * Regra critica: nunca criar mais de uma instancia do MercadoPago por sessao.
   Multiplas instancias quebram os Secure Fields silenciosamente.
 * Script de seguranca `https://www.mercadopago.com/v2/security.js` carregado
-  em `index.html` com `view="checkout"` para gerar `window.MP_DEVICE_SESSION_ID`.
+  DINAMICAMENTE em `src/screens/Pagamento.tsx` via `loadMercadoPagoSecurity()`
+  quando o usuario seleciona pagamento com cartao. NAO deve estar em `index.html`
+  (geraria um device session ID no contexto errado — pagina inicial — que o MP
+  nao reconheceria como checkout, resultando em `security:none`).
+* O script e carregado com `view="checkout"` e `output="mp-device-session-id"`.
 * `window.MP_DEVICE_SESSION_ID` e enviado junto ao payload de pagamento para
   device fingerprinting.
 
@@ -86,3 +90,6 @@ cliente, loja e entregador.
   fingerprinting, restricoes de SDK e incompatibilidade npm:mercadopago/Deno.
 * 2026-06-13: explicitado script `security.js` do Mercado Pago para gerar
   `MP_DEVICE_SESSION_ID` no checkout.
+* 2026-06-13: removido `security.js` de `index.html`; carregamento agora e
+  dinamico via `loadMercadoPagoSecurity()` no contexto real de checkout para
+  corrigir `tracking_id: security:none` e `cc_rejected_high_risk`.

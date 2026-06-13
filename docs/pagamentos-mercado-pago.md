@@ -74,8 +74,14 @@ usar alias `cliente+{userId_slice}@meucosechas.app` para pagamentos Pix.
 ## Device Fingerprinting
 
 * `window.MP_DEVICE_SESSION_ID` e gerado pelo script de seguranca do Mercado Pago
-  carregado em `index.html`: `https://www.mercadopago.com/v2/security.js` com
-  `view="checkout"`.
+  `https://www.mercadopago.com/v2/security.js` com `view="checkout"` e
+  `output="mp-device-session-id"`.
+* O script NAO deve estar em `index.html`. Deve ser carregado DINAMICAMENTE por
+  `loadMercadoPagoSecurity()` em `src/screens/Pagamento.tsx` quando o usuario
+  seleciona cartao. Razao: se carregado na pagina inicial, o device session ID
+  e gerado no contexto errado (browsing, nao checkout) e o MP retorna
+  `security:none` — mesmo recebendo um device_session_id valido em formato, o
+  MP nao encontra dados de fingerprint de checkout associados a ele.
 * Enviado pelo frontend como `device_session_id` no body do pagamento.
 * Edge Function repassa como header `X-meli-session-id` na chamada ao MP.
 * Obrigatorio para aprovacao no Avaliar Qualidade (items: SDK do frontend +
@@ -136,3 +142,6 @@ Para cartao: tambem `token`, `installments`, `issuer_id` (se disponivel).
 * 2026-06-13: explicitado uso de `security.js` para gerar o device session id.
 * 2026-06-13: cartao passou a exigir CPF, aguardar device id e usar email real
   do usuario no payload antifraude.
+* 2026-06-13: removido `security.js` de `index.html`; carregamento passou a ser
+  dinamico via `loadMercadoPagoSecurity()` para garantir contexto de checkout
+  correto e eliminar `security:none` no tracking_id do Mercado Pago.

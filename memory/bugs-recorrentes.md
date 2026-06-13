@@ -22,12 +22,22 @@ Registrar bugs recorrentes, causa provavel, prevencao e status.
 
 ### Cartao recusado por alto risco no Mercado Pago
 
-* Bug: pagamento com cartao em producao podia retornar "Pagamento recusado ou cancelado".
-* Evidencia: `order_payments.raw_response.status_detail = cc_rejected_high_risk`.
-* Local: `index.html`, `src/screens/Pagamento.tsx`, Edge Function `create-mercado-pago-payment`.
-* Causa provavel: device fingerprint ausente/intermitente quando `security.js` do Mercado Pago nao era carregado explicitamente.
-* Prevencao: manter `https://www.mercadopago.com/v2/security.js` com `view="checkout"`, aguardar `MP_DEVICE_SESSION_ID`, enviar `X-meli-session-id`, usar CPF e email real em cartao.
-* Status: mitigado em 2026-06-13; recusa antifraude ainda pode ocorrer por decisao do Mercado Pago/cartao.
+* Bug: pagamento com cartao em producao retornava `cc_rejected_high_risk` com
+  `tracking_id: security:none` mesmo quando `device_session_id` era enviado.
+* Evidencia: `order_payments.raw_response.status_detail = cc_rejected_high_risk`,
+  `tracking_id` contendo `security:none`, `metadata.app_has_device_session_id: true`.
+* Local: `index.html` (causa raiz), `src/screens/Pagamento.tsx`.
+* Causa raiz confirmada (2026-06-13): `security.js` carregado em `index.html` gerava
+  o device session ID na abertura do app (contexto de browse). `loadMercadoPagoSecurity()`
+  retornava early porque `window.MP_DEVICE_SESSION_ID` ja estava setado. O MP recebia
+  o ID mas nao encontrava dados de fingerprint de checkout associados → `security:none`.
+* Correcao: remover `security.js` de `index.html`. O script agora e carregado
+  DINAMICAMENTE em `loadMercadoPagoSecurity()` quando o usuario seleciona cartao,
+  com `view="checkout"` e `output="mp-device-session-id"` no contexto correto.
+* Prevencao: NUNCA colocar `security.js` em `index.html` nem em qualquer pagina que
+  nao seja o checkout de cartao. O device session ID deve ser gerado no contexto real
+  de checkout para ser reconhecido pelo antifraude do MP.
+* Status: corrigido em 2026-06-13.
 
 ## Pendencias
 
