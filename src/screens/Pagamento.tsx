@@ -46,6 +46,7 @@ export default function Pagamento() {
   const couponDiscount = location.state?.couponDiscount ?? 0;
   const referrerId = location.state?.referrerId ?? null;
   const referralCreditId = location.state?.referralCreditId ?? null;
+  const cartState = { modality, address, couponDiscount, referrerId, referralCreditId };
   const deliverySubtotal = calculateDeliverySubtotal(items);
   const deliveryFee = calculateDeliveryFee(deliverySubtotal, modality);
   const finalTotal = Math.max(0, totalPrice + deliveryFee - couponDiscount);
@@ -264,7 +265,7 @@ export default function Pagamento() {
   return (
     <div className="bg-[#fcf9f8] font-body text-[#1c1b1b] antialiased min-h-screen relative z-0">
       <header className="fixed top-0 w-full z-50 bg-[#fcf9f8]/70 backdrop-blur-xl flex items-center justify-between px-6 h-16">
-        <button onClick={() => navigate(-1)} className="text-[#E8173A] p-2 rounded-full active:scale-95 transition-transform">
+        <button onClick={() => navigate('/sacola', { state: cartState })} className="text-[#E8173A] p-2 rounded-full active:scale-95 transition-transform">
           <ChevronLeft className="w-6 h-6" />
         </button>
         <h1 className="font-display font-bold text-lg text-[#1c1b1b]">Forma de Pagamento</h1>

@@ -42,14 +42,22 @@ export default function Sacola() {
   const navigate = useNavigate();
   const location = useLocation();
   const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, phoneVerified, addActiveOrder } = useCart();
-  const [modality, setModality] = useState<'counter' | 'delivery'>('counter');
+  const initialState = location.state as {
+    modality?: 'counter' | 'delivery';
+    address?: { block?: string; room?: string; complement?: string };
+    couponDiscount?: number;
+    referrerId?: string | null;
+    referralCreditId?: string | null;
+  } | null;
+  const initialModality = initialState?.modality === 'delivery' ? 'delivery' : 'counter';
+  const [modality, setModality] = useState<'counter' | 'delivery'>(initialModality);
   const [coupon, setCoupon] = useState('');
   const [couponError, setCouponError] = useState(false);
-  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponDiscount, setCouponDiscount] = useState(initialState?.couponDiscount ?? 0);
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [couponSuccess, setCouponSuccess] = useState(false);
-  const [referrerId, setReferrerId] = useState<string | null>(null);
-  const [referralCreditId] = useState<string | null>((location.state as any)?.referralCreditId ?? null);
+  const [referrerId, setReferrerId] = useState<string | null>(initialState?.referrerId ?? null);
+  const [referralCreditId] = useState<string | null>(initialState?.referralCreditId ?? null);
   const [selectedProductForEdit, setSelectedProductForEdit] = useState<{ product: any, itemId: string } | null>(null);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
 
@@ -70,9 +78,9 @@ export default function Sacola() {
 
   // Address State
   const [address, setAddress] = useState({
-    block: SAVED_ADDRESSES[0].block,
-    room: SAVED_ADDRESSES[0].room,
-    complement: SAVED_ADDRESSES[0].complement
+    block: initialState?.address?.block ?? SAVED_ADDRESSES[0].block,
+    room: initialState?.address?.room ?? SAVED_ADDRESSES[0].room,
+    complement: initialState?.address?.complement ?? SAVED_ADDRESSES[0].complement
   });
   const [showAddressErrors, setShowAddressErrors] = useState(false);
 
