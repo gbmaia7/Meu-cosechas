@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
   const serviceClient = createClient(supabaseUrl, serviceRoleKey);
   const { data: payment, error } = await serviceClient
     .from('order_payments')
-    .select('id, order_id, provider_payment_id, provider_status, payment_method, qr_code, qr_code_base64, ticket_url')
+    .select('id, order_id, provider_payment_id, provider_status, payment_method, qr_code, qr_code_base64, ticket_url, raw_response')
     .eq('order_id', orderId)
     .eq('provider', 'mercado_pago')
     .order('created_at', { ascending: false })
@@ -69,7 +69,10 @@ Deno.serve(async (req) => {
     .from('order_payments')
     .update({
       provider_status: mpData.status,
-      raw_response: mpData,
+      raw_response: {
+        ...mpData,
+        _app_diagnostics: payment.raw_response?._app_diagnostics,
+      },
       updated_at: new Date().toISOString(),
     })
     .eq('id', payment.id);

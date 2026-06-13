@@ -149,6 +149,12 @@ Deno.serve(async (req) => {
   if (!orderId) return jsonResponse({ error: 'Payment has no external_reference' }, 400);
 
   const mapped = mapOrderStatus(mpData.status);
+  const { data: existingPayment } = await serviceClient
+    .from('order_payments')
+    .select('raw_response')
+    .eq('provider', 'mercado_pago')
+    .eq('provider_payment_id', providerPaymentId)
+    .single();
   const { data: order } = await serviceClient
     .from('orders')
     .select('id, status, user_id, referral_credit_id')
@@ -160,7 +166,10 @@ Deno.serve(async (req) => {
     .from('order_payments')
     .update({
       provider_status: mpData.status,
-      raw_response: mpData,
+      raw_response: {
+        ...mpData,
+        _app_diagnostics: existingPayment?.raw_response?._app_diagnostics,
+      },
       updated_at: new Date().toISOString(),
     })
     .eq('provider', 'mercado_pago')
