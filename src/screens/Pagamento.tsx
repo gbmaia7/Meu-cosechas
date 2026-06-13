@@ -78,8 +78,26 @@ export default function Pagamento() {
   const formatCurrency = (value: number) =>
     value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+  const loadMercadoPagoSecurity = async () => {
+    if ((window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID?.trim()) return;
+
+    await new Promise<void>((resolve, reject) => {
+      const existing = document.querySelector<HTMLScriptElement>('script[src="https://www.mercadopago.com/v2/security.js"]');
+      if (existing) existing.remove();
+
+      const script = document.createElement('script');
+      script.src = 'https://www.mercadopago.com/v2/security.js';
+      script.setAttribute('view', 'checkout');
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Nao foi possivel carregar a verificacao de seguranca do Mercado Pago.'));
+      document.head.appendChild(script);
+    });
+  };
+
   const getDeviceSessionId = async () => {
-    for (let attempt = 0; attempt < 20; attempt += 1) {
+    await loadMercadoPagoSecurity();
+
+    for (let attempt = 0; attempt < 50; attempt += 1) {
       const deviceSessionId = (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID;
       if (deviceSessionId?.trim()) return deviceSessionId;
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -170,11 +188,11 @@ export default function Pagamento() {
       paymentMethod,
     };
 
-    const cardPayload = isCardPayment ? await getCardToken() : {};
-    const cpf = cardCpf.replace(/\D/g, '');
     const deviceSessionId = isCardPayment
       ? await getDeviceSessionId()
       : (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID || undefined;
+    const cardPayload = isCardPayment ? await getCardToken() : {};
+    const cpf = cardCpf.replace(/\D/g, '');
 
     const { data, error } = await supabase.functions.invoke('create-mercado-pago-payment', {
       body: {
