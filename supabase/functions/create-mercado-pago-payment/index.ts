@@ -256,6 +256,10 @@ Deno.serve(async (req) => {
     statement_descriptor: 'Cosechas',
     payment_method_id: mpPaymentMethod,
     external_reference: savedOrder.id,
+    metadata: {
+      app_has_device_session_id: typeof payload.device_session_id === 'string' && payload.device_session_id.trim().length > 0,
+      app_payment_method: payload.paymentMethod,
+    },
     additional_info: {
       items: items.map((item) => ({
         id: item.productId,

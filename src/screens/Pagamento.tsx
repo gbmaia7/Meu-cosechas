@@ -78,8 +78,24 @@ export default function Pagamento() {
   const formatCurrency = (value: number) =>
     value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
+  const readMercadoPagoDeviceSessionId = () => {
+    const globalDeviceSessionId = (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID;
+    if (globalDeviceSessionId?.trim()) return globalDeviceSessionId.trim();
+
+    const output = document.getElementById('mp-device-session-id') as HTMLInputElement | null;
+    return output?.value?.trim() || '';
+  };
+
   const loadMercadoPagoSecurity = async () => {
-    if ((window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID?.trim()) return;
+    if (readMercadoPagoDeviceSessionId()) return;
+
+    let output = document.getElementById('mp-device-session-id') as HTMLInputElement | null;
+    if (!output) {
+      output = document.createElement('input');
+      output.type = 'hidden';
+      output.id = 'mp-device-session-id';
+      document.body.appendChild(output);
+    }
 
     await new Promise<void>((resolve, reject) => {
       const existing = document.querySelector<HTMLScriptElement>('script[src="https://www.mercadopago.com/v2/security.js"]');
@@ -88,9 +104,10 @@ export default function Pagamento() {
       const script = document.createElement('script');
       script.src = 'https://www.mercadopago.com/v2/security.js';
       script.setAttribute('view', 'checkout');
+      script.setAttribute('output', 'mp-device-session-id');
       script.onload = () => resolve();
       script.onerror = () => reject(new Error('Nao foi possivel carregar a verificacao de seguranca do Mercado Pago.'));
-      document.head.appendChild(script);
+      document.body.appendChild(script);
     });
   };
 
@@ -98,8 +115,8 @@ export default function Pagamento() {
     await loadMercadoPagoSecurity();
 
     for (let attempt = 0; attempt < 50; attempt += 1) {
-      const deviceSessionId = (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID;
-      if (deviceSessionId?.trim()) return deviceSessionId;
+      const deviceSessionId = readMercadoPagoDeviceSessionId();
+      if (deviceSessionId) return deviceSessionId;
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
