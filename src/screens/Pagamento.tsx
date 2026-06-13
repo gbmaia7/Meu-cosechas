@@ -102,6 +102,8 @@ export default function Pagamento() {
       script.src = 'https://www.mercadopago.com/v2/security.js';
       script.setAttribute('view', 'checkout');
       script.setAttribute('output', 'mp-device-session-id');
+      const publicKey = (import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY as string) || '';
+      if (publicKey) script.setAttribute('public_key', publicKey);
       script.onload = () => resolve();
       script.onerror = () => reject(new Error('Nao foi possivel carregar a verificacao de seguranca do Mercado Pago.'));
       document.body.appendChild(script);
@@ -114,6 +116,15 @@ export default function Pagamento() {
     for (let attempt = 0; attempt < 50; attempt += 1) {
       const deviceSessionId = readMercadoPagoDeviceSessionId();
       if (deviceSessionId) return deviceSessionId;
+
+      if (attempt === 25) {
+        const windowId = (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID?.trim();
+        if (windowId) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          return readMercadoPagoDeviceSessionId() || windowId;
+        }
+      }
+
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
