@@ -79,9 +79,6 @@ export default function Pagamento() {
     value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   const readMercadoPagoDeviceSessionId = () => {
-    const globalDeviceSessionId = (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID;
-    if (globalDeviceSessionId?.trim()) return globalDeviceSessionId.trim();
-
     const output = document.getElementById('mp-device-session-id') as HTMLInputElement | null;
     return output?.value?.trim() || '';
   };

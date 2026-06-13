@@ -302,6 +302,8 @@ Deno.serve(async (req) => {
     'X-Idempotency-Key': savedOrder.id,
   };
   const hasDeviceSessionId = typeof payload.device_session_id === 'string' && payload.device_session_id.trim().length > 0;
+  const deviceSessionIdLen = hasDeviceSessionId ? payload.device_session_id!.trim().length : 0;
+  const deviceSessionIdPrefix = hasDeviceSessionId ? payload.device_session_id!.trim().slice(0, 8) : '';
   if (payload.device_session_id) {
     mpHeaders['X-meli-session-id'] = payload.device_session_id;
   }
@@ -313,13 +315,17 @@ Deno.serve(async (req) => {
   });
 
   const mpData = await mpResponse.json().catch(() => null);
+  const trackingId = mpData?.additional_info?.tracking_id || null;
   const appDiagnostics = {
     has_device_session_id: hasDeviceSessionId,
+    device_session_id_len: deviceSessionIdLen,
+    device_session_id_prefix: deviceSessionIdPrefix,
     payment_method: payload.paymentMethod,
     amount: total,
     mp_http_status: mpResponse.status,
     mp_status: mpData?.status || null,
     mp_status_detail: mpData?.status_detail || null,
+    tracking_id: trackingId,
   };
   console.log('[create-mercado-pago-payment] diagnostics', JSON.stringify(appDiagnostics));
   if (!mpResponse.ok) {
