@@ -31,8 +31,10 @@ cliente, loja e entregador.
 * Inicializar com `new window.MercadoPago(key, { locale: 'pt-BR' })`.
 * Regra critica: nunca criar mais de uma instancia do MercadoPago por sessao.
   Multiplas instancias quebram os Secure Fields silenciosamente.
-* `window.MP_DEVICE_SESSION_ID` e definido pelo SDK apos a inicializacao e
-  enviado junto ao payload de pagamento para device fingerprinting.
+* Script de seguranca `https://www.mercadopago.com/v2/security.js` carregado
+  em `index.html` com `view="checkout"` para gerar `window.MP_DEVICE_SESSION_ID`.
+* `window.MP_DEVICE_SESSION_ID` e enviado junto ao payload de pagamento para
+  device fingerprinting.
 
 ### Secure Fields (tokenizacao de cartao)
 
@@ -82,3 +84,5 @@ cliente, loja e entregador.
 * 2026-06-03: adicionada camada Mercado Pago Checkout Transparente.
 * 2026-06-05: adicionados Secure Fields, singleton __mpGlobal, device
   fingerprinting, restricoes de SDK e incompatibilidade npm:mercadopago/Deno.
+* 2026-06-13: explicitado script `security.js` do Mercado Pago para gerar
+  `MP_DEVICE_SESSION_ID` no checkout.

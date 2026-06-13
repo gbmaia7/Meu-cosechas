@@ -68,7 +68,9 @@ usar alias `cliente+{userId_slice}@meucosechas.app` para pagamentos Pix.
 
 ## Device Fingerprinting
 
-* `window.MP_DEVICE_SESSION_ID` e definido pelo SDK apos inicializacao.
+* `window.MP_DEVICE_SESSION_ID` e gerado pelo script de seguranca do Mercado Pago
+  carregado em `index.html`: `https://www.mercadopago.com/v2/security.js` com
+  `view="checkout"`.
 * Enviado pelo frontend como `device_session_id` no body do pagamento.
 * Edge Function repassa como header `X-meli-session-id` na chamada ao MP.
 * Obrigatorio para aprovacao no Avaliar Qualidade (items: SDK do frontend +
@@ -126,3 +128,4 @@ Para cartao: tambem `token`, `installments`, `issuer_id` (se disponivel).
 * 2026-06-03: decisao atualizada para Mercado Pago Checkout Transparente.
 * 2026-06-05: adicionados Secure Fields, device fingerprinting, regras de
   producao, resultado Avaliar Qualidade 92/100, incompatibilidade SDK/Deno.
+* 2026-06-13: explicitado uso de `security.js` para gerar o device session id.
