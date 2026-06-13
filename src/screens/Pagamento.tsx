@@ -123,6 +123,14 @@ export default function Pagamento() {
     throw new Error('Nao foi possivel validar a seguranca do pagamento. Recarregue a pagina e tente novamente.');
   };
 
+  useEffect(() => {
+    if (!isCardPayment) return;
+
+    loadMercadoPagoSecurity().catch((error) => {
+      console.error('[Pagamento] Erro ao carregar security.js:', error);
+    });
+  }, [isCardPayment]);
+
   const loadMercadoPago = async () => {
     if (window.MercadoPago) return window.MercadoPago;
 
