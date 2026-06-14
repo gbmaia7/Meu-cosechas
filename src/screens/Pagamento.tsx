@@ -34,6 +34,7 @@ export default function Pagamento() {
   const [paymentError, setPaymentError] = useState('');
   const [cardHolder, setCardHolder] = useState('');
   const [cardCpf, setCardCpf] = useState('');
+  const [savedCpf, setSavedCpf] = useState('');
   const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
   const [selectedSavedCard, setSelectedSavedCard] = useState<SavedCard | null>(
     location.state?.savedCard || null,
@@ -63,6 +64,18 @@ export default function Pagamento() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    supabase
+      .from('profiles')
+      .select('cpf')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.cpf) { setCardCpf(data.cpf); setSavedCpf(data.cpf); }
+      });
+  }, [session]);
 
   useEffect(() => {
     if (!isCardPayment || !session) return;
@@ -260,6 +273,10 @@ export default function Pagamento() {
 
     if (error) throw error;
     if (data?.success === false) throw new Error(`MP ${data.mp_status}: ${JSON.stringify(data.mp_error)}, email: ${data.payer_email_used}`);
+
+    if (isCardPayment && cpf.length === 11 && cpf !== savedCpf) {
+      supabase.from('profiles').update({ cpf }).eq('id', session.user.id).then(() => {});
+    }
 
     sessionStorage.setItem('mercadoPagoPendingOrder', JSON.stringify({
       ...orderState,
