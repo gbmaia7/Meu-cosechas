@@ -80,8 +80,12 @@ usar alias `cliente+{userId_slice}@meucosechas.app` para pagamentos Pix.
   `loadMercadoPagoSecurity()` em `src/screens/Pagamento.tsx` quando o usuario
   seleciona cartao. Razao: se carregado na pagina inicial, o device session ID
   e gerado no contexto errado (browsing, nao checkout) e o MP retorna
-  `security:none` — mesmo recebendo um device_session_id valido em formato, o
-  MP nao encontra dados de fingerprint de checkout associados a ele.
+  `security:none`.
+* O script DEVE incluir os tres atributos: `view="checkout"`,
+  `output="mp-device-session-id"` e `public_key`. Sem `public_key`, o script
+  gera um ID local (`window.MP_DEVICE_SESSION_ID`) mas nao consegue registrar
+  o fingerprint no backend do MP — o elemento DOM nunca e preenchido e o
+  pagamento fica bloqueado ou retorna `security:none`.
 * Enviado pelo frontend como `device_session_id` no body do pagamento.
 * Edge Function repassa como header `X-meli-session-id` na chamada ao MP.
 * Obrigatorio para aprovacao no Avaliar Qualidade (items: SDK do frontend +
@@ -145,3 +149,6 @@ Para cartao: tambem `token`, `installments`, `issuer_id` (se disponivel).
 * 2026-06-13: removido `security.js` de `index.html`; carregamento passou a ser
   dinamico via `loadMercadoPagoSecurity()` para garantir contexto de checkout
   correto e eliminar `security:none` no tracking_id do Mercado Pago.
+* 2026-06-14: adicionado atributo `public_key` ao script de security.js —
+  obrigatorio para que o MP registre o fingerprint no backend e preencha o
+  elemento DOM de saida. Confirmado funcionando em producao.

@@ -31,13 +31,13 @@ Registrar bugs recorrentes, causa provavel, prevencao e status.
   o device session ID na abertura do app (contexto de browse). `loadMercadoPagoSecurity()`
   retornava early porque `window.MP_DEVICE_SESSION_ID` ja estava setado. O MP recebia
   o ID mas nao encontrava dados de fingerprint de checkout associados → `security:none`.
-* Correcao: remover `security.js` de `index.html`. O script agora e carregado
-  DINAMICAMENTE em `loadMercadoPagoSecurity()` quando o usuario seleciona cartao,
-  com `view="checkout"` e `output="mp-device-session-id"` no contexto correto.
-* Prevencao: NUNCA colocar `security.js` em `index.html` nem em qualquer pagina que
-  nao seja o checkout de cartao. O device session ID deve ser gerado no contexto real
-  de checkout para ser reconhecido pelo antifraude do MP.
-* Status: corrigido em 2026-06-13.
+* Correcao: (1) remover `security.js` de `index.html`; (2) carregar DINAMICAMENTE
+  em `loadMercadoPagoSecurity()` com `view="checkout"`, `output="mp-device-session-id"`
+  E `public_key` no script tag. Sem `public_key`, o script gera ID local mas nao
+  registra o fingerprint no backend do MP — elemento DOM nunca e preenchido.
+* Prevencao: NUNCA colocar `security.js` em `index.html`. Sempre incluir `view`,
+  `output` E `public_key` ao carregar dinamicamente.
+* Status: corrigido em 2026-06-14. Confirmado funcionando em producao.
 
 ## Pendencias
 
