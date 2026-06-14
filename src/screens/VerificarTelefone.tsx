@@ -18,11 +18,18 @@ export default function VerificarTelefone() {
     window.scrollTo(0, 0);
   }, []);
 
+  const toE164 = (raw: string) => {
+    const digits = raw.replace(/\D/g, '');
+    if (digits.startsWith('55') && digits.length >= 12) return `+${digits}`;
+    return `+55${digits}`;
+  };
+
   const handleSendOtp = async () => {
     setLoading(true);
     setError('');
-    setNormalizedPhone(phone);
-    const { error } = await supabase.auth.signInWithOtp({ phone: phone });
+    const e164 = toE164(phone);
+    setNormalizedPhone(e164);
+    const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
     setLoading(false);
     if (error) {
       setError('Não foi possível enviar o código. Verifique o número.');
@@ -56,7 +63,7 @@ export default function VerificarTelefone() {
   };
 
   const handleResend = async () => {
-    const { error } = await supabase.auth.signInWithOtp({ phone: normalizedPhone });
+    const { error } = await supabase.auth.signInWithOtp({ phone: normalizedPhone }); // already E.164
     if (!error) {
       setResendStatus('sent');
       setTimeout(() => setResendStatus('idle'), 3000);
