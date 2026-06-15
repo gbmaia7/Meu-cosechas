@@ -90,37 +90,41 @@ export default function VerificarTelefone() {
   const handleVerify = async () => {
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.verifyOtp({
-      phone: normalizedPhone,
-      token: otp,
-      type: 'sms',
-    });
-    if (error) {
-      setLoading(false);
-      setError('Código incorreto ou expirado. Tente novamente.');
-      return;
-    }
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      if (fromCadastro) {
-        await supabase.auth.updateUser({ password: fromCadastro.senha, email: fromCadastro.email });
-        const nomeLetras = fromCadastro.nome.replace(/\s+/g, '').substring(0, 4).toUpperCase();
-        const referralCode = `${nomeLetras}${Math.floor(1000 + Math.random() * 9000)}`;
-        await supabase.from('profiles').update({
-          name: fromCadastro.nome,
-          phone: normalizedPhone,
-          phone_verified: true,
-          email: fromCadastro.email,
-          referral_code: referralCode,
-        }).eq('id', user.id);
-      } else {
-        await supabase.from('profiles')
-          .update({ phone_verified: true, phone: normalizedPhone })
-          .eq('id', user.id);
+    try {
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        phone: normalizedPhone,
+        token: otp,
+        type: 'sms',
+      });
+      if (verifyError) {
+        setError('Código incorreto ou expirado. Tente novamente.');
+        return;
       }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        if (fromCadastro) {
+          await supabase.auth.updateUser({ password: fromCadastro.senha });
+          await supabase.auth.updateUser({ email: fromCadastro.email });
+          await supabase.from('profiles').upsert({
+            id: user.id,
+            name: fromCadastro.nome,
+            phone: normalizedPhone,
+            phone_verified: true,
+            email: fromCadastro.email,
+            role: 'customer',
+          }, { onConflict: 'id' });
+        } else {
+          await supabase.from('profiles')
+            .update({ phone_verified: true, phone: normalizedPhone })
+            .eq('id', user.id);
+        }
+      }
+      navigate('/HomeComSacola', { replace: true });
+    } catch {
+      setError('Erro inesperado. Tente novamente.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    navigate('/HomeComSacola', { replace: true });
   };
 
   const handleResend = async () => {
