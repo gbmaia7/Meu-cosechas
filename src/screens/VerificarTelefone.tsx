@@ -105,12 +105,15 @@ export default function VerificarTelefone() {
         if (fromCadastro) {
           await supabase.auth.updateUser({ password: fromCadastro.senha });
           await supabase.auth.updateUser({ email: fromCadastro.email });
+          const nomeLetras = fromCadastro.nome.replace(/\s+/g, '').substring(0, 4).toUpperCase();
+          const referralCode = `${nomeLetras}${Math.floor(1000 + Math.random() * 9000)}`;
           await supabase.from('profiles').upsert({
             id: user.id,
             name: fromCadastro.nome,
             phone: normalizedPhone,
             phone_verified: true,
             email: fromCadastro.email,
+            referral_code: referralCode,
             role: 'customer',
           }, { onConflict: 'id' });
         } else {
