@@ -1,8 +1,23 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { X, Utensils, ShoppingBag, User, Phone, CheckCircle2, AlertCircle, MapPin, Heart, LogOut, ChevronRight, Crown, Mail, Lock, CreditCard, UserPlus } from 'lucide-react';
+import { usePhoneInput, CountrySelector } from 'react-international-phone';
+import 'react-international-phone/style.css';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
+
+const phoneDropdownStyle = `
+  .react-international-phone-country-selector-dropdown {
+    position: fixed !important;
+    z-index: 9999 !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    background: white !important;
+    border: 1px solid #e5e2e1 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15) !important;
+  }
+`
 
 export default function PerfilLogado() {
   const navigate = useNavigate();
@@ -26,6 +41,22 @@ export default function PerfilLogado() {
     phone_verified: boolean;
     email_verified?: boolean;
   } | null>(null);
+
+  // Phone change states
+  const [showChangePhone, setShowChangePhone] = useState(false);
+  const [newPhoneE164, setNewPhoneE164] = useState('');
+  const [phoneChangeStep, setPhoneChangeStep] = useState<'input' | 'otp'>('input');
+  const [phoneChangeOtp, setPhoneChangeOtp] = useState('');
+  const [phoneChangeLoading, setPhoneChangeLoading] = useState(false);
+  const [phoneChangeError, setPhoneChangeError] = useState('');
+  const [phoneChangeDone, setPhoneChangeDone] = useState(false);
+
+  const { inputValue: newPhoneInput, handlePhoneValueChange: handleNewPhoneChange, inputRef: newPhoneRef, country: newPhoneCountry, setCountry: setNewPhoneCountry } = usePhoneInput({
+    defaultCountry: 'br',
+    value: newPhoneE164,
+    disableDialCodeAndPrefix: true,
+    onChange: ({ phone }) => setNewPhoneE164(phone),
+  });
 
   const togglePhoneVerified = () => {
     const newState = !isPhoneVerified;
@@ -129,15 +160,72 @@ export default function PerfilLogado() {
     }, 3000);
   };
 
+  const handleRequestPhoneChange = async () => {
+    setPhoneChangeLoading(true);
+    setPhoneChangeError('');
+
+    const { data: alreadyVerified } = await supabase.rpc('phone_is_verified', { p_phone: newPhoneE164 });
+    if (alreadyVerified) {
+      setPhoneChangeError('Este número já está associado a outra conta.');
+      setPhoneChangeLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ phone: newPhoneE164 });
+    setPhoneChangeLoading(false);
+    if (error) {
+      setPhoneChangeError('Não foi possível enviar o código. Verifique o número.');
+      return;
+    }
+    setPhoneChangeStep('otp');
+  };
+
+  const handleVerifyPhoneChange = async () => {
+    setPhoneChangeLoading(true);
+    setPhoneChangeError('');
+
+    const { error } = await supabase.auth.verifyOtp({
+      phone: newPhoneE164,
+      token: phoneChangeOtp,
+      type: 'phone_change',
+    });
+
+    if (error) {
+      setPhoneChangeLoading(false);
+      setPhoneChangeError('Código incorreto ou expirado.');
+      return;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from('profiles').update({ phone: newPhoneE164, phone_verified: true }).eq('id', user.id);
+    }
+
+    setPhoneChangeLoading(false);
+    setPhoneChangeDone(true);
+    setProfile(prev => prev ? { ...prev, phone: newPhoneE164, phone_verified: true } : prev);
+    setTimeout(() => {
+      setPhoneChangeDone(false);
+      setShowChangePhone(false);
+      setPhoneChangeStep('input');
+      setNewPhoneE164('');
+      setPhoneChangeOtp('');
+    }, 3000);
+  };
+
+  const newPhoneDigits = newPhoneE164.replace(/\D/g, '');
+  const newPhoneReady = newPhoneDigits.length >= 10;
+
   return (
     <div className="bg-[#fcf9f8] font-body text-[#1c1b1b] antialiased min-h-screen pb-40">
+      <style>{phoneDropdownStyle}</style>
       {/* TopAppBar */}
       <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-2xl shadow-sm flex justify-between items-center px-6 py-4">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-[#bd002a]" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
           <h1 className="font-display font-extrabold text-[#bd002a] text-xl tracking-tight">Meu Perfil</h1>
         </div>
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#eae7e7] transition-colors active:scale-90"
         >
@@ -148,13 +236,13 @@ export default function PerfilLogado() {
       <main className="pt-24 pb-12 px-4 max-w-2xl mx-auto space-y-6">
         {/* Simulator Toggle */}
         <div className="flex justify-end gap-2 px-1">
-          <button 
+          <button
             onClick={togglePhoneVerified}
             className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
           >
             Simular: {isPhoneVerified ? 'Não Verificado' : 'Verificado'}
           </button>
-          <button 
+          <button
             onClick={() => {
               setIsAuthenticated(false);
               navigate('/perfil/nao-logado');
@@ -183,7 +271,7 @@ export default function PerfilLogado() {
           </div>
         </section>
 
-        {/* Verification Alert / Status */}
+        {/* Phone Verification Status */}
         {profile && (
           <section className={`rounded-xl p-5 shadow-sm border ${profile.phone_verified ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
             <div className="flex items-start gap-4">
@@ -203,10 +291,20 @@ export default function PerfilLogado() {
                     )}
                   </div>
                   <button
-                    onClick={() => navigate('/perfil/verificar-telefone')}
+                    onClick={() => {
+                      if (profile.phone_verified) {
+                        setShowChangePhone(!showChangePhone);
+                        setPhoneChangeStep('input');
+                        setPhoneChangeError('');
+                        setNewPhoneE164('');
+                        setPhoneChangeOtp('');
+                      } else {
+                        navigate('/perfil/verificar-telefone');
+                      }
+                    }}
                     className={`text-[10px] font-bold uppercase underline ${profile.phone_verified ? 'text-emerald-700' : 'text-amber-700'}`}
                   >
-                    Alterar
+                    {profile.phone_verified ? (showChangePhone ? 'Cancelar' : 'Trocar') : 'Verificar'}
                   </button>
                 </div>
                 <p className={`text-xs ${profile.phone_verified ? 'text-emerald-700/80' : 'text-amber-800/80 mb-3'}`}>
@@ -224,6 +322,96 @@ export default function PerfilLogado() {
                 )}
               </div>
             </div>
+
+            {/* Phone change form */}
+            {showChangePhone && (
+              <div className="mt-4 pt-4 border-t border-emerald-200 space-y-3">
+                {phoneChangeDone ? (
+                  <div className="flex items-center gap-3 text-emerald-600">
+                    <CheckCircle2 className="w-5 h-5 shrink-0" />
+                    <p className="text-sm font-medium">Número alterado com sucesso!</p>
+                  </div>
+                ) : phoneChangeStep === 'input' ? (
+                  <>
+                    <p className="text-xs text-emerald-800 font-medium">Digite o novo número:</p>
+                    <div style={{
+                      border: '1px solid #d1fae5', borderRadius: '10px',
+                      backgroundColor: 'white', display: 'flex', alignItems: 'center', overflow: 'hidden',
+                    }}>
+                      <CountrySelector
+                        selectedCountry={newPhoneCountry.iso2}
+                        onSelect={({ iso2 }) => setNewPhoneCountry(iso2)}
+                        countrySelectorStyleProps={{
+                          buttonStyle: {
+                            border: 'none', backgroundColor: 'white',
+                            paddingLeft: '10px', paddingRight: '4px', cursor: 'pointer',
+                          }
+                        }}
+                      />
+                      <span style={{
+                        fontSize: '14px', fontWeight: 700, color: '#1c1b1b',
+                        paddingLeft: '4px', paddingRight: '8px',
+                        borderRight: '1px solid #d1fae5',
+                      }}>
+                        +{newPhoneCountry.dialCode}
+                      </span>
+                      <input
+                        ref={newPhoneRef}
+                        type="tel"
+                        value={newPhoneInput}
+                        onChange={handleNewPhoneChange}
+                        placeholder="(21) 99999-9999"
+                        style={{
+                          flex: 1, border: 'none', outline: 'none',
+                          padding: '12px', fontSize: '14px', backgroundColor: 'white',
+                        }}
+                      />
+                    </div>
+                    {phoneChangeError && (
+                      <p className="text-[#bd002a] text-xs text-center">{phoneChangeError}</p>
+                    )}
+                    <button
+                      onClick={handleRequestPhoneChange}
+                      disabled={!newPhoneReady || phoneChangeLoading}
+                      className="w-full bg-emerald-600 text-white py-3 rounded-full font-extrabold font-display uppercase tracking-wider text-xs shadow-md disabled:opacity-60"
+                    >
+                      {phoneChangeLoading ? 'Enviando...' : 'Enviar código por SMS'}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xs text-emerald-800 font-medium">
+                      Digite o código enviado para {newPhoneE164}:
+                    </p>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={phoneChangeOtp}
+                      onChange={(e) => setPhoneChangeOtp(e.target.value.replace(/\D/g, ''))}
+                      placeholder="000000"
+                      className="w-full text-center text-2xl font-bold tracking-[0.4em] bg-white border border-emerald-200 rounded-xl py-3 px-4 focus:outline-none focus:border-emerald-500 transition-all"
+                    />
+                    {phoneChangeError && (
+                      <p className="text-[#bd002a] text-xs text-center">{phoneChangeError}</p>
+                    )}
+                    <button
+                      onClick={handleVerifyPhoneChange}
+                      disabled={phoneChangeOtp.length < 6 || phoneChangeLoading}
+                      className="w-full bg-emerald-600 text-white py-3 rounded-full font-extrabold font-display uppercase tracking-wider text-xs shadow-md disabled:opacity-60"
+                    >
+                      {phoneChangeLoading ? 'Verificando...' : 'Confirmar novo número'}
+                    </button>
+                    <button
+                      onClick={() => setPhoneChangeStep('input')}
+                      className="w-full text-xs text-emerald-700 font-bold uppercase tracking-wider"
+                    >
+                      ← Voltar
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </section>
         )}
 
@@ -287,7 +475,7 @@ export default function PerfilLogado() {
         {/* Menu Items */}
         <section className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#e5e2e1]/50">
           <div className="divide-y divide-[#f0eded]">
-            <button 
+            <button
               onClick={() => navigate('/perfil/enderecos')}
               className="w-full flex items-center justify-between p-5 hover:bg-[#fcf9f8] transition-colors"
             >
@@ -412,7 +600,7 @@ export default function PerfilLogado() {
 
         {/* Logout */}
         <div className="flex justify-center mt-8">
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center gap-2 text-[#5d3f3e] hover:text-[#bd002a] font-bold text-sm transition-colors py-2 px-4"
           >
@@ -432,9 +620,9 @@ export default function PerfilLogado() {
           { icon: ShoppingBag, label: 'Sacola', active: false, badge: totalItems, path: '/sacola' },
           { icon: User, label: 'Perfil', active: true, path: isAuthenticated ? '/perfil/logado' : '/perfil/nao-logado' },
         ].map((item: any) => (
-          <Link 
-            key={item.label} 
-            to={item.path} 
+          <Link
+            key={item.label}
+            to={item.path}
             className={`flex flex-col items-center justify-center ${item.active ? 'text-[#e8173a] bg-[#e8173a]/10' : 'text-[#a8a29e]'} rounded-full px-2 py-2 transition-transform duration-300 ${item.active ? 'scale-105' : 'active:scale-95'}`}
           >
             <div className="relative">

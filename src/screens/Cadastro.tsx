@@ -27,6 +27,7 @@ export default function Cadastro() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [phoneExists, setPhoneExists] = useState(false);
+  const [emailExists, setEmailExists] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -44,6 +45,7 @@ export default function Cadastro() {
 
     setLoading(true);
     setPhoneExists(false);
+    setEmailExists(false);
 
     const normalizedPhone = phone;
 
@@ -51,6 +53,13 @@ export default function Cadastro() {
     if (alreadyVerified) {
       setLoading(false);
       setPhoneExists(true);
+      return;
+    }
+
+    const { data: emailRegistered } = await supabase.rpc('email_is_registered', { p_email: email });
+    if (emailRegistered) {
+      setLoading(false);
+      setEmailExists(true);
       return;
     }
 
@@ -219,6 +228,37 @@ export default function Cadastro() {
             }}>
               <p style={{ fontSize: '14px', color: '#92400e', fontWeight: 600 }}>
                 Já existe uma conta verificada com este número.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                style={{
+                  width: '100%', padding: '12px', backgroundColor: '#bd002a',
+                  color: 'white', border: 'none', borderRadius: '9999px',
+                  fontWeight: 800, fontSize: '13px', cursor: 'pointer',
+                  textTransform: 'uppercase', letterSpacing: '0.05em'
+                }}
+              >
+                Fazer Login
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/esqueceu-senha')}
+                style={{ fontSize: '12px', fontWeight: 800, color: '#bd002a', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+              >
+                Esqueceu a senha? Recuperar senha
+              </button>
+            </div>
+          )}
+
+          {emailExists && (
+            <div style={{
+              backgroundColor: '#fffbeb', border: '1px solid #fcd34d',
+              borderRadius: '12px', padding: '16px', textAlign: 'center',
+              display: 'flex', flexDirection: 'column', gap: '10px'
+            }}>
+              <p style={{ fontSize: '14px', color: '#92400e', fontWeight: 600 }}>
+                Já existe uma conta com este e-mail.
               </p>
               <button
                 type="button"

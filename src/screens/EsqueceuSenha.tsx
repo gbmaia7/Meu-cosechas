@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Mail, Phone, MessageCircle, Lock } from 'lucide-react';
+import { ChevronLeft, MessageCircle, Lock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { PhoneInput } from 'react-international-phone';
+import { usePhoneInput, CountrySelector } from 'react-international-phone';
 import 'react-international-phone/style.css';
 
 const phoneDropdownStyle = `
@@ -20,35 +20,39 @@ const phoneDropdownStyle = `
 
 export default function EsqueceuSenha() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'choose' | 'sms' | 'email' | 'otp' | 'newpass' | 'sent'>('choose');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const [step, setStep] = useState<'sms' | 'otp' | 'newpass' | 'done'>('sms');
+  const [phoneE164, setPhoneE164] = useState('');
   const [otp, setOtp] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [sentVia, setSentVia] = useState<'sms' | 'email'>('sms');
   const [resendStatus, setResendStatus] = useState<'idle' | 'sent'>('idle');
+
+  const { inputValue, handlePhoneValueChange, inputRef, country, setCountry } = usePhoneInput({
+    defaultCountry: 'br',
+    value: phoneE164,
+    disableDialCodeAndPrefix: true,
+    onChange: ({ phone }) => setPhoneE164(phone),
+  });
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const phoneDigits = phoneE164.replace(/\D/g, '');
+  const phoneReady = phoneDigits.length >= 10;
+
   const handleSendSms = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    const { error } = await supabase.auth.signInWithOtp({ phone });
-
+    const { error } = await supabase.auth.signInWithOtp({ phone: phoneE164 });
     setLoading(false);
-
     if (error) {
       setError('Não foi possível enviar o código. Verifique o número.');
       return;
     }
-
     setStep('otp');
   };
 
@@ -56,74 +60,43 @@ export default function EsqueceuSenha() {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     const { error } = await supabase.auth.verifyOtp({
-      phone,
+      phone: phoneE164,
       token: otp,
       type: 'sms',
     });
-
     setLoading(false);
-
     if (error) {
       setError('Código incorreto ou expirado. Tente novamente.');
       return;
     }
-
     setStep('newpass');
   };
 
   const handleNewPass = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     if (senha.length < 6) {
       setError('A senha deve ter pelo menos 6 caracteres.');
       return;
     }
-
     if (senha !== confirmar) {
       setError('As senhas não coincidem.');
       return;
     }
-
     setLoading(true);
-
     const { error } = await supabase.auth.updateUser({ password: senha });
-
     setLoading(false);
-
     if (error) {
       setError('Não foi possível redefinir a senha. Tente novamente.');
       return;
     }
-
-    setSentVia('sms');
-    setStep('sent');
-  };
-
-  const handleSendEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/redefinir-senha`,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      setError('Não foi possível enviar o e-mail. Verifique o endereço.');
-      return;
-    }
-
-    setSentVia('email');
-    setStep('sent');
+    setStep('done');
   };
 
   return (
     <div className="bg-[#fcf9f8] font-body text-[#1c1b1b] antialiased min-h-screen">
+      <style>{phoneDropdownStyle}</style>
       <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-2xl shadow-sm flex items-center px-4 py-4">
         <button
           onClick={() => navigate(-1)}
@@ -136,117 +109,75 @@ export default function EsqueceuSenha() {
 
       <main className="pt-24 pb-12 px-6 max-w-xl mx-auto space-y-8">
 
-        {/* ── CHOOSE ── */}
-        {step === 'choose' && (
-          <div className="flex flex-col items-center">
-            <h2 className="font-display font-extrabold text-2xl text-center mb-2">Como prefere recuperar?</h2>
-            <p className="text-center text-[#5d3f3e] text-sm mb-8">
-              Escolha a forma de receber as instruções de recuperação.
-            </p>
-
-            <div className="w-full space-y-4">
-              <button
-                onClick={() => setStep('sms')}
-                className="w-full bg-white border border-[#e5e2e1] rounded-2xl p-5 flex items-center gap-4 cursor-pointer active:bg-[#f8f4f3] transition-colors"
-              >
-                <div className="w-12 h-12 bg-[#fde8ed] rounded-full flex items-center justify-center shrink-0">
-                  <Phone className="w-6 h-6 text-[#bd002a]" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-display font-extrabold text-base">Via SMS</p>
-                  <p className="text-[#5d3f3e] text-sm">Receba um código no seu celular</p>
-                </div>
-                <ChevronLeft className="w-5 h-5 text-[#a8a29e] rotate-180 shrink-0" />
-              </button>
-
-              <button
-                onClick={() => setStep('email')}
-                className="w-full bg-white border border-[#e5e2e1] rounded-2xl p-5 flex items-center gap-4 cursor-pointer active:bg-[#f8f4f3] transition-colors"
-              >
-                <div className="w-12 h-12 bg-[#fde8ed] rounded-full flex items-center justify-center shrink-0">
-                  <Mail className="w-6 h-6 text-[#bd002a]" />
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-display font-extrabold text-base">Via E-mail</p>
-                  <p className="text-[#5d3f3e] text-sm">Receba um link no seu e-mail verificado</p>
-                </div>
-                <ChevronLeft className="w-5 h-5 text-[#a8a29e] rotate-180 shrink-0" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── SMS ── */}
+        {/* SMS */}
         {step === 'sms' && (
           <div className="flex flex-col items-center">
-            <h2 className="font-display font-extrabold text-2xl text-center mb-2">Recuperar via SMS</h2>
+            <h2 className="font-display font-extrabold text-2xl text-center mb-2">Qual o seu número?</h2>
             <p className="text-center text-[#5d3f3e] text-sm mb-8">
-              Digite o número cadastrado na sua conta.
+              Enviaremos um código SMS para o número cadastrado na sua conta.
             </p>
 
-            <style>{phoneDropdownStyle}</style>
-
             <form onSubmit={handleSendSms} className="w-full space-y-4">
-              <div className="bg-white border border-[#e5e2e1] rounded-xl overflow-hidden shadow-sm flex items-center focus-within:border-[#bd002a] focus-within:ring-1 focus-within:ring-[#bd002a] transition-all">
-                <PhoneInput
-                  defaultCountry="br"
-                  value={phone}
-                  onChange={(value) => setPhone(value || '')}
-                  inputStyle={{
-                    width: '100%',
-                    paddingTop: '16px',
-                    paddingBottom: '16px',
-                    fontSize: '16px',
-                    border: 'none',
-                    outline: 'none',
-                    backgroundColor: 'white',
-                  }}
+              <div style={{
+                border: '1px solid #e5e2e1', borderRadius: '12px',
+                backgroundColor: 'white', display: 'flex', alignItems: 'center',
+                overflow: 'hidden',
+              }}>
+                <CountrySelector
+                  selectedCountry={country.iso2}
+                  onSelect={({ iso2 }) => setCountry(iso2)}
                   countrySelectorStyleProps={{
                     buttonStyle: {
-                      paddingLeft: '12px',
-                      paddingRight: '8px',
-                      border: 'none',
-                      borderRight: '1px solid #e5e2e1',
-                      backgroundColor: 'white',
-                      cursor: 'pointer',
-                    },
+                      border: 'none', backgroundColor: 'white',
+                      paddingLeft: '12px', paddingRight: '4px', cursor: 'pointer',
+                    }
+                  }}
+                />
+                <span style={{
+                  fontSize: '16px', fontWeight: 700, color: '#1c1b1b',
+                  paddingLeft: '4px', paddingRight: '10px',
+                  borderRight: '1px solid #e5e2e1',
+                }}>
+                  +{country.dialCode}
+                </span>
+                <input
+                  ref={inputRef}
+                  type="tel"
+                  value={inputValue}
+                  onChange={handlePhoneValueChange}
+                  placeholder="(21) 99999-9999"
+                  style={{
+                    flex: 1, border: 'none', outline: 'none',
+                    padding: '16px', fontSize: '18px', backgroundColor: 'white',
                   }}
                 />
               </div>
 
-              {error && <p className="text-[#bd002a] text-sm text-center mt-2">{error}</p>}
+              {error && <p className="text-[#bd002a] text-sm text-center">{error}</p>}
 
               <button
                 type="submit"
-                disabled={phone.length < 8 || loading}
-                className="w-full bg-[#bd002a] text-white py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-50 disabled:scale-100"
+                disabled={!phoneReady || loading}
+                className={`w-full py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-transform ${phoneReady ? 'bg-[#bd002a] text-white shadow-[#bd002a]/20' : 'bg-[#f0eded] text-[#a8a29e] shadow-none'}`}
               >
                 {loading ? 'Enviando...' : 'Enviar código SMS'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setStep('choose'); setError(''); }}
-                className="w-full text-[#5d3f3e] text-sm font-semibold py-2"
-              >
-                Voltar
               </button>
             </form>
           </div>
         )}
 
-        {/* ── OTP ── */}
+        {/* OTP */}
         {step === 'otp' && (
           <div className="flex flex-col items-center">
             <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-6">
               <MessageCircle className="w-10 h-10 text-amber-500" />
             </div>
-            <h2 className="font-display font-extrabold text-2xl text-center mb-2">Digite o código SMS</h2>
+            <h2 className="font-display font-extrabold text-2xl text-center mb-2">Digite o código</h2>
             <p className="text-center text-[#5d3f3e] text-sm mb-8">
-              Enviamos um código de 6 dígitos para {phone}
+              Enviamos um código de 6 dígitos para {phoneE164}.
             </p>
 
-            <form onSubmit={handleVerifyOtp} className="w-full">
+            <form onSubmit={handleVerifyOtp} className="w-full space-y-4">
               <input
                 type="text"
                 inputMode="numeric"
@@ -254,10 +185,10 @@ export default function EsqueceuSenha() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                 placeholder="000000"
-                className="w-full text-center text-3xl font-bold tracking-[0.5em] bg-white border border-[#e5e2e1] rounded-xl py-4 px-4 focus:outline-none focus:border-[#bd002a] shadow-sm mb-4"
+                className="w-full text-center text-3xl font-bold tracking-[0.5em] bg-white border border-[#e5e2e1] rounded-xl py-4 px-4 focus:outline-none focus:border-[#bd002a] shadow-sm"
               />
 
-              {error && <p className="text-[#bd002a] text-sm text-center mb-2">{error}</p>}
+              {error && <p className="text-[#bd002a] text-sm text-center">{error}</p>}
 
               <button
                 type="submit"
@@ -271,11 +202,11 @@ export default function EsqueceuSenha() {
             <button
               type="button"
               onClick={async () => {
-                await supabase.auth.signInWithOtp({ phone });
+                await supabase.auth.signInWithOtp({ phone: phoneE164 });
                 setResendStatus('sent');
                 setTimeout(() => setResendStatus('idle'), 3000);
               }}
-              className="mt-4 text-[#5d3f3e] text-sm font-semibold py-2"
+              className="mt-4 text-xs font-bold uppercase tracking-wider text-[#a8a29e]"
             >
               {resendStatus === 'sent' ? 'Código reenviado!' : 'Reenviar código'}
             </button>
@@ -283,14 +214,14 @@ export default function EsqueceuSenha() {
             <button
               type="button"
               onClick={() => { setStep('sms'); setError(''); setOtp(''); }}
-              className="text-[#5d3f3e] text-sm font-semibold py-1"
+              className="mt-2 text-sm text-[#5d3f3e] font-semibold py-1"
             >
-              Voltar
+              ← Voltar
             </button>
           </div>
         )}
 
-        {/* ── NEWPASS ── */}
+        {/* Nova senha */}
         {step === 'newpass' && (
           <div className="flex flex-col items-center">
             <div className="w-20 h-20 bg-[#fde8ed] rounded-full flex items-center justify-center mb-6">
@@ -303,30 +234,25 @@ export default function EsqueceuSenha() {
 
             <form onSubmit={handleNewPass} className="w-full space-y-4">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="w-5 h-5 text-[#a8a29e]" />
-                </div>
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a8a29e]" />
                 <input
                   type="password"
                   placeholder="Nova senha"
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
                   required
-                  className="w-full pl-11 pr-4 py-4 bg-white border border-[#e5e2e1] rounded-xl focus:outline-none focus:border-[#bd002a] focus:ring-1 focus:ring-[#bd002a] transition-all shadow-sm"
+                  className="w-full pl-11 pr-4 py-4 bg-white border border-[#e5e2e1] rounded-xl focus:outline-none focus:border-[#bd002a] transition-all shadow-sm"
                 />
               </div>
-
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="w-5 h-5 text-[#a8a29e]" />
-                </div>
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#a8a29e]" />
                 <input
                   type="password"
                   placeholder="Confirmar nova senha"
                   value={confirmar}
                   onChange={(e) => setConfirmar(e.target.value)}
                   required
-                  className="w-full pl-11 pr-4 py-4 bg-white border border-[#e5e2e1] rounded-xl focus:outline-none focus:border-[#bd002a] focus:ring-1 focus:ring-[#bd002a] transition-all shadow-sm"
+                  className="w-full pl-11 pr-4 py-4 bg-white border border-[#e5e2e1] rounded-xl focus:outline-none focus:border-[#bd002a] transition-all shadow-sm"
                 />
               </div>
 
@@ -335,7 +261,7 @@ export default function EsqueceuSenha() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#bd002a] text-white py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-70 mt-4"
+                className="w-full bg-[#bd002a] text-white py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-70"
               >
                 {loading ? 'Salvando...' : 'Salvar nova senha'}
               </button>
@@ -343,71 +269,21 @@ export default function EsqueceuSenha() {
           </div>
         )}
 
-        {/* ── EMAIL ── */}
-        {step === 'email' && (
-          <div className="flex flex-col items-center">
-            <h2 className="font-display font-extrabold text-2xl text-center mb-2">Recuperar via E-mail</h2>
-            <p className="text-center text-[#5d3f3e] text-sm mb-8">
-              Digite o e-mail verificado cadastrado na sua conta.
-            </p>
-
-            <form onSubmit={handleSendEmail} className="w-full space-y-4">
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="w-5 h-5 text-[#a8a29e]" />
-                </div>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seu@email.com"
-                  required
-                  className="w-full pl-11 pr-4 py-4 bg-white border border-[#e5e2e1] rounded-xl focus:outline-none focus:border-[#bd002a] focus:ring-1 focus:ring-[#bd002a] transition-all shadow-sm"
-                />
-              </div>
-
-              {error && <p className="text-[#bd002a] text-sm text-center mt-2">{error}</p>}
-
-              <button
-                type="submit"
-                disabled={!email || loading}
-                className="w-full bg-[#bd002a] text-white py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-50 disabled:scale-100"
-              >
-                {loading ? 'Enviando...' : 'Enviar link de recuperação'}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => { setStep('choose'); setError(''); }}
-                className="w-full text-[#5d3f3e] text-sm font-semibold py-2"
-              >
-                Voltar
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* ── SENT ── */}
-        {step === 'sent' && (
+        {/* Concluído */}
+        {step === 'done' && (
           <div className="flex flex-col items-center text-center">
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
-              {sentVia === 'email'
-                ? <Mail className="w-10 h-10 text-emerald-600" />
-                : <MessageCircle className="w-10 h-10 text-emerald-600" />
-              }
+              <MessageCircle className="w-10 h-10 text-emerald-600" />
             </div>
-            <h2 className="font-display font-extrabold text-2xl mb-2">Enviado!</h2>
+            <h2 className="font-display font-extrabold text-2xl mb-2">Senha redefinida!</h2>
             <p className="text-[#5d3f3e] text-sm mb-8">
-              {sentVia === 'email'
-                ? 'Se o e-mail fornecido estiver associado a uma conta verificada, você receberá um link em breve. Verifique também a caixa de spam.'
-                : 'Sua senha foi redefinida com sucesso. Faça login com sua nova senha.'
-              }
+              Sua senha foi atualizada com sucesso. Faça login com a nova senha.
             </p>
             <button
               onClick={() => navigate('/login')}
               className="w-full bg-[#bd002a] text-white py-4 rounded-full font-extrabold font-display uppercase tracking-wider text-sm shadow-lg shadow-[#bd002a]/20 hover:scale-[1.02] active:scale-95 transition-transform"
             >
-              Voltar ao Login
+              Fazer Login
             </button>
           </div>
         )}
