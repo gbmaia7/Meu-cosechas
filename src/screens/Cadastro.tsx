@@ -70,14 +70,7 @@ export default function Cadastro() {
       return;
     }
 
-    const { error: otpError } = await supabase.auth.signInWithOtp({ phone: normalizedPhone });
     setLoading(false);
-
-    if (otpError) {
-      setError('Número de telefone inválido. Verifique e tente novamente.');
-      return;
-    }
-
     navigate('/verificar-telefone', { state: { phone: normalizedPhone, fromCadastro: { nome, email, senha } } });
   };
 
