@@ -157,45 +157,60 @@ export default function VerificarTelefone() {
             <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-6">
               <Phone className="w-10 h-10 text-amber-600" />
             </div>
-            <h2 className="font-display font-extrabold text-2xl text-center mb-2">Qual o seu número?</h2>
+            <h2 className="font-display font-extrabold text-2xl text-center mb-2">
+              {initialE164 ? 'Confirmar número' : 'Qual o seu número?'}
+            </h2>
             <p className="text-center text-[#5d3f3e] text-sm mb-8">
-              Ter um telefone verificado é necessário para fazer pedidos com entrega, resgatar prêmios e pontuar no Clube Cosechas. Enviaremos um código para confirmar seu número.
+              {initialE164
+                ? 'Enviaremos um código SMS para confirmar seu número.'
+                : 'Ter um telefone verificado é necessário para fazer pedidos com entrega, resgatar prêmios e pontuar no Clube Cosechas. Enviaremos um código para confirmar seu número.'}
             </p>
 
-            <div style={{
-              border: '1px solid #e5e2e1', borderRadius: '12px',
-              backgroundColor: 'white', display: 'flex', alignItems: 'center',
-              width: '100%', marginBottom: '32px', overflow: 'hidden',
-            }}>
-              <CountrySelector
-                selectedCountry={country.iso2}
-                onSelect={({ iso2 }) => setCountry(iso2)}
-                countrySelectorStyleProps={{
-                  buttonStyle: {
-                    border: 'none', backgroundColor: 'white',
-                    paddingLeft: '12px', paddingRight: '4px', cursor: 'pointer',
-                  }
-                }}
-              />
-              <span style={{
-                fontSize: '16px', fontWeight: 700, color: '#1c1b1b',
-                paddingLeft: '4px', paddingRight: '10px',
-                borderRight: '1px solid #e5e2e1',
+            {initialE164 ? (
+              <div style={{
+                border: '1px solid #e5e2e1', borderRadius: '12px',
+                backgroundColor: 'white', display: 'flex', alignItems: 'center',
+                width: '100%', marginBottom: '32px', padding: '16px 20px',
               }}>
-                +{country.dialCode}
-              </span>
-              <input
-                ref={inputRef}
-                type="tel"
-                value={inputValue}
-                onChange={handlePhoneValueChange}
-                placeholder="(21) 99999-9999"
-                style={{
-                  flex: 1, border: 'none', outline: 'none',
-                  padding: '16px', fontSize: '18px', backgroundColor: 'white',
-                }}
-              />
-            </div>
+                <Phone className="w-5 h-5 text-[#a8a29e] mr-3 flex-shrink-0" />
+                <span style={{ fontSize: '18px', fontWeight: 600, color: '#1c1b1b' }}>{phoneE164}</span>
+              </div>
+            ) : (
+              <div style={{
+                border: '1px solid #e5e2e1', borderRadius: '12px',
+                backgroundColor: 'white', display: 'flex', alignItems: 'center',
+                width: '100%', marginBottom: '32px', overflow: 'hidden',
+              }}>
+                <CountrySelector
+                  selectedCountry={country.iso2}
+                  onSelect={({ iso2 }) => setCountry(iso2)}
+                  countrySelectorStyleProps={{
+                    buttonStyle: {
+                      border: 'none', backgroundColor: 'white',
+                      paddingLeft: '12px', paddingRight: '4px', cursor: 'pointer',
+                    }
+                  }}
+                />
+                <span style={{
+                  fontSize: '16px', fontWeight: 700, color: '#1c1b1b',
+                  paddingLeft: '4px', paddingRight: '10px',
+                  borderRight: '1px solid #e5e2e1',
+                }}>
+                  +{country.dialCode}
+                </span>
+                <input
+                  ref={inputRef}
+                  type="tel"
+                  value={inputValue}
+                  onChange={handlePhoneValueChange}
+                  placeholder="(21) 99999-9999"
+                  style={{
+                    flex: 1, border: 'none', outline: 'none',
+                    padding: '16px', fontSize: '18px', backgroundColor: 'white',
+                  }}
+                />
+              </div>
+            )}
 
             {error && <p className="text-[#bd002a] text-sm text-center mt-2">{error}</p>}
 
