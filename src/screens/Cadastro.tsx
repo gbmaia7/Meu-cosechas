@@ -43,6 +43,11 @@ export default function Cadastro() {
       return;
     }
 
+    if (senha.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+
     setLoading(true);
     setPhoneExists(false);
     setEmailExists(false);
@@ -63,51 +68,15 @@ export default function Cadastro() {
       return;
     }
 
-    const { data, error: authError } = await supabase.auth.signUp({
-      phone: normalizedPhone,
-      password: senha,
-      options: { data: { name: nome, email: email } }
-    });
+    const { error: otpError } = await supabase.auth.signInWithOtp({ phone: normalizedPhone });
+    setLoading(false);
 
-    if (authError) {
-      setLoading(false);
-      console.error('Supabase error:', authError);
-      if (authError.message.includes('User already registered') ||
-          authError.message.includes('already been registered'))
-        setError('Este telefone ou e-mail já está cadastrado.');
-      else if (authError.message.includes('Password should be at least 6 characters') ||
-               authError.message.includes('at least 6'))
-        setError('A senha deve ter pelo menos 6 caracteres.');
-      else if (authError.message.includes('phone') ||
-               authError.message.includes('Invalid phone'))
-        setError('Número de telefone inválido. Verifique e tente novamente.');
-      else if (authError.message.includes('email'))
-        setError('E-mail inválido ou já cadastrado.');
-      else
-        setError(`Erro: ${authError.message}`);
+    if (otpError) {
+      setError('Número de telefone inválido. Verifique e tente novamente.');
       return;
     }
 
-    if (data.user) {
-      await supabase
-        .from('profiles')
-        .update({ name: nome, phone: normalizedPhone, email: email })
-        .eq('id', data.user.id);
-
-      const nomeLetras = nome.replace(/\s+/g, '').substring(0, 4).toUpperCase();
-      const digitos = Math.floor(1000 + Math.random() * 9000).toString();
-      const referralCode = `${nomeLetras}${digitos}`;
-
-      await supabase
-        .from('profiles')
-        .update({ referral_code: referralCode })
-        .eq('id', data.user.id);
-
-      await supabase.auth.updateUser({ email: email });
-    }
-
-    setLoading(false);
-    navigate('/verificar-telefone', { state: { phone: normalizedPhone } });
+    navigate('/verificar-telefone', { state: { phone: normalizedPhone, fromCadastro: { nome, email, senha } } });
   };
 
   return (
@@ -293,7 +262,7 @@ export default function Cadastro() {
               marginTop: '8px'
             }}
           >
-            {loading ? 'Criando conta...' : 'CRIAR E VERIFICAR TELEFONE'}
+            {loading ? 'Enviando código...' : 'VERIFICAR TELEFONE'}
           </button>
 
           <p style={{ textAlign: 'center', fontSize: '11px', color: '#a8a29e', marginTop: '8px' }}>

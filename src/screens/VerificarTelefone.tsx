@@ -25,6 +25,7 @@ export default function VerificarTelefone() {
   const [resendStatus, setResendStatus] = useState<'idle' | 'sent'>('idle');
   const rawPhone = location.state?.phone || '';
   const initialE164 = rawPhone && !rawPhone.startsWith('+') ? `+${rawPhone}` : rawPhone;
+  const fromCadastro = location.state?.fromCadastro as { nome: string; email: string; senha: string } | undefined;
   const [phoneE164, setPhoneE164] = useState(initialE164);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -101,10 +102,22 @@ export default function VerificarTelefone() {
     }
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      await supabase
-        .from('profiles')
-        .update({ phone_verified: true, phone: normalizedPhone })
-        .eq('id', user.id);
+      if (fromCadastro) {
+        await supabase.auth.updateUser({ password: fromCadastro.senha, email: fromCadastro.email });
+        const nomeLetras = fromCadastro.nome.replace(/\s+/g, '').substring(0, 4).toUpperCase();
+        const referralCode = `${nomeLetras}${Math.floor(1000 + Math.random() * 9000)}`;
+        await supabase.from('profiles').update({
+          name: fromCadastro.nome,
+          phone: normalizedPhone,
+          phone_verified: true,
+          email: fromCadastro.email,
+          referral_code: referralCode,
+        }).eq('id', user.id);
+      } else {
+        await supabase.from('profiles')
+          .update({ phone_verified: true, phone: normalizedPhone })
+          .eq('id', user.id);
+      }
     }
     setLoading(false);
     navigate('/HomeComSacola', { replace: true });
