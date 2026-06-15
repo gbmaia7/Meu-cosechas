@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Phone, ShieldCheck } from 'lucide-react';
 import { usePhoneInput, CountrySelector } from 'react-international-phone';
@@ -31,6 +31,9 @@ export default function VerificarTelefone() {
   const [otp, setOtp] = useState('');
   const [normalizedPhone, setNormalizedPhone] = useState('');
   const [accountExists, setAccountExists] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const sendingRef = useRef(false);
+  const resendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { inputValue, handlePhoneValueChange, inputRef, country, setCountry } = usePhoneInput({
     defaultCountry: 'br',
@@ -43,7 +46,22 @@ export default function VerificarTelefone() {
     window.scrollTo(0, 0);
   }, []);
 
+  const startResendCooldown = () => {
+    setResendCooldown(30);
+    resendTimerRef.current = setInterval(() => {
+      setResendCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(resendTimerRef.current!);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const handleSendOtp = async () => {
+    if (sendingRef.current) return;
+    sendingRef.current = true;
     setLoading(true);
     setError('');
     setAccountExists(false);
@@ -52,16 +70,19 @@ export default function VerificarTelefone() {
     const { data: alreadyVerified } = await supabase.rpc('phone_is_verified', { p_phone: phoneE164 });
     if (alreadyVerified) {
       setLoading(false);
+      sendingRef.current = false;
       setAccountExists(true);
       return;
     }
 
     const { error } = await supabase.auth.signInWithOtp({ phone: phoneE164 });
     setLoading(false);
+    sendingRef.current = false;
     if (error) {
       setError('Não foi possível enviar o código. Verifique o número.');
       return;
     }
+    startResendCooldown();
     setStep(2);
   };
 
@@ -90,9 +111,13 @@ export default function VerificarTelefone() {
   };
 
   const handleResend = async () => {
+    if (resendCooldown > 0 || sendingRef.current) return;
+    sendingRef.current = true;
     const { error } = await supabase.auth.signInWithOtp({ phone: normalizedPhone });
+    sendingRef.current = false;
     if (!error) {
       setResendStatus('sent');
+      startResendCooldown();
       setTimeout(() => setResendStatus('idle'), 3000);
     }
   };
@@ -219,9 +244,10 @@ export default function VerificarTelefone() {
             {error && <p className="text-[#bd002a] text-sm text-center mt-2">{error}</p>}
             <button
               onClick={handleResend}
-              className={`mt-4 text-xs font-bold uppercase tracking-wider transition-colors ${resendStatus === 'sent' ? 'text-emerald-600' : 'text-[#a8a29e]'}`}
+              disabled={resendCooldown > 0}
+              className={`mt-4 text-xs font-bold uppercase tracking-wider transition-colors disabled:cursor-not-allowed ${resendStatus === 'sent' ? 'text-emerald-600' : resendCooldown > 0 ? 'text-[#c8c4c3]' : 'text-[#a8a29e]'}`}
             >
-              {resendStatus === 'sent' ? 'Código reenviado!' : 'Reenviar código'}
+              {resendStatus === 'sent' ? 'Código reenviado!' : resendCooldown > 0 ? `Reenviar em ${resendCooldown}s` : 'Reenviar código'}
             </button>
           </div>
         )}

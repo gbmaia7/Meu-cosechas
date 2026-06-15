@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, MessageCircle, Lock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -28,6 +28,9 @@ export default function EsqueceuSenha() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resendStatus, setResendStatus] = useState<'idle' | 'sent'>('idle');
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const sendingRef = useRef(false);
+  const resendTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const { inputValue, handlePhoneValueChange, inputRef, country, setCountry } = usePhoneInput({
     defaultCountry: 'br',
@@ -43,16 +46,30 @@ export default function EsqueceuSenha() {
   const phoneDigits = phoneE164.replace(/\D/g, '');
   const phoneReady = phoneDigits.length >= 10;
 
+  const startResendCooldown = () => {
+    setResendCooldown(30);
+    resendTimerRef.current = setInterval(() => {
+      setResendCooldown(prev => {
+        if (prev <= 1) { clearInterval(resendTimerRef.current!); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const handleSendSms = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (sendingRef.current) return;
+    sendingRef.current = true;
     setLoading(true);
     setError('');
     const { error } = await supabase.auth.signInWithOtp({ phone: phoneE164 });
     setLoading(false);
+    sendingRef.current = false;
     if (error) {
       setError('Não foi possível enviar o código. Verifique o número.');
       return;
     }
+    startResendCooldown();
     setStep('otp');
   };
 
@@ -201,14 +218,19 @@ export default function EsqueceuSenha() {
 
             <button
               type="button"
+              disabled={resendCooldown > 0}
               onClick={async () => {
+                if (resendCooldown > 0 || sendingRef.current) return;
+                sendingRef.current = true;
                 await supabase.auth.signInWithOtp({ phone: phoneE164 });
+                sendingRef.current = false;
                 setResendStatus('sent');
+                startResendCooldown();
                 setTimeout(() => setResendStatus('idle'), 3000);
               }}
-              className="mt-4 text-xs font-bold uppercase tracking-wider text-[#a8a29e]"
+              className={`mt-4 text-xs font-bold uppercase tracking-wider disabled:cursor-not-allowed ${resendStatus === 'sent' ? 'text-emerald-600' : resendCooldown > 0 ? 'text-[#c8c4c3]' : 'text-[#a8a29e]'}`}
             >
-              {resendStatus === 'sent' ? 'Código reenviado!' : 'Reenviar código'}
+              {resendStatus === 'sent' ? 'Código reenviado!' : resendCooldown > 0 ? `Reenviar em ${resendCooldown}s` : 'Reenviar código'}
             </button>
 
             <button
