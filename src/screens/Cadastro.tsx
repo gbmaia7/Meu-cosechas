@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, User, Lock, Mail } from 'lucide-react';
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
@@ -20,10 +20,12 @@ const phoneDropdownStyle = `
 
 export default function Cadastro() {
   const navigate = useNavigate();
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [senha, setSenha] = useState('');
+  const location = useLocation();
+  const prefill = location.state?.prefill as { nome?: string; email?: string; phone?: string; senha?: string } | undefined;
+  const [nome, setNome] = useState(prefill?.nome || '');
+  const [email, setEmail] = useState(prefill?.email || '');
+  const [phone, setPhone] = useState(prefill?.phone || '');
+  const [senha, setSenha] = useState(prefill?.senha || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [phoneExists, setPhoneExists] = useState(false);

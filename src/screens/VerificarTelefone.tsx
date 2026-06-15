@@ -143,7 +143,14 @@ export default function VerificarTelefone() {
       <style>{phoneDropdownStyle}</style>
       <header className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-2xl shadow-sm flex items-center px-4 py-4">
         <button
-          onClick={() => step === 2 ? setStep(1) : navigate(-1)}
+          onClick={() => {
+            if (step === 2) { setStep(1); return; }
+            if (fromCadastro) {
+              navigate('/cadastro', { state: { prefill: { ...fromCadastro, phone: phoneE164 } }, replace: true });
+            } else {
+              navigate(-1);
+            }
+          }}
           className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#eae7e7] transition-colors active:scale-90"
         >
           <ChevronLeft className="text-[#5d3f3e] w-6 h-6" />
@@ -173,7 +180,7 @@ export default function VerificarTelefone() {
                 width: '100%', marginBottom: '32px', padding: '16px 20px',
               }}>
                 <Phone className="w-5 h-5 text-[#a8a29e] mr-3 flex-shrink-0" />
-                <span style={{ fontSize: '18px', fontWeight: 600, color: '#1c1b1b' }}>{phoneE164}</span>
+                <span style={{ fontSize: '18px', fontWeight: 600, color: '#1c1b1b' }}>+{country.dialCode} {inputValue}</span>
               </div>
             ) : (
               <div style={{
