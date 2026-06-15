@@ -107,7 +107,7 @@ export default function Cadastro() {
     }
 
     setLoading(false);
-    navigate('/verificar-telefone', { state: { phone: normalizedPhone, otpAlreadySent: true } });
+    navigate('/verificar-telefone', { state: { phone: normalizedPhone } });
   };
 
   return (

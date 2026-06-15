@@ -21,16 +21,15 @@ const phoneDropdownStyle = `
 export default function VerificarTelefone() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [step, setStep] = useState<1 | 2>(location.state?.otpAlreadySent ? 2 : 1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [resendStatus, setResendStatus] = useState<'idle' | 'sent'>('idle');
   const rawPhone = location.state?.phone || '';
   const initialE164 = rawPhone && !rawPhone.startsWith('+') ? `+${rawPhone}` : rawPhone;
-  const otpAlreadySent = location.state?.otpAlreadySent === true;
   const [phoneE164, setPhoneE164] = useState(initialE164);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [otp, setOtp] = useState('');
-  const [normalizedPhone, setNormalizedPhone] = useState(initialE164);
+  const [normalizedPhone, setNormalizedPhone] = useState('');
   const [accountExists, setAccountExists] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const sendingRef = useRef(false);
