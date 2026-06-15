@@ -26,6 +26,7 @@ export default function Cadastro() {
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [phoneExists, setPhoneExists] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -42,8 +43,16 @@ export default function Cadastro() {
     }
 
     setLoading(true);
+    setPhoneExists(false);
 
     const normalizedPhone = phone;
+
+    const { data: alreadyVerified } = await supabase.rpc('phone_is_verified', { p_phone: normalizedPhone });
+    if (alreadyVerified) {
+      setLoading(false);
+      setPhoneExists(true);
+      return;
+    }
 
     const { data, error: authError } = await supabase.auth.signUp({
       phone: normalizedPhone,
@@ -200,6 +209,37 @@ export default function Cadastro() {
 
           {error && (
             <p style={{ color: '#bd002a', fontSize: '14px', textAlign: 'center' }}>{error}</p>
+          )}
+
+          {phoneExists && (
+            <div style={{
+              backgroundColor: '#fffbeb', border: '1px solid #fcd34d',
+              borderRadius: '12px', padding: '16px', textAlign: 'center',
+              display: 'flex', flexDirection: 'column', gap: '10px'
+            }}>
+              <p style={{ fontSize: '14px', color: '#92400e', fontWeight: 600 }}>
+                Já existe uma conta verificada com este número.
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/login')}
+                style={{
+                  width: '100%', padding: '12px', backgroundColor: '#bd002a',
+                  color: 'white', border: 'none', borderRadius: '9999px',
+                  fontWeight: 800, fontSize: '13px', cursor: 'pointer',
+                  textTransform: 'uppercase', letterSpacing: '0.05em'
+                }}
+              >
+                Fazer Login
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/esqueceu-senha')}
+                style={{ fontSize: '12px', fontWeight: 800, color: '#bd002a', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+              >
+                Esqueceu a senha? Recuperar senha
+              </button>
+            </div>
           )}
 
           <button

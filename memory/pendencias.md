@@ -56,7 +56,7 @@ Registrar pendencias operacionais, tecnicas e de produto.
 * Status: **deployado e testado em 2026-06-08**. Todos os cenarios do checklist
   validados com sucesso em producao.
 * Proximo passo: implementar claim automatico de eventos `pending` apos
-  verificacao de telefone via Twilio; depois criar documento externo para
+  verificacao de telefone via Vonage (substituiu Twilio); depois criar documento externo para
   Teknisa e agendar homologacao conjunta.
 
 ### Expiracao de creditos pendentes Teknisa
@@ -79,7 +79,7 @@ Registrar pendencias operacionais, tecnicas e de produto.
   * Todos os testes do checklist passaram (T8-T13).
 * Proximos passos, em ordem:
   1. Implementar claim automatico de eventos `pending` apos verificacao de
-     telefone via Twilio.
+     telefone via Vonage (provider SMS escolhido em 2026-06-09, substituindo Twilio).
   2. Criar documento externo para Teknisa (`docs/teknisa-doc-externo.md`).
   3. Agendar homologacao conjunta com equipe Teknisa.
   4. Depois do claim Twilio, atualizar `docs/integracao-teknisa.md`,
@@ -90,7 +90,7 @@ Registrar pendencias operacionais, tecnicas e de produto.
   * Assinatura esperada: `sha256=<hex>` de
     `HMAC_SHA256(secret, timestamp + "." + raw_body)`.
   * Timestamp tem tolerancia maxima de 5 minutos.
-  * O claim automatico pos-Twilio ainda nao foi implementado.
+  * O claim automatico pos-verificacao de telefone (Vonage) ainda nao foi implementado.
   * O documento externo deve conter: objetivo, URL real de producao,
     headers obrigatorios, algoritmo HMAC, exemplos curl, payloads finais,
     respostas esperadas, tabela de erros e checklist de homologacao.

@@ -43,6 +43,13 @@ Registrar decisoes tecnicas relevantes para evitar redescoberta e inconsistencia
 * Arquivos afetados: `docs/integracao-teknisa.md`, `docs/regras-negocio.md`,
   `docs/data-model.md`.
 
+### 2026-06-09
+
+* Decisao: substituir Twilio por Vonage como provider SMS para OTP de verificacao de telefone.
+* Motivo: decisao operacional do usuario; Vonage oferece melhor custo-beneficio para operacao brasileira de pequeno/medio volume e tem suporte nativo no Supabase Auth.
+* Impacto: configurar Vonage como phone provider no Supabase Dashboard (sem alteracao de codigo — frontend continua usando `supabase.auth.signInWithOtp`).
+* Arquivos afetados: configuracao no Supabase Dashboard (Authentication > Phone Provider).
+
 ## Pendencias
 
 * A definir: padrao oficial de migrations. (resolvido em 2026-06-04 — ver docs/database.md)
