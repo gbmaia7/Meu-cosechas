@@ -95,12 +95,6 @@ Deno.serve(async (req) => {
     .eq('id', userId)
     .single();
 
-  const { count: orderCount } = await serviceClient
-    .from('orders')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .eq('payment_status', 'paid');
-
   let addressId: string | null = null;
   if (payload.modality === 'delivery') {
     if (!payload.address?.block || !payload.address?.room) {
@@ -212,20 +206,20 @@ Deno.serve(async (req) => {
   if (!payload.payer?.email && !profile?.email && !userData.user.email) {
     return jsonResponse({ error: 'Payer email is required' }, 400);
   }
-  // Pix rejects payments when payer and collector share the same email, so keep
-  // the scoped alias there. Card payments benefit from the real customer email
-  // as an antifraud signal.
+
   const payerAliasEmail = `cliente${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`;
   const customerEmail = payload.payer?.email || profile?.email || userData.user.email || payerAliasEmail;
   const payerEmail = payload.paymentMethod === 'pix' ? payerAliasEmail : customerEmail;
 
-  let mpPaymentMethod: string | undefined =
-    payload.paymentMethod === 'pix'
-      ? 'pix'
-      : payload.payment_method_id;
+  const nameParts = (profile?.name || '').trim().split(/\s+/);
+  const payerFirstName = nameParts[0] || '';
+  const payerLastName = nameParts.slice(1).join(' ') || payerFirstName;
 
-  // When payment_method_id is missing or 'unknown', resolve from the saved card on MP
+  // Resolve card payment method
+  let mpPaymentMethod: string | undefined =
+    payload.paymentMethod === 'pix' ? 'pix' : payload.payment_method_id;
   let resolvedIssuerId: string | number | undefined = payload.issuer_id;
+
   if (payload.paymentMethod !== 'pix' && (!mpPaymentMethod || mpPaymentMethod === 'unknown')) {
     if (profile?.mp_customer_id && payload.mp_card_id) {
       try {
@@ -235,7 +229,7 @@ Deno.serve(async (req) => {
         );
         const cardData = await cardRes.json();
         const resolvedPmId = cardData?.payment_method?.id || cardData?.payment_method_id;
-        console.log('[payment] card lookup status:', cardRes.status, 'payment_method:', JSON.stringify(cardData?.payment_method), 'payment_method_id:', cardData?.payment_method_id);
+        console.log('[payment] card lookup status:', cardRes.status, 'payment_method:', JSON.stringify(cardData?.payment_method));
         if (resolvedPmId) {
           mpPaymentMethod = resolvedPmId;
           if (cardData.issuer?.id) resolvedIssuerId = cardData.issuer.id;
@@ -252,128 +246,126 @@ Deno.serve(async (req) => {
     }
   }
 
-  const nameParts = (profile?.name || '').trim().split(/\s+/);
-  const payerFirstName = nameParts[0] || '';
-  const payerLastName = nameParts.slice(1).join(' ') || payerFirstName;
+  if (payload.paymentMethod !== 'pix') {
+    if (!payload.token) return jsonResponse({ error: 'Card token is required' }, 400);
+    if (!mpPaymentMethod || mpPaymentMethod === 'unknown') {
+      return jsonResponse({ error: 'Could not determine payment method for this card' }, 400);
+    }
+  }
 
-  // Format phone for MP: strip country code, split into area_code (2 digits) + number
-  const rawPhone = (profile?.phone || '').replace(/\D/g, '').replace(/^55/, '');
-  const phoneAreaCode = rawPhone.slice(0, 2);
-  const phoneNumber = rawPhone.slice(2);
-  const isFirstPurchase = (orderCount ?? 0) === 0;
+  // Build transaction payment_method for Orders API
+  const transactionPaymentMethod: Record<string, unknown> =
+    payload.paymentMethod === 'pix'
+      ? { id: 'pix', type: 'bank_transfer' }
+      : {
+          id: mpPaymentMethod,
+          type: payload.paymentMethod === 'debit_card' ? 'debit_card' : 'credit_card',
+          token: payload.token,
+          installments: Math.max(1, Number(payload.installments) || 1),
+          ...(resolvedIssuerId ? { issuer_id: String(resolvedIssuerId) } : {}),
+        };
 
-  const mercadoPagoPayload: Record<string, unknown> = {
-    transaction_amount: total,
-    description: `Pedido Meu Cosechas ${savedOrder.pickup_code || savedOrder.id}`,
-    statement_descriptor: 'Cosechas',
-    payment_method_id: mpPaymentMethod,
+  const mpOrderPayload: Record<string, unknown> = {
+    type: 'online',
     external_reference: savedOrder.id,
-    metadata: {
-      app_has_device_session_id: typeof payload.device_session_id === 'string' && payload.device_session_id.trim().length > 0,
-      app_payment_method: payload.paymentMethod,
-    },
-    additional_info: {
-      items: items.map((item) => ({
-        id: item.productId,
-        title: cleanName(item.name),
-        description: cleanName(item.name),
-        quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
-        unit_price: roundMoney(Number(item.price) || 0),
-      })),
-      payer: {
-        first_name: payerFirstName,
-        last_name: payerLastName,
-        ...(phoneAreaCode && phoneNumber ? { phone: { area_code: phoneAreaCode, number: phoneNumber } } : {}),
-        ...(profile?.created_at ? { registration_date: profile.created_at } : {}),
-        is_first_purchase_online: isFirstPurchase,
-      },
-    },
+    processing_mode: 'automatic',
+    capture_mode: 'automatic',
+    total_amount: total.toFixed(2),
     payer: {
       email: payerEmail,
       first_name: payerFirstName,
       last_name: payerLastName,
       identification: payload.payer?.identification,
     },
+    transactions: {
+      payments: [
+        {
+          amount: total.toFixed(2),
+          payment_method: transactionPaymentMethod,
+        },
+      ],
+    },
+    notification_url: `${supabaseUrl}/functions/v1/webhook-mercado-pago`,
   };
 
+  // 3DS for card payments: triggers challenge only when MP deems risky (on_fraud_risk)
   if (payload.paymentMethod !== 'pix') {
-    if (!payload.token) {
-      return jsonResponse({ error: 'Card token is required' }, 400);
-    }
-    if (!mpPaymentMethod || mpPaymentMethod === 'unknown') {
-      return jsonResponse({ error: 'Could not determine payment method for this card' }, 400);
-    }
-    mercadoPagoPayload.token = payload.token;
-    mercadoPagoPayload.installments = Math.max(1, Number(payload.installments) || 1);
-    if (resolvedIssuerId) mercadoPagoPayload.issuer_id = resolvedIssuerId;
-    // Required for saved card payments: MP needs customer reference to find the card
-    if (profile?.mp_customer_id) {
-      (mercadoPagoPayload.payer as Record<string, unknown>).type = 'customer';
-      (mercadoPagoPayload.payer as Record<string, unknown>).id = profile.mp_customer_id;
-    }
+    mpOrderPayload.config = {
+      online: {
+        transaction_security: {
+          validation: 'on_fraud_risk',
+          liability_shift: 'required',
+        },
+      },
+    };
   }
-
-  mercadoPagoPayload.notification_url = `${supabaseUrl}/functions/v1/webhook-mercado-pago`;
 
   const mpHeaders: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
     'X-Idempotency-Key': savedOrder.id,
   };
-  const hasDeviceSessionId = typeof payload.device_session_id === 'string' && payload.device_session_id.trim().length > 0;
-  const deviceSessionIdLen = hasDeviceSessionId ? payload.device_session_id!.trim().length : 0;
-  const deviceSessionIdPrefix = hasDeviceSessionId ? payload.device_session_id!.trim().slice(0, 8) : '';
   if (payload.device_session_id) {
     mpHeaders['X-meli-session-id'] = payload.device_session_id;
   }
 
-  const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+  const mpResponse = await fetch('https://api.mercadopago.com/v1/orders', {
     method: 'POST',
     headers: mpHeaders,
-    body: JSON.stringify(mercadoPagoPayload),
+    body: JSON.stringify(mpOrderPayload),
   });
 
   const mpData = await mpResponse.json().catch(() => null);
-  const trackingId = mpData?.additional_info?.tracking_id || null;
-  const appDiagnostics = {
-    has_device_session_id: hasDeviceSessionId,
-    device_session_id_len: deviceSessionIdLen,
-    device_session_id_prefix: deviceSessionIdPrefix,
-    payment_method: payload.paymentMethod,
-    amount: total,
-    mp_http_status: mpResponse.status,
-    mp_status: mpData?.status || null,
-    mp_status_detail: mpData?.status_detail || null,
-    tracking_id: trackingId,
-  };
-  console.log('[create-mercado-pago-payment] diagnostics', JSON.stringify(appDiagnostics));
+  const mpStatus = String(mpData?.status || '');
+  const mpStatusDetail = String(
+    mpData?.status_detail || mpData?.transactions?.payments?.[0]?.status_detail || '',
+  );
+  console.log('[create-mercado-pago-payment] orders api:', mpResponse.status, mpStatus, mpStatusDetail);
+
   if (!mpResponse.ok) {
     await serviceClient.from('orders').update({ status: 'payment_failed', payment_status: 'failed' }).eq('id', savedOrder.id);
     return jsonResponse({ success: false, mp_status: mpResponse.status, mp_error: mpData, payer_email_used: payerEmail }, 200);
   }
 
-  const transactionData = mpData?.point_of_interaction?.transaction_data || {};
+  // MP order ID used as provider_payment_id for polling via GET /v1/orders/{id}
+  const mpOrderId = String(mpData?.id || '');
+
+  // Extract Pix QR code — Orders API puts it in payment_method.transaction_data or point_of_interaction
+  const pixPayment = mpData?.transactions?.payments?.[0];
+  const txData =
+    pixPayment?.point_of_interaction?.transaction_data ||
+    pixPayment?.payment_method?.transaction_data ||
+    {};
+  const qrCode = txData.qr_code || null;
+  const qrCodeBase64 = txData.qr_code_base64 || null;
+  const ticketUrl = txData.ticket_url || pixPayment?.ticket_url || null;
+
+  // 3DS challenge URL — present when status is action_required / pending_challenge
+  const threeDSecureUrl =
+    mpStatusDetail === 'pending_challenge'
+      ? (pixPayment?.payment_method?.transaction_security?.url || null)
+      : null;
+
   const { data: savedPayment, error: paymentError } = await serviceClient
     .from('order_payments')
     .insert({
       order_id: savedOrder.id,
       provider: 'mercado_pago',
-      provider_payment_id: String(mpData.id),
-      provider_status: mpData.status,
+      provider_payment_id: mpOrderId,
+      provider_status: mpStatus,
       payment_method: payload.paymentMethod,
       amount: total,
-      qr_code: transactionData.qr_code || null,
-      qr_code_base64: transactionData.qr_code_base64 || null,
-      ticket_url: transactionData.ticket_url || null,
-      raw_response: { ...mpData, _app_diagnostics: appDiagnostics },
+      qr_code: qrCode,
+      qr_code_base64: qrCodeBase64,
+      ticket_url: ticketUrl,
+      raw_response: mpData,
     })
     .select('id')
     .single();
 
   if (paymentError) return jsonResponse({ error: 'Unable to save payment', details: paymentError }, 500);
 
-  // Mark referral credit as used on immediate approval (Pix pending → handled by webhook)
-  if (mpData.status === 'approved' && payload.referralCreditId) {
+  if ((mpStatus === 'processed' || mpStatus === 'approved') && payload.referralCreditId) {
     await serviceClient
       .from('referrals')
       .update({ credit_redeemed_at: new Date().toISOString() })
@@ -386,11 +378,13 @@ Deno.serve(async (req) => {
     pickup_code: savedOrder.pickup_code,
     delivery_pin: deliveryPin,
     payment_id: savedPayment.id,
-    provider_payment_id: String(mpData.id),
-    provider_status: mpData.status,
+    provider_payment_id: mpOrderId,
+    provider_status: mpStatus,
+    status_detail: mpStatusDetail || null,
     payment_method: payload.paymentMethod,
-    qr_code: transactionData.qr_code || null,
-    qr_code_base64: transactionData.qr_code_base64 || null,
-    ticket_url: transactionData.ticket_url || null,
+    qr_code: qrCode,
+    qr_code_base64: qrCodeBase64,
+    ticket_url: ticketUrl,
+    three_d_secure_url: threeDSecureUrl,
   });
 });

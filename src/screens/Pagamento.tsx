@@ -32,6 +32,8 @@ export default function Pagamento() {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(initialMethod);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [threeDSecureUrl, setThreeDSecureUrl] = useState<string | null>(null);
+  const [pendingNavigationState, setPendingNavigationState] = useState<unknown>(null);
   const [cardHolder, setCardHolder] = useState('');
   const [cardCpf, setCardCpf] = useState('');
   const [savedCpf, setSavedCpf] = useState('');
@@ -151,6 +153,21 @@ export default function Pagamento() {
       console.error('[Pagamento] Erro ao carregar security.js:', error);
     });
   }, [isCardPayment]);
+
+  useEffect(() => {
+    if (!threeDSecureUrl) return;
+    const handler = (e: MessageEvent) => {
+      if (e.data?.status === 'COMPLETE') {
+        setThreeDSecureUrl(null);
+        if (pendingNavigationState) {
+          navigate('/validando-pagamento', { state: pendingNavigationState as Record<string, unknown> });
+          setPendingNavigationState(null);
+        }
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [threeDSecureUrl, navigate, pendingNavigationState]);
 
   const loadMercadoPago = async () => {
     if (window.MercadoPago) return window.MercadoPago;
@@ -295,6 +312,13 @@ export default function Pagamento() {
       payment: data,
       total: finalTotal.toFixed(2).replace('.', ','),
     };
+
+    if (data?.three_d_secure_url) {
+      setPendingNavigationState(nextState);
+      setThreeDSecureUrl(data.three_d_secure_url);
+      setIsCreatingPayment(false);
+      return;
+    }
 
     navigate(paymentMethod === 'pix' ? '/pagamento/pix' : '/validando-pagamento', {
       state: nextState,
@@ -560,6 +584,27 @@ export default function Pagamento() {
           </div>
         )}
       </main>
+
+      {threeDSecureUrl && (
+        <div className="fixed inset-0 z-[200] flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#e5e2e1]">
+            <span className="font-display font-bold text-sm text-[#1c1b1b]">Verificação do banco</span>
+            <button
+              type="button"
+              onClick={() => { setThreeDSecureUrl(null); setPendingNavigationState(null); }}
+              className="text-[#5d3f3e] p-2 rounded-full active:scale-95 transition-transform"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <iframe
+            src={threeDSecureUrl}
+            className="flex-1 w-full border-0 bg-white"
+            title="Verificação 3DS"
+            allow="payment"
+          />
+        </div>
+      )}
 
       <nav className="fixed bottom-0 left-0 w-full z-50 bg-white rounded-t-[2.5rem] shadow-[0_-12px_40px_rgba(0,0,0,0.05)] px-6 py-4 pb-8 flex justify-between items-center gap-4">
         <div className="flex flex-col whitespace-nowrap">

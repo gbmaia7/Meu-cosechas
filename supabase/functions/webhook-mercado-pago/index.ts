@@ -11,11 +11,20 @@ const jsonResponse = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 
-const mapOrderStatus = (providerStatus: string) => {
-  if (providerStatus === 'approved') return { status: 'new', payment_status: 'paid' };
-  if (['rejected', 'cancelled'].includes(providerStatus)) return { status: 'payment_failed', payment_status: 'failed' };
-  if (providerStatus === 'refunded') return { status: 'cancelled', payment_status: 'refunded' };
-  return { status: 'pending_payment', payment_status: 'pending' };
+// Legacy Payments API statuses
+const mapPaymentsApiStatus = (status: string) => {
+  if (status === 'approved') return { orderStatus: 'new', paymentStatus: 'paid' };
+  if (['rejected', 'cancelled'].includes(status)) return { orderStatus: 'payment_failed', paymentStatus: 'failed' };
+  if (status === 'refunded') return { orderStatus: 'cancelled', paymentStatus: 'refunded' };
+  return { orderStatus: 'pending_payment', paymentStatus: 'pending' };
+};
+
+// Orders API statuses
+const mapOrdersApiStatus = (status: string) => {
+  if (status === 'processed') return { orderStatus: 'new', paymentStatus: 'paid' };
+  if (status === 'failed') return { orderStatus: 'payment_failed', paymentStatus: 'failed' };
+  // action_required = 3DS pending, pending = Pix/general pending
+  return { orderStatus: 'pending_payment', paymentStatus: 'pending' };
 };
 
 const getSafeOrderStatus = (currentStatus: string | null | undefined, nextStatus: string) => {
@@ -23,6 +32,9 @@ const getSafeOrderStatus = (currentStatus: string | null | undefined, nextStatus
   if (paymentStatuses.includes(currentStatus || '')) return nextStatus;
   return currentStatus || nextStatus;
 };
+
+// Orders API uses non-numeric IDs (ORD..., PAY...)
+const isOrdersApiId = (id: string) => !/^\d+$/.test(id);
 
 const getSignatureParts = (signature: string) =>
   signature.split(',').reduce<Record<string, string>>((acc, part) => {
@@ -119,8 +131,6 @@ Deno.serve(async (req) => {
 
   const providerPaymentId = String(url.searchParams.get('data.id') || payload?.data?.id || payload?.id || '').trim();
   const xSignature = req.headers.get('x-signature');
-  // Old-format notifications (?id=&topic=) do not carry x-signature.
-  // Only reject when the header is present but the HMAC does not match.
   const signatureValid = xSignature
     ? await validateSignature(webhookSecret, xSignature, req.headers.get('x-request-id'), providerPaymentId)
     : false;
@@ -139,65 +149,141 @@ Deno.serve(async (req) => {
   if (xSignature && !signatureValid) return jsonResponse({ error: 'Invalid webhook signature' }, 401);
   if (!providerPaymentId) return jsonResponse({ error: 'Missing payment id' }, 400);
 
-  const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${providerPaymentId}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  const mpData = await mpResponse.json().catch(() => null);
-  if (!mpResponse.ok) return jsonResponse({ error: 'Unable to fetch Mercado Pago payment', details: mpData }, 502);
+  const useOrdersApi = isOrdersApiId(providerPaymentId);
+  console.log('[webhook] providerPaymentId:', providerPaymentId, 'useOrdersApi:', useOrdersApi, 'type:', payload?.type);
 
-  const orderId = String(mpData.external_reference || '').trim();
-  if (!orderId) return jsonResponse({ error: 'Payment has no external_reference' }, 400);
+  let orderId: string;
+  let providerStatus: string;
+  let paymentStatus: string;
+  let newOrderStatus: string;
+  let mpDataForSave: unknown;
 
-  const mapped = mapOrderStatus(mpData.status);
-  const { data: existingPayment } = await serviceClient
-    .from('order_payments')
-    .select('raw_response')
-    .eq('provider', 'mercado_pago')
-    .eq('provider_payment_id', providerPaymentId)
-    .single();
-  const { data: order } = await serviceClient
-    .from('orders')
-    .select('id, status, user_id, referral_credit_id')
-    .eq('id', orderId)
-    .single();
-  const safeStatus = getSafeOrderStatus(order?.status, mapped.status);
+  if (useOrdersApi) {
+    // Orders API path: data.id is the MP Order ID (ORD...)
+    const mpResponse = await fetch(`https://api.mercadopago.com/v1/orders/${providerPaymentId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const mpData = await mpResponse.json().catch(() => null);
+    if (!mpResponse.ok) return jsonResponse({ error: 'Unable to fetch Mercado Pago order', details: mpData }, 502);
 
-  await serviceClient
-    .from('order_payments')
-    .update({
-      provider_status: mpData.status,
-      raw_response: {
-        ...mpData,
-        _app_diagnostics: existingPayment?.raw_response?._app_diagnostics,
-      },
-      updated_at: new Date().toISOString(),
-    })
-    .eq('provider', 'mercado_pago')
-    .eq('provider_payment_id', providerPaymentId);
+    orderId = String(mpData?.external_reference || '').trim();
+    if (!orderId) return jsonResponse({ error: 'Order has no external_reference' }, 400);
 
-  await serviceClient
-    .from('orders')
-    .update({ status: safeStatus, payment_status: mapped.payment_status })
-    .eq('id', orderId);
+    providerStatus = String(mpData?.status || '');
+    const mapped = mapOrdersApiStatus(providerStatus);
+    paymentStatus = mapped.paymentStatus;
 
-  await serviceClient
-    .from('payment_webhook_events')
-    .update({ processed_at: new Date().toISOString() })
-    .eq('provider', 'mercado_pago')
-    .eq('provider_payment_id', providerPaymentId)
-    .is('processed_at', null);
+    const { data: order } = await serviceClient
+      .from('orders')
+      .select('id, status, user_id, referral_credit_id')
+      .eq('id', orderId)
+      .single();
+    newOrderStatus = getSafeOrderStatus(order?.status, mapped.orderStatus);
 
-  if (mapped.status === 'new' && order?.user_id) {
-    await creditPointsForOnlinePayment(serviceClient, orderId, order.user_id);
-  }
+    // Preserve _app_diagnostics from existing record
+    const { data: existingPayment } = await serviceClient
+      .from('order_payments')
+      .select('raw_response')
+      .eq('provider', 'mercado_pago')
+      .eq('provider_payment_id', providerPaymentId)
+      .single();
 
-  if (mapped.status === 'new' && (order as any)?.referral_credit_id) {
+    mpDataForSave = {
+      ...mpData,
+      _app_diagnostics: existingPayment?.raw_response?._app_diagnostics,
+    };
+
     await serviceClient
-      .from('referrals')
-      .update({ credit_redeemed_at: new Date().toISOString() })
-      .eq('id', (order as any).referral_credit_id)
-      .is('credit_redeemed_at', null);
+      .from('order_payments')
+      .update({ provider_status: providerStatus, raw_response: mpDataForSave, updated_at: new Date().toISOString() })
+      .eq('provider', 'mercado_pago')
+      .eq('provider_payment_id', providerPaymentId);
+
+    await serviceClient
+      .from('orders')
+      .update({ status: newOrderStatus, payment_status: paymentStatus })
+      .eq('id', orderId);
+
+    await serviceClient
+      .from('payment_webhook_events')
+      .update({ processed_at: new Date().toISOString() })
+      .eq('provider', 'mercado_pago')
+      .eq('provider_payment_id', providerPaymentId)
+      .is('processed_at', null);
+
+    if (mapped.orderStatus === 'new' && order?.user_id) {
+      await creditPointsForOnlinePayment(serviceClient, orderId, order.user_id);
+    }
+    if (mapped.orderStatus === 'new' && (order as Record<string, unknown>)?.referral_credit_id) {
+      await serviceClient
+        .from('referrals')
+        .update({ credit_redeemed_at: new Date().toISOString() })
+        .eq('id', (order as Record<string, unknown>).referral_credit_id)
+        .is('credit_redeemed_at', null);
+    }
+  } else {
+    // Legacy Payments API path: data.id is a numeric payment ID
+    const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${providerPaymentId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const mpData = await mpResponse.json().catch(() => null);
+    if (!mpResponse.ok) return jsonResponse({ error: 'Unable to fetch Mercado Pago payment', details: mpData }, 502);
+
+    orderId = String(mpData.external_reference || '').trim();
+    if (!orderId) return jsonResponse({ error: 'Payment has no external_reference' }, 400);
+
+    providerStatus = String(mpData.status || '');
+    const mapped = mapPaymentsApiStatus(providerStatus);
+    paymentStatus = mapped.paymentStatus;
+
+    const { data: existingPayment } = await serviceClient
+      .from('order_payments')
+      .select('raw_response')
+      .eq('provider', 'mercado_pago')
+      .eq('provider_payment_id', providerPaymentId)
+      .single();
+
+    const { data: order } = await serviceClient
+      .from('orders')
+      .select('id, status, user_id, referral_credit_id')
+      .eq('id', orderId)
+      .single();
+    newOrderStatus = getSafeOrderStatus(order?.status, mapped.orderStatus);
+
+    mpDataForSave = {
+      ...mpData,
+      _app_diagnostics: existingPayment?.raw_response?._app_diagnostics,
+    };
+
+    await serviceClient
+      .from('order_payments')
+      .update({ provider_status: providerStatus, raw_response: mpDataForSave, updated_at: new Date().toISOString() })
+      .eq('provider', 'mercado_pago')
+      .eq('provider_payment_id', providerPaymentId);
+
+    await serviceClient
+      .from('orders')
+      .update({ status: newOrderStatus, payment_status: paymentStatus })
+      .eq('id', orderId);
+
+    await serviceClient
+      .from('payment_webhook_events')
+      .update({ processed_at: new Date().toISOString() })
+      .eq('provider', 'mercado_pago')
+      .eq('provider_payment_id', providerPaymentId)
+      .is('processed_at', null);
+
+    if (mapped.orderStatus === 'new' && order?.user_id) {
+      await creditPointsForOnlinePayment(serviceClient, orderId, order.user_id);
+    }
+    if (mapped.orderStatus === 'new' && (order as Record<string, unknown>)?.referral_credit_id) {
+      await serviceClient
+        .from('referrals')
+        .update({ credit_redeemed_at: new Date().toISOString() })
+        .eq('id', (order as Record<string, unknown>).referral_credit_id)
+        .is('credit_redeemed_at', null);
+    }
   }
 
-  return jsonResponse({ success: true, order_id: orderId, provider_status: mpData.status });
+  return jsonResponse({ success: true, order_id: orderId, provider_status: providerStatus });
 });

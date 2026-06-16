@@ -11,11 +11,20 @@ const jsonResponse = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
 
-const mapOrderStatus = (providerStatus: string) => {
-  if (providerStatus === 'approved') return { status: 'new', payment_status: 'paid' };
-  if (['rejected', 'cancelled'].includes(providerStatus)) return { status: 'payment_failed', payment_status: 'failed' };
-  if (providerStatus === 'refunded') return { status: 'cancelled', payment_status: 'refunded' };
-  return { status: 'pending_payment', payment_status: 'pending' };
+// Legacy Payments API statuses
+const mapPaymentsApiStatus = (status: string) => {
+  if (status === 'approved') return { orderStatus: 'new', paymentStatus: 'paid' };
+  if (['rejected', 'cancelled'].includes(status)) return { orderStatus: 'payment_failed', paymentStatus: 'failed' };
+  if (status === 'refunded') return { orderStatus: 'cancelled', paymentStatus: 'refunded' };
+  return { orderStatus: 'pending_payment', paymentStatus: 'pending' };
+};
+
+// Orders API statuses
+const mapOrdersApiStatus = (status: string) => {
+  if (status === 'processed') return { orderStatus: 'new', paymentStatus: 'paid' };
+  if (status === 'failed') return { orderStatus: 'payment_failed', paymentStatus: 'failed' };
+  // action_required = 3DS pending, pending = Pix/general pending
+  return { orderStatus: 'pending_payment', paymentStatus: 'pending' };
 };
 
 const getSafeOrderStatus = (currentStatus: string | null | undefined, nextStatus: string) => {
@@ -23,6 +32,8 @@ const getSafeOrderStatus = (currentStatus: string | null | undefined, nextStatus
   if (paymentStatuses.includes(currentStatus || '')) return nextStatus;
   return currentStatus || nextStatus;
 };
+
+const isOrdersApiId = (id: string) => !/^\d+$/.test(id);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -51,24 +62,45 @@ Deno.serve(async (req) => {
 
   if (error || !payment?.provider_payment_id) return jsonResponse({ error: 'Payment not found' }, 404);
 
-  const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${payment.provider_payment_id}`, {
+  const providerPaymentId = payment.provider_payment_id;
+  const useOrdersApi = isOrdersApiId(providerPaymentId);
+
+  const mpUrl = useOrdersApi
+    ? `https://api.mercadopago.com/v1/orders/${providerPaymentId}`
+    : `https://api.mercadopago.com/v1/payments/${providerPaymentId}`;
+
+  const mpResponse = await fetch(mpUrl, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   const mpData = await mpResponse.json().catch(() => null);
   if (!mpResponse.ok) return jsonResponse({ error: 'Unable to fetch Mercado Pago payment', details: mpData }, 502);
 
-  const mapped = mapOrderStatus(mpData.status);
+  let providerStatus: string;
+  let statusDetail: string | null;
+  let mapped: { orderStatus: string; paymentStatus: string };
+
+  if (useOrdersApi) {
+    providerStatus = String(mpData?.status || '');
+    const txPayment = mpData?.transactions?.payments?.[0];
+    statusDetail = String(txPayment?.status_detail || mpData?.status_detail || '') || null;
+    mapped = mapOrdersApiStatus(providerStatus);
+  } else {
+    providerStatus = String(mpData?.status || '');
+    statusDetail = mpData?.status_detail || null;
+    mapped = mapPaymentsApiStatus(providerStatus);
+  }
+
   const { data: order } = await serviceClient
     .from('orders')
     .select('status')
     .eq('id', orderId)
     .single();
-  const safeStatus = getSafeOrderStatus(order?.status, mapped.status);
+  const safeOrderStatus = getSafeOrderStatus(order?.status, mapped.orderStatus);
 
   await serviceClient
     .from('order_payments')
     .update({
-      provider_status: mpData.status,
+      provider_status: providerStatus,
       raw_response: {
         ...mpData,
         _app_diagnostics: payment.raw_response?._app_diagnostics,
@@ -79,16 +111,16 @@ Deno.serve(async (req) => {
 
   await serviceClient
     .from('orders')
-    .update({ status: safeStatus, payment_status: mapped.payment_status })
+    .update({ status: safeOrderStatus, payment_status: mapped.paymentStatus })
     .eq('id', orderId);
 
   return jsonResponse({
     order_id: orderId,
-    provider_payment_id: payment.provider_payment_id,
-    provider_status: mpData.status,
-    status_detail: mpData.status_detail || null,
-    payment_status: mapped.payment_status,
-    order_status: safeStatus,
+    provider_payment_id: providerPaymentId,
+    provider_status: providerStatus,
+    status_detail: statusDetail,
+    payment_status: mapped.paymentStatus,
+    order_status: safeOrderStatus,
     payment_method: payment.payment_method,
     qr_code: payment.qr_code,
     qr_code_base64: payment.qr_code_base64,
