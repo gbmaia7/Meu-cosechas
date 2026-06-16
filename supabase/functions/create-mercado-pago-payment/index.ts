@@ -91,9 +91,15 @@ Deno.serve(async (req) => {
 
   const { data: profile } = await serviceClient
     .from('profiles')
-    .select('name, phone, email, mp_customer_id')
+    .select('name, phone, email, mp_customer_id, created_at')
     .eq('id', userId)
     .single();
+
+  const { count: orderCount } = await serviceClient
+    .from('orders')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('payment_status', 'paid');
 
   let addressId: string | null = null;
   if (payload.modality === 'delivery') {
@@ -250,6 +256,12 @@ Deno.serve(async (req) => {
   const payerFirstName = nameParts[0] || '';
   const payerLastName = nameParts.slice(1).join(' ') || payerFirstName;
 
+  // Format phone for MP: strip country code, split into area_code (2 digits) + number
+  const rawPhone = (profile?.phone || '').replace(/\D/g, '').replace(/^55/, '');
+  const phoneAreaCode = rawPhone.slice(0, 2);
+  const phoneNumber = rawPhone.slice(2);
+  const isFirstPurchase = (orderCount ?? 0) === 0;
+
   const mercadoPagoPayload: Record<string, unknown> = {
     transaction_amount: total,
     description: `Pedido Meu Cosechas ${savedOrder.pickup_code || savedOrder.id}`,
@@ -268,6 +280,15 @@ Deno.serve(async (req) => {
         quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
         unit_price: roundMoney(Number(item.price) || 0),
       })),
+      payer: {
+        first_name: payerFirstName,
+        last_name: payerLastName,
+        ...(phoneAreaCode && phoneNumber ? { phone: { area_code: phoneAreaCode, number: phoneNumber } } : {}),
+        ...(profile?.created_at ? { registration_date: profile.created_at } : {}),
+        is_first_purchase_online: isFirstPurchase,
+        buyer_status: 'Registered',
+        authentication_type: 'Gmail',
+      },
     },
     payer: {
       email: payerEmail,
