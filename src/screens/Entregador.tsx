@@ -58,7 +58,7 @@ const paymentLabels: Record<string, string> = {
   debit: 'Debito',
   credit_card: 'Credito',
   debit_card: 'Debito',
-  cash: 'Dinheiro',
+  cash: 'Presencial',
   machine: 'Maquininha',
   vr: 'VR/VA',
   subscription: 'Assinatura',

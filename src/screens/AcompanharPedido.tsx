@@ -9,7 +9,8 @@ import {
   ShoppingBag, 
   ChevronRight,
   CupSoda,
-  Bike
+  Bike,
+  Wallet
 , Crown} from 'lucide-react';
 
 const isClube = (name: string) => name.startsWith('[CLUBE]')
@@ -38,6 +39,10 @@ export default function AcompanharPedido() {
     : activeOrder?.status === 'out_for_delivery' || activeOrder?.status === 'ready' ? 2
     : 1;
 
+  const awaitingCashierPayment =
+    activeOrder?.modality === 'counter' && activeOrder?.payment_status === 'pay_on_delivery';
+  const orderDisplayCode = activeOrder?.pickup_code || (activeOrder?.id ? `#${activeOrder.id.slice(0, 8)}` : '');
+
   const [deliveryWhatsapp, setDeliveryWhatsapp] = useState('5521995435384');
 
   useEffect(() => {
@@ -65,14 +70,23 @@ export default function AcompanharPedido() {
   useEffect(() => {
     if (!activeOrder?.id) return;
 
+    supabase
+      .from('orders')
+      .select('status, payment_status')
+      .eq('id', activeOrder.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.status) updateActiveOrderStatus(activeOrder.id, data.status as ActiveOrder['status'], data.payment_status);
+      });
+
     const channel = supabase
       .channel(`order-status-${activeOrder.id}`)
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${activeOrder.id}` },
         (payload) => {
-          const newStatus = (payload.new as { status: string })?.status as ActiveOrder['status'];
-          if (newStatus) updateActiveOrderStatus(activeOrder.id, newStatus);
+          const updated = payload.new as { status: string; payment_status?: string };
+          if (updated?.status) updateActiveOrderStatus(activeOrder.id, updated.status as ActiveOrder['status'], updated.payment_status);
         }
       )
       .subscribe();
@@ -139,6 +153,16 @@ export default function AcompanharPedido() {
         </div>
 
         {/* Status Area */}
+        {awaitingCashierPayment ? (
+          <section className="relative overflow-hidden bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-8 text-center space-y-4">
+            <div className="w-16 h-16 mx-auto bg-amber-200 rounded-full flex items-center justify-center">
+              <Wallet className="w-8 h-8 text-amber-700" />
+            </div>
+            <h2 className="text-xl font-extrabold text-amber-900 leading-tight font-display">
+              Dirija-se ao caixa e mostre seu código para pagar. Assim que o pagamento for realizado, seu pedido entra em preparo.
+            </h2>
+          </section>
+        ) : (
         <section className="relative overflow-hidden bg-gradient-to-br from-[#f6f3f2] to-[#f0eded] rounded-lg p-8 text-center space-y-6">
           <div className="space-y-2 relative z-10">
             <h2 className="text-xl font-extrabold text-[#1c1b1b] leading-tight font-display">
@@ -208,18 +232,19 @@ export default function AcompanharPedido() {
             </div>
           )}
         </section>
+        )}
 
         {/* Pickup Code — counter */}
         {activeOrder?.modality === 'counter' && activeOrder?.pickup_code && (
           <section className="bg-white rounded-lg p-6 shadow-sm border border-[#e5e2e1]/30 text-center">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#5d3f3e] mb-2">
-              Seu código de retirada
+              {awaitingCashierPayment ? 'Seu código de pagamento' : 'Seu código de retirada'}
             </p>
             <p className="font-display font-extrabold text-7xl text-[#bd002a] tracking-wider">
               {activeOrder.pickup_code}
             </p>
             <p className="text-xs text-[#5d3f3e] mt-3">
-              Mostre este código no balcão para retirar seu pedido.
+              {awaitingCashierPayment ? 'Mostre este código no caixa para pagar.' : 'Mostre este código no balcão para retirar seu pedido.'}
             </p>
           </section>
         )}
@@ -331,10 +356,11 @@ export default function AcompanharPedido() {
         {/* Summary Card */}
         <section className="bg-white rounded-lg p-6 shadow-[0_-8px_30px_rgb(0,0,0,0.02)] border border-[#e5e2e1]/30">
           <div className="flex justify-between items-center mb-6">
-            <span className="text-xs font-bold text-[#5d3f3e] uppercase tracking-widest font-display">Pedido #82931</span>
+            <span className="text-xs font-bold text-[#5d3f3e] uppercase tracking-widest font-display">Pedido {orderDisplayCode}</span>
             <span className="text-[#bd002a] font-bold text-sm font-display">
                 {activeOrder?.modality === 'delivery'
                   ? deliveryStep === 3 ? 'Entregue' : deliveryStep === 2 ? 'Saiu para entrega' : 'Em andamento'
+                  : awaitingCashierPayment ? 'Aguardando pagamento'
                   : orderStatus === 'preparing' ? 'Em andamento' : 'Pronto para retirar'}
             </span>
           </div>

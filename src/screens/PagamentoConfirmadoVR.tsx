@@ -11,6 +11,9 @@ export default function PagamentoConfirmadoVR() {
   
   const modality = location.state?.modality || 'counter';
   const address = location.state?.address;
+  const orderId = location.state?.orderId;
+  const pickupCode = location.state?.pickupCode || location.state?.pickup_code || null;
+  const orderDisplayCode = pickupCode || (orderId ? `#${String(orderId).slice(0, 8)}` : 'A gerar');
   const deliverySubtotal = calculateDeliverySubtotal(items);
   const deliveryFee = calculateDeliveryFee(deliverySubtotal, modality);
   
@@ -47,7 +50,7 @@ export default function PagamentoConfirmadoVR() {
         <div className="bg-white rounded-lg shadow-[0_-12px_40px_rgba(28,27,27,0.05)] p-6 mb-6 w-full mt-4">
           <div className="flex justify-between items-center mb-6">
             <span className="text-[#5d3f3e] text-sm font-semibold uppercase tracking-wider">Pedido</span>
-            <span className="text-[#e8173a] font-bold text-lg">#82931</span>
+            <span className="text-[#e8173a] font-bold text-lg">{orderDisplayCode}</span>
           </div>
           
           <div className="space-y-4 mb-6">

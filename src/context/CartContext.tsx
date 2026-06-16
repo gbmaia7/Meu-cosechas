@@ -32,6 +32,7 @@ export interface ActiveOrder {
   pickup_code?: string | null;
   delivery_pin?: string | null;
   payment_method?: string;
+  payment_status?: string;
 }
 
 interface CartContextType {
@@ -54,7 +55,7 @@ interface CartContextType {
   activeOrders: ActiveOrder[];
   addActiveOrder: (order: Omit<ActiveOrder, 'id'>) => Promise<ActiveOrder | null>;
   trackActiveOrder: (order: ActiveOrder) => void;
-  updateActiveOrderStatus: (id: string, status: ActiveOrder['status']) => void;
+  updateActiveOrderStatus: (id: string, status: ActiveOrder['status'], paymentStatus?: string) => void;
   removeActiveOrder: (id: string) => void;
   productFrequency: Record<string, number>;
 }
@@ -148,12 +149,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     clearCart();
 
+    const paymentStatus =
+      order.payment_method === 'cash' || order.payment_method === 'machine' || order.payment_method === 'vr'
+        ? 'pay_on_delivery'
+        : 'paid';
+
     if (!session || !phoneVerified) {
       const guestOrder: ActiveOrder = {
         ...order,
         id: crypto.randomUUID(),
         pickup_code: null,
         delivery_pin: null,
+        payment_status: paymentStatus,
       };
       setActiveOrders((prev) => [...prev, guestOrder]);
       return guestOrder;
@@ -229,10 +236,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const basePoints = hasPaidItems ? 1 : 0;
     const bonusPoints = hasPaidItems && hasDoublePoints ? 1 : 0;
     const paymentMethod = order.payment_method || 'pix';
-    const paymentStatus =
-      paymentMethod === 'cash' || paymentMethod === 'machine' || paymentMethod === 'vr'
-        ? 'pay_on_delivery'
-        : 'paid';
 
     const { data: savedOrder, error: orderError } = await supabase
       .from('orders')
@@ -265,6 +268,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       status: 'new',
       pickup_code: savedOrder.pickup_code,
       delivery_pin: deliveryPin,
+      payment_status: paymentStatus,
     };
     setActiveOrders((prev) => [...prev, newOrder]);
 
@@ -369,8 +373,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return newOrder;
   };
 
-  const updateActiveOrderStatus = (id: string, status: ActiveOrder['status']) => {
-    setActiveOrders((prev) => prev.map(order => order.id === id ? { ...order, status } : order));
+  const updateActiveOrderStatus = (id: string, status: ActiveOrder['status'], paymentStatus?: string) => {
+    setActiveOrders((prev) => prev.map(order => order.id === id
+      ? { ...order, status, ...(paymentStatus ? { payment_status: paymentStatus } : {}) }
+      : order));
   };
 
   const trackActiveOrder = (order: ActiveOrder) => {

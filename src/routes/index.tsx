@@ -11,7 +11,6 @@ import PerfilNaoLogado from '../screens/PerfilNaoLogado';
 import VerificarTelefone from '../screens/VerificarTelefone';
 import MeusEnderecos from '../screens/MeusEnderecos';
 import Favoritos from '../screens/Favoritos';
-import GerenciarCartoes from '../screens/GerenciarCartoes';
 import Login from '../screens/Login';
 import Cadastro from '../screens/Cadastro';
 import EsqueceuSenha from '../screens/EsqueceuSenha';
@@ -19,9 +18,9 @@ import RedefinirSenha from '../screens/RedefinirSenha';
 import Pagamento from '../screens/Pagamento';
 import PagamentoPix from '../screens/PagamentoPix';
 import PagamentoVR from '../screens/PagamentoVR';
-import NovoCartao from '../screens/NovoCartao';
 import ValidandoPagamento from '../screens/ValidandoPagamento';
 import PagamentoConfirmado from '../screens/PagamentoConfirmado';
+import PagamentoPresencial from '../screens/PagamentoPresencial';
 import PagamentoConfirmadoVR from '../screens/PagamentoConfirmadoVR';
 import AcompanharPedido from '../screens/AcompanharPedido';
 import Loja from '../screens/Loja';
@@ -45,7 +44,6 @@ export function AppRoutes() {
       <Route path="/perfil/verificar-telefone" element={<VerificarTelefone />} />
       <Route path="/perfil/enderecos" element={<MeusEnderecos />} />
       <Route path="/perfil/favoritos" element={<Favoritos />} />
-      <Route path="/perfil/cartoes" element={<GerenciarCartoes />} />
       <Route path="/login" element={<Login />} />
       <Route path="/cadastro" element={<Cadastro />} />
       <Route path="/esqueceu-senha" element={<EsqueceuSenha />} />
@@ -53,9 +51,9 @@ export function AppRoutes() {
       <Route path="/pagamento" element={<Pagamento />} />
       <Route path="/pagamento/pix" element={<PagamentoPix />} />
       <Route path="/pagamento/vr" element={<PagamentoVR />} />
-      <Route path="/pagamento/cartao" element={<NovoCartao />} />
       <Route path="/validando-pagamento" element={<ValidandoPagamento />} />
       <Route path="/pagamento-confirmado" element={<PagamentoConfirmado />} />
+      <Route path="/pagamento-presencial" element={<PagamentoPresencial />} />
       <Route path="/pagamento-confirmado-vr" element={<PagamentoConfirmadoVR />} />
       <Route path="/acompanhar-pedido" element={<AcompanharPedido />} />
       <Route path="/loja" element={<Loja />} />

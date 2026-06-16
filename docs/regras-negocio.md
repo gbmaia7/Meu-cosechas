@@ -34,12 +34,19 @@ tratada como "Necessita validacao".
 
 ### Pagamento
 
-* Formas observadas: Pix, cartao de credito/debito via Mercado Pago Checkout
-  Transparente, dinheiro, maquininha e VR/VA.
-* Pagamentos em dinheiro/maquininha/VR podem ser tratados como
-  `pay_on_delivery`.
-* Confirmacao final de Pix/cartao deve vir de webhook ou consulta backend ao
+* Formas observadas: Pix (online, automatico via Mercado Pago) e "Presencial"
+  (dinheiro ou cartao na maquininha, decidido na hora, `payment_method: 'cash'`).
+  Cliente nao escolhe mais dinheiro x maquininha no app — uma opcao so. Cartao
+  online foi removido em 2026-06-16 — ver `docs/pagamentos-mercado-pago.md`.
+* Pagamentos em dinheiro/maquininha/VR sao tratados como `pay_on_delivery`
+  ate a confirmacao manual.
+* Confirmacao final de Pix deve vir de webhook ou consulta backend ao
   Mercado Pago.
+* Balcao com dinheiro/maquininha: pedido entra como `new` +
+  `pay_on_delivery`; loja so credita pontos e avanca para `preparing` depois
+  que o operador clicar "Pago" (apos cobrar no caixa).
+* Entrega com dinheiro/maquininha: pedido segue preparo normalmente; pontos
+  so sao creditados quando o entregador confirma com o PIN de seguranca.
 
 ### Clube Cosechas
 
@@ -76,3 +83,7 @@ tratada como "Necessita validacao".
 * 2026-06-08: adicionada politica de taxa de entrega por subtotal.
 * 2026-06-08: adicionada regra proposta para pontos de compras de balcao via
   Teknisa.
+* 2026-06-16: removido cartao online; balcao com dinheiro/maquininha passa a
+  exigir confirmacao manual ("Pago") antes de creditar pontos e preparar.
+* 2026-06-16: unificada a escolha dinheiro/maquininha em uma opcao
+  "Presencial" no app.

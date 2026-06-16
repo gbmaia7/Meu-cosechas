@@ -34,6 +34,27 @@ const getSafeOrderStatus = (currentStatus: string | null | undefined, nextStatus
 };
 
 const isOrdersApiId = (id: string) => !/^\d+$/.test(id);
+const getPixTransactionData = (payment: any) => {
+  const paymentMethod = payment?.payment_method || {};
+  return {
+    qrCode:
+      paymentMethod.qr_code ||
+      payment?.point_of_interaction?.transaction_data?.qr_code ||
+      paymentMethod.transaction_data?.qr_code ||
+      null,
+    qrCodeBase64:
+      paymentMethod.qr_code_base64 ||
+      payment?.point_of_interaction?.transaction_data?.qr_code_base64 ||
+      paymentMethod.transaction_data?.qr_code_base64 ||
+      null,
+    ticketUrl:
+      paymentMethod.ticket_url ||
+      payment?.ticket_url ||
+      payment?.point_of_interaction?.transaction_data?.ticket_url ||
+      paymentMethod.transaction_data?.ticket_url ||
+      null,
+  };
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -85,11 +106,18 @@ Deno.serve(async (req) => {
   let providerStatus: string;
   let statusDetail: string | null;
   let mapped: { orderStatus: string; paymentStatus: string };
+  let pixQrCode = payment.qr_code;
+  let pixQrCodeBase64 = payment.qr_code_base64;
+  let pixTicketUrl = payment.ticket_url;
 
   if (useOrdersApi) {
     providerStatus = String(mpData?.status || '');
     const txPayment = mpData?.transactions?.payments?.[0];
     statusDetail = String(txPayment?.status_detail || mpData?.status_detail || '') || null;
+    const txData = getPixTransactionData(txPayment);
+    pixQrCode = pixQrCode || txData.qrCode;
+    pixQrCodeBase64 = pixQrCodeBase64 || txData.qrCodeBase64;
+    pixTicketUrl = pixTicketUrl || txData.ticketUrl;
     mapped = mapOrdersApiStatus(providerStatus);
   } else {
     providerStatus = String(mpData?.status || '');
@@ -108,6 +136,9 @@ Deno.serve(async (req) => {
     .from('order_payments')
     .update({
       provider_status: providerStatus,
+      qr_code: pixQrCode,
+      qr_code_base64: pixQrCodeBase64,
+      ticket_url: pixTicketUrl,
       raw_response: {
         ...mpData,
         _app_diagnostics: payment.raw_response?._app_diagnostics,
@@ -129,8 +160,8 @@ Deno.serve(async (req) => {
     payment_status: mapped.paymentStatus,
     order_status: safeOrderStatus,
     payment_method: payment.payment_method,
-    qr_code: payment.qr_code,
-    qr_code_base64: payment.qr_code_base64,
-    ticket_url: payment.ticket_url,
+    qr_code: pixQrCode,
+    qr_code_base64: pixQrCodeBase64,
+    ticket_url: pixTicketUrl,
   });
 });

@@ -15,6 +15,7 @@ export default function FloatingOrderTracker() {
     '/acompanhar-pedido', 
     '/validando-pagamento', 
     '/pagamento-confirmado',
+    '/pagamento-presencial',
     '/pagamento',
     '/pagamento/pix',
     '/pagamento/vr',

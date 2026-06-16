@@ -124,7 +124,7 @@ const paymentLabels: Record<string, string> = {
   debit: 'Debito',
   credit_card: 'Credito',
   debit_card: 'Debito',
-  cash: 'Dinheiro',
+  cash: 'Presencial',
   machine: 'Maquininha',
   vr: 'VR/VA',
   subscription: 'Assinatura',
@@ -199,7 +199,7 @@ const getPaymentSummary = (order: StoreOrder) => {
   if (order.payment_status === 'pay_on_delivery') {
     return order.modality === 'delivery'
       ? `Paga na entrega - ${method}`
-      : `Pagar no balcao - ${method}`;
+      : `Pagar no caixa - ${method}`;
   }
   if (order.payment_status === 'pending') return `Pendente - ${method}`;
   if (order.payment_status === 'failed') return `Falhou - ${method}`;
@@ -215,13 +215,25 @@ const getPaymentStyle = (order: StoreOrder) => {
   return 'bg-[#f3eeee] text-[#5d3f3e] border-[#d8d0cf]';
 };
 
-const getModalityStyle = (modality: StoreOrder['modality']) => {
-  if (modality === 'delivery') {
+const needsCounterPaymentConfirmation = (order: StoreOrder) =>
+  order.modality === 'counter' && order.payment_status === 'pay_on_delivery';
+
+const getCardStyle = (order: StoreOrder) => {
+  if (order.modality === 'delivery') {
     return {
       cardBorder: 'border-l-blue-500',
       tag: 'bg-blue-600 text-white ring-blue-100',
       icon: Bike,
       label: 'Entrega',
+    };
+  }
+
+  if (needsCounterPaymentConfirmation(order)) {
+    return {
+      cardBorder: 'border-l-red-500',
+      tag: 'bg-red-600 text-white ring-red-100',
+      icon: Store,
+      label: 'Balcao',
     };
   }
 
@@ -474,6 +486,33 @@ export default function Loja() {
     await loadOrders();
   };
 
+  const confirmCounterPayment = async (order: StoreOrder) => {
+    setStatusError('');
+
+    const timestamp = new Date().toISOString();
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: 'preparing', payment_status: 'paid', accepted_at: timestamp, prepared_at: timestamp })
+      .eq('id', order.id);
+
+    if (error) {
+      setStatusError('Nao foi possivel confirmar o pagamento.');
+      return;
+    }
+
+    await supabase.from('order_status_events').insert({
+      order_id: order.id,
+      old_status: order.status,
+      new_status: 'preparing',
+      changed_by: session?.user.id,
+      reason: 'Pagamento confirmado no caixa',
+    });
+
+    await supabase.rpc('credit_order_points', { p_order_id: order.id });
+
+    await loadOrders();
+  };
+
   const cancelOrder = (order: StoreOrder) => {
     const reason = window.prompt('Motivo do cancelamento');
     if (reason === null) return;
@@ -625,7 +664,7 @@ export default function Loja() {
                         {columnOrders.map((order) => {
                           const itemDetails = getItemDetails(order);
                           const primaryNote = getPrimaryItem(order)?.notes;
-                          const modalityStyle = getModalityStyle(order.modality);
+                          const modalityStyle = getCardStyle(order);
                           const ModalityIcon = modalityStyle.icon;
                           const paymentSummary = getPaymentSummary(order);
 
@@ -778,15 +817,24 @@ export default function Loja() {
 
               <div className="p-5 border-t border-[#e5e2e1] space-y-2">
                 <div className="grid grid-cols-2 gap-2">
-                  {getOrderActions(selectedOrder).map((action) => (
+                  {needsCounterPaymentConfirmation(selectedOrder) && normalizeStatus(selectedOrder.status) === 'new' ? (
                     <button
-                      key={action.status}
-                      onClick={() => updateOrderStatus(selectedOrder, action.status)}
-                      className="rounded-lg bg-[#bd002a] text-white font-bold py-3 text-sm"
+                      onClick={() => confirmCounterPayment(selectedOrder)}
+                      className="rounded-lg bg-red-600 text-white font-bold py-3 text-sm"
                     >
-                      {action.label}
+                      Pago
                     </button>
-                  ))}
+                  ) : (
+                    getOrderActions(selectedOrder).map((action) => (
+                      <button
+                        key={action.status}
+                        onClick={() => updateOrderStatus(selectedOrder, action.status)}
+                        className="rounded-lg bg-[#bd002a] text-white font-bold py-3 text-sm"
+                      >
+                        {action.label}
+                      </button>
+                    ))
+                  )}
                   {normalizeStatus(selectedOrder.status) !== 'cancelled' && normalizeStatus(selectedOrder.status) !== 'delivered' && (
                     <button
                       onClick={() => cancelOrder(selectedOrder)}

@@ -3,26 +3,72 @@
 ## Objetivo
 
 Registrar a decisao e o fluxo oficial de pagamentos do Meu-Cosechas com
-Mercado Pago Checkout Transparente, mantendo a experiencia dentro do app.
+Mercado Pago, mantendo a experiencia dentro do app.
+
+## Decisao (2026-06-16): cartao saiu do fluxo digital
+
+* Cartao de credito/debito online (Checkout Transparente, Secure Fields, 3DS,
+  cartoes salvos) foi **removido**. Motivo: custo de engenharia recorrente
+  (antifraude, 3DS, idempotencia, bugs de SDK) para um fluxo que pode ser
+  resolvido com maquininha fisica, como a maioria dos pequenos negocios.
+* **Pix continua 100% automatico** via Mercado Pago (sem mudanca).
+* Cartao/dinheiro passam a ser pagos fisicamente (maquininha ou caixa) com
+  confirmacao manual:
+  * **Balcao**: pedido nasce em `new` (coluna "Novo" da loja) com
+    `payment_status = 'pay_on_delivery'` e aparece destacado em vermelho. O
+    operador cobra no caixa e clica "Pago" — isso credita os pontos do Clube
+    Cosechas (`credit_order_points`) e avanca o pedido para "Preparando" com
+    `payment_status = 'paid'` (vira verde) em uma unica acao.
+  * **Entrega**: pedido segue o fluxo normal de preparo/pronto/saiu para
+    entrega sem gate de pagamento (o entregador ja esta comprometido a
+    entregar). O entregador cobra na entrega e confirma com o PIN de
+    seguranca; isso credita os pontos (`Entregador.tsx` -> RPC
+    `credit_order_points`), sem mudanca nesse fluxo.
+* Telas/rotas removidas: `NovoCartao.tsx`, `GerenciarCartoes.tsx`,
+  `useSecureCardFields.ts`, rotas `/pagamento/cartao` e `/perfil/cartoes`,
+  Edge Functions `save-card` e `delete-card`, SDK `sdk.mercadopago.com/js/v2`
+  (`index.html`), singleton `window.__mpGlobal` (`App.tsx`).
+* `VITE_MERCADO_PAGO_PUBLIC_KEY` deixou de ser necessaria no frontend (nao ha
+  mais tokenizacao de cartao). Pode ser removida do Vercel quando conveniente.
+* Resultado "Avaliar Qualidade" (92/100, 2026-06-05) ficou obsoleto para
+  cartao — nao se aplica mais, pois nao ha mais pagamento de cartao online.
+
+### Ajuste (2026-06-16): "Dinheiro" e "Maquininha" virou uma opcao so
+
+* `Pagamento.tsx` tinha dois botoes (Dinheiro, Maquininha) que faziam a mesma
+  coisa no backend. Unificados em um unico botao "Pagar no balcao"/"Pagar na
+  entrega" que envia `payment_method: 'cash'` (valor unico daqui pra frente;
+  `'machine'` continua valido no banco so para pedidos antigos).
+* Texto do botao e da tela seguinte deixam explicito que, no balcao, o pedido
+  so entra em preparo depois do pagamento confirmado no caixa (ver botao
+  "Pago" em `Loja.tsx`). Na entrega, o preparo comeca normalmente e o
+  entregador cobra na hora.
+* Nova tela `src/screens/PagamentoPresencial.tsx` (rota `/pagamento-presencial`)
+  para pedidos pagos no balcao/entrega — substitui o uso de
+  `/pagamento-confirmado` para esse caso. `PagamentoConfirmado.tsx` agora e
+  exclusivo do Pix (cabecalho "Pagamento confirmado!" so faz sentido quando o
+  pagamento ja aconteceu).
+* Labels `cash` em `Loja.tsx`/`Entregador.tsx` renomeados de "Dinheiro" para
+  "Presencial" (cobre dinheiro ou cartao, decidido na hora pelo cliente).
+* Terminologia padronizada para "pagar no caixa" (era "balcao") em todo o
+  fluxo de pagamento presencial de balcao — botao em `Pagamento.tsx`, badge
+  em `Loja.tsx`, e novo estado "Aguardando pagamento no caixa" em
+  `AcompanharPedido.tsx` (substitui a mensagem de "preparando" enquanto
+  `payment_status = pay_on_delivery`). `ActiveOrder.payment_status` foi
+  adicionado ao `CartContext` para isso funcionar via realtime.
 
 ## Contexto
 
-Gateway oficial: Mercado Pago Checkout Transparente.
-InfinitePay descartado por redirecionar para checkout externo.
+Gateway oficial: Mercado Pago (Orders API), usado apenas para Pix.
+InfinitePay e Checkout Pro/link de pagamento permanecem descartados.
 
 ## Diretriz principal
 
 * Nao usar Checkout Pro, link de pagamento ou redirecionamento externo.
-* `VITE_MERCADO_PAGO_PUBLIC_KEY` somente no frontend.
 * `MERCADO_PAGO_ACCESS_TOKEN` somente em Supabase Edge Functions.
-* Tokenizar cartao no frontend com Secure Fields antes de chamar o backend.
 * Confirmacao final via webhook ou consulta backend sincronizada.
 
 ## Variaveis de ambiente
-
-Frontend Vite (obrigatorio no Vercel para Secure Fields funcionarem):
-
-* `VITE_MERCADO_PAGO_PUBLIC_KEY` — chave publica de producao (`APP_USR-...`)
 
 Backend/Supabase Edge Functions (todas obrigatorias):
 
@@ -32,71 +78,34 @@ Backend/Supabase Edge Functions (todas obrigatorias):
 * `SUPABASE_ANON_KEY`
 * `SUPABASE_SERVICE_ROLE_KEY`
 
-## Fluxo de cartao (Secure Fields)
-
-1. `App.tsx` inicializa `new MercadoPago(key, { locale: 'pt-BR' })` no mount
-   e armazena em `window.__mpGlobal`.
-2. `useSecureCardFields` reutiliza `window.__mpGlobal` (nunca cria segunda
-   instancia).
-3. Campos de cartao sao iframes do MP (`cardNumber`, `expirationDate`,
-   `securityCode`). Dados nunca transitam pelo backend do app.
-4. No submit: `mp.fields.createCardToken({ cardholderName, CPF })` → token.
-5. Frontend exige CPF valido e aguarda `MP_DEVICE_SESSION_ID` antes de criar
-   pagamento com cartao.
-6. Frontend envia token + `payment_method_id` + `device_session_id` para
-   `create-mercado-pago-payment`.
-7. Edge Function chama `POST /v1/payments` com header `X-meli-session-id`.
-8. Para cartao, Edge Function usa email real do usuario como sinal antifraude.
-   Para Pix, mantem alias `cliente{userId}@meucosechas.app` para evitar
-   conflito com email do recebedor.
-
-### Regras criticas de Secure Fields
-
-* Containers dos campos NAO podem ter `overflow: hidden` (bloqueia iframes
-  no iOS/Safari).
-* Usar altura minima de `52px` nos containers.
-* Apenas UMA instancia MercadoPago por sessao (`window.__mpGlobal`).
-* Cartoes de teste (ex: `5031 4332 1540 6351`) so funcionam com credenciais
-  sandbox (`TEST-...`). Em producao usar cartao real.
-
 ## Fluxo Pix
 
-1. Frontend envia payload (sem token) para `create-mercado-pago-payment`.
-2. Edge Function cria pagamento Pix no MP e retorna `qr_code` e `ticket_url`.
+1. Frontend envia payload para `create-mercado-pago-payment` (sem token, sem
+   SDK frontend).
+2. Edge Function cria order Pix via fetch raw na Orders API e retorna
+   `qr_code` e `ticket_url`.
 3. Frontend exibe QR e/ou copia-e-cola.
 4. Webhook ou polling via `get-mercado-pago-payment` atualiza status.
+
+Importante: payload Pix da Orders API nao envia `capture_mode`. Esse campo e
+especifico do fluxo de cartao e faz o validador rejeitar
+`payment_method.type = 'bank_transfer'`. A resposta Pix pode trazer
+`qr_code`, `qr_code_base64` e `ticket_url` diretamente em
+`transactions.payments[0].payment_method`.
 
 ### Email do pagador Pix
 
 O MP rejeita quando o email do pagador e igual ao email do recebedor. Solucao:
-usar alias `cliente+{userId_slice}@meucosechas.app` para pagamentos Pix.
-
-## Device Fingerprinting
-
-* `window.MP_DEVICE_SESSION_ID` e gerado pelo script de seguranca do Mercado Pago
-  `https://www.mercadopago.com/v2/security.js` com `view="checkout"` e
-  `output="mp-device-session-id"`.
-* O script NAO deve estar em `index.html`. Deve ser carregado DINAMICAMENTE por
-  `loadMercadoPagoSecurity()` em `src/screens/Pagamento.tsx` quando o usuario
-  seleciona cartao. Razao: se carregado na pagina inicial, o device session ID
-  e gerado no contexto errado (browsing, nao checkout) e o MP retorna
-  `security:none`.
-* O script DEVE incluir os tres atributos: `view="checkout"`,
-  `output="mp-device-session-id"` e `public_key`. Sem `public_key`, o script
-  gera um ID local (`window.MP_DEVICE_SESSION_ID`) mas nao consegue registrar
-  o fingerprint no backend do MP — o elemento DOM nunca e preenchido e o
-  pagamento fica bloqueado ou retorna `security:none`.
-* Enviado pelo frontend como `device_session_id` no body do pagamento.
-* Edge Function repassa como header `X-meli-session-id` na chamada ao MP.
-* Obrigatorio para aprovacao no Avaliar Qualidade (items: SDK do frontend +
-  Identificador do dispositivo).
+usar alias `cliente{userId_slice}@meucosechas.app` para pagamentos Pix.
 
 ## Edge Functions
 
 * `create-mercado-pago-payment`: cria pedido `pending_payment`, cria pagamento
-  Pix/cartao no Mercado Pago via fetch raw e salva em `order_payments`.
+  Pix no Mercado Pago via fetch raw e salva em `order_payments`.
 * `get-mercado-pago-payment`: consulta pagamento no MP e sincroniza status.
-* `webhook-mercado-pago`: recebe notificacoes, valida assinatura, atualiza pedido.
+* `webhook-mercado-pago`: recebe notificacoes, valida assinatura, atualiza
+  pedido (generico — funciona para qualquer `payment_method`, sem logica
+  especifica de cartao).
 
 ### Incompatibilidade de SDK no backend
 
@@ -104,37 +113,21 @@ usar alias `cliente+{userId_slice}@meucosechas.app` para pagamentos Pix.
 bundler do Supabase/Deno. Usar `fetch` raw para chamar a API do MP e suficiente
 e recomendado.
 
-## Payload de pagamento (campos obrigatorios)
-
-```
-transaction_amount, description, statement_descriptor: 'Cosechas',
-payment_method_id, external_reference, additional_info.items[],
-payer.{ email, first_name, last_name, identification },
-notification_url
-```
-
-Para cartao: tambem `token`, `installments`, `issuer_id` (se disponivel).
-
 ## Status de pedido
 
 | Evento | orders.status | orders.payment_status |
 |---|---|---|
-| Criado | pending_payment | pending |
-| Aprovado | new | paid |
+| Criado (Pix) | pending_payment | pending |
+| Aprovado (Pix) | new | paid |
 | Recusado/cancelado | payment_failed | failed |
-| Pendente | pending_payment | pending |
-
-## Avaliar Qualidade (resultado)
-
-* Score obtido: **92/100** (2026-06-05, producao).
-* Threshold necessario para cartao em producao: 73.
-* Para reavaliar: usar payment ID de pagamento com **cartao de credito** real
-  (nao Pix). Checks de SDK do frontend e Identificador do dispositivo so
-  passam com tokenizacao de cartao.
+| Balcao, aguardando pagamento no caixa | new | pay_on_delivery |
+| Balcao, pagamento confirmado pelo operador | preparing | paid |
+| Entrega, paga na entrega | new/preparing/ready/out_for_delivery | pay_on_delivery |
+| Entrega, confirmada com PIN | delivered | pay_on_delivery (pontos ja creditados) |
 
 ## Pendencias
 
-* A definir: politica de estorno/refund.
+* A definir: politica de estorno/refund (Pix).
 * A definir: expiracao operacional de Pix pendente (pg_cron configurado para
   40 minutos).
 
@@ -152,3 +145,9 @@ Para cartao: tambem `token`, `installments`, `issuer_id` (se disponivel).
 * 2026-06-14: adicionado atributo `public_key` ao script de security.js —
   obrigatorio para que o MP registre o fingerprint no backend e preencha o
   elemento DOM de saida. Confirmado funcionando em producao.
+* 2026-06-16: migrado para Orders API com 3DS 2.0 (commit c72f514).
+* 2026-06-16: **cartao removido do fluxo digital** — Pix-only via app; cartao
+  fisico (maquininha) com confirmacao manual no balcao/entrega.
+* 2026-06-16: unificado Dinheiro/Maquininha em uma opcao ("Presencial",
+  `payment_method: 'cash'`); criada tela `PagamentoPresencial.tsx` separada
+  de `PagamentoConfirmado.tsx` (que ficou exclusiva do Pix).

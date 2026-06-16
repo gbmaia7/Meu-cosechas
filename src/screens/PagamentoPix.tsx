@@ -9,8 +9,9 @@ export default function PagamentoPix() {
   const payment = location.state?.payment;
   const orderId = location.state?.orderId || payment?.order_id;
   const total = location.state?.total || '0,00';
-  const qrCode = payment?.qr_code;
-  const qrCodeBase64 = payment?.qr_code_base64;
+  const [pixPayment, setPixPayment] = useState(payment);
+  const qrCode = pixPayment?.qr_code;
+  const qrCodeBase64 = pixPayment?.qr_code_base64;
   const [copied, setCopied] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Aguardando confirmacao do pagamento.');
   const [statusError, setStatusError] = useState('');
@@ -47,6 +48,10 @@ export default function PagamentoPix() {
       if (error) {
         setStatusMessage('Nao foi possivel consultar o pagamento agora.');
         return;
+      }
+
+      if (data?.qr_code || data?.qr_code_base64 || data?.ticket_url) {
+        setPixPayment((current: any) => ({ ...current, ...data }));
       }
 
       if (data?.payment_status === 'paid') {
@@ -95,6 +100,10 @@ export default function PagamentoPix() {
       setCheckWarning('Nao foi possivel verificar agora. Tente novamente em alguns segundos.');
       setIsChecking(false);
       return;
+    }
+
+    if (data?.qr_code || data?.qr_code_base64 || data?.ticket_url) {
+      setPixPayment((current: any) => ({ ...current, ...data }));
     }
 
     if (data?.payment_status === 'paid') {

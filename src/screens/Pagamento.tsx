@@ -1,22 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Banknote, CheckCircle2, ChevronLeft, CreditCard, Loader2, Lock, Wallet, X } from 'lucide-react';
+import { Banknote, CheckCircle2, ChevronLeft, Loader2, Wallet, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../lib/supabase';
-import { useSecureCardFields } from '../lib/useSecureCardFields';
 import { calculateDeliveryFee, calculateDeliverySubtotal } from '../lib/deliveryFee';
 
-type PaymentMethod = 'pix' | 'credit_card' | 'debit_card' | 'cash' | 'machine';
-
-type SavedCard = {
-  id: string;
-  mp_card_id: string;
-  brand: string;
-  last_four: string;
-  holder_name: string;
-  exp_month: number;
-  exp_year: number;
-};
+type PaymentMethod = 'pix' | 'cash';
 
 export default function Pagamento() {
   const navigate = useNavigate();
@@ -24,26 +13,11 @@ export default function Pagamento() {
   const { items, totalPrice, session, clearCart, addActiveOrder } = useCart();
 
   const preSelected = location.state?.preSelectedMethod;
-  const initialMethod: PaymentMethod =
-    preSelected === 'credit_card' || preSelected === 'debit_card' || preSelected === 'cash' || preSelected === 'machine'
-      ? preSelected
-      : 'pix';
+  const initialMethod: PaymentMethod = preSelected === 'cash' ? 'cash' : 'pix';
 
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(initialMethod);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState('');
-  const [threeDSecureUrl, setThreeDSecureUrl] = useState<string | null>(null);
-  const [pendingNavigationState, setPendingNavigationState] = useState<unknown>(null);
-  const [cardHolder, setCardHolder] = useState('');
-  const [cardCpf, setCardCpf] = useState('');
-  const [savedCpf, setSavedCpf] = useState('');
-  const [savedCards, setSavedCards] = useState<SavedCard[]>([]);
-  const [selectedSavedCard, setSelectedSavedCard] = useState<SavedCard | null>(
-    location.state?.savedCard || null,
-  );
-  const [savedCardCvv, setSavedCardCvv] = useState('');
-  const [paymentMethodId, setPaymentMethodId] = useState('');
-  const [issuerId, setIssuerId] = useState<string | number | undefined>();
 
   const modality = location.state?.modality || 'delivery';
   const address = location.state?.address;
@@ -54,184 +28,13 @@ export default function Pagamento() {
   const deliverySubtotal = calculateDeliverySubtotal(items);
   const deliveryFee = calculateDeliveryFee(deliverySubtotal, modality);
   const finalTotal = Math.max(0, totalPrice + deliveryFee - couponDiscount);
-  const isCardPayment = selectedMethod === 'credit_card' || selectedMethod === 'debit_card';
-
-  const { createToken: createTokenFromFields } = useSecureCardFields(
-    import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY as string,
-    { cardNumber: 'pg-card-number', expiration: 'pg-expiration', cvv: 'pg-cvv' },
-    (info) => { setPaymentMethodId(info.paymentMethodId); setIssuerId(info.issuerId); },
-    isCardPayment && !selectedSavedCard,
-  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  useEffect(() => {
-    if (!session) return;
-    supabase
-      .from('profiles')
-      .select('cpf')
-      .eq('id', session.user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.cpf) { setCardCpf(data.cpf); setSavedCpf(data.cpf); }
-      });
-  }, [session]);
-
-  useEffect(() => {
-    if (!isCardPayment || !session) return;
-    supabase
-      .from('saved_cards')
-      .select('id, mp_card_id, brand, last_four, holder_name, exp_month, exp_year')
-      .eq('user_id', session.user.id)
-      .not('mp_card_id', 'is', null)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => { if (data) setSavedCards(data as SavedCard[]); });
-  }, [isCardPayment, session]);
-
   const formatCurrency = (value: number) =>
     value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-  const readMercadoPagoDeviceSessionId = () => {
-    const output = document.getElementById('mp-device-session-id') as HTMLInputElement | null;
-    return output?.value?.trim() || '';
-  };
-
-  const loadMercadoPagoSecurity = async () => {
-    if (readMercadoPagoDeviceSessionId()) return;
-
-    let output = document.getElementById('mp-device-session-id') as HTMLInputElement | null;
-    if (!output) {
-      output = document.createElement('input');
-      output.type = 'hidden';
-      output.id = 'mp-device-session-id';
-      document.body.appendChild(output);
-    }
-
-    await new Promise<void>((resolve, reject) => {
-      const existing = document.querySelector<HTMLScriptElement>('script[src="https://www.mercadopago.com/v2/security.js"]');
-      if (existing) existing.remove();
-
-      const script = document.createElement('script');
-      script.src = 'https://www.mercadopago.com/v2/security.js';
-      script.setAttribute('view', 'checkout');
-      script.setAttribute('output', 'mp-device-session-id');
-      const publicKey = (import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY as string) || '';
-      if (publicKey) script.setAttribute('public_key', publicKey);
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Nao foi possivel carregar a verificacao de seguranca do Mercado Pago.'));
-      document.body.appendChild(script);
-    });
-  };
-
-  const getDeviceSessionId = async () => {
-    await loadMercadoPagoSecurity();
-
-    for (let attempt = 0; attempt < 50; attempt += 1) {
-      const deviceSessionId = readMercadoPagoDeviceSessionId();
-      if (deviceSessionId) return deviceSessionId;
-
-      if (attempt === 25) {
-        const windowId = (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID?.trim();
-        if (windowId) {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          return readMercadoPagoDeviceSessionId() || windowId;
-        }
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 200));
-    }
-
-    throw new Error('Nao foi possivel validar a seguranca do pagamento. Recarregue a pagina e tente novamente.');
-  };
-
-  useEffect(() => {
-    if (!isCardPayment) return;
-
-    loadMercadoPagoSecurity().catch((error) => {
-      console.error('[Pagamento] Erro ao carregar security.js:', error);
-    });
-  }, [isCardPayment]);
-
-  useEffect(() => {
-    if (!threeDSecureUrl) return;
-    const handler = (e: MessageEvent) => {
-      if (e.data?.status === 'COMPLETE') {
-        setThreeDSecureUrl(null);
-        if (pendingNavigationState) {
-          navigate('/validando-pagamento', { state: pendingNavigationState as Record<string, unknown> });
-          setPendingNavigationState(null);
-        }
-      }
-    };
-    window.addEventListener('message', handler);
-    return () => window.removeEventListener('message', handler);
-  }, [threeDSecureUrl, navigate, pendingNavigationState]);
-
-  const loadMercadoPago = async () => {
-    if (window.MercadoPago) return window.MercadoPago;
-
-    await new Promise<void>((resolve, reject) => {
-      const existing = document.querySelector<HTMLScriptElement>('script[src="https://sdk.mercadopago.com/js/v2"]');
-      if (existing) {
-        existing.addEventListener('load', () => resolve(), { once: true });
-        existing.addEventListener('error', () => reject(new Error('Nao foi possivel carregar MercadoPago.js.')), { once: true });
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://sdk.mercadopago.com/js/v2';
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Nao foi possivel carregar MercadoPago.js.'));
-      document.body.appendChild(script);
-    });
-
-    if (!window.MercadoPago) throw new Error('MercadoPago.js nao esta disponivel.');
-    return window.MercadoPago;
-  };
-
-  const getCardToken = async () => {
-    const cpf = cardCpf.replace(/\D/g, '');
-    if (cpf.length !== 11) throw new Error('Informe um CPF valido para o pagamento.');
-
-    if (selectedSavedCard) {
-      if (!savedCardCvv || savedCardCvv.length < 3) throw new Error('Digite o CVV do cartao salvo.');
-      const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
-      if (!publicKey) throw new Error('Public Key do Mercado Pago nao configurada.');
-      await loadMercadoPago();
-      const mp = (window as any).__mpGlobal || (() => {
-        const instance = new window.MercadoPago!(publicKey, { locale: 'pt-BR' });
-        (window as any).__mpGlobal = instance;
-        return instance;
-      })();
-      const token = await mp.createCardToken({
-        cardId: selectedSavedCard.mp_card_id,
-        securityCode: savedCardCvv,
-      });
-      if (!token?.id) throw new Error('Nao foi possivel tokenizar o cartao salvo.');
-
-      // Prefer payment_method_id from token response; fall back to stored brand
-      let pmId: string = (token as any).payment_method_id ||
-        (selectedSavedCard.brand !== 'unknown' ? selectedSavedCard.brand : '');
-
-      // If still unknown, detect via BIN (first 6 digits from token)
-      if (!pmId && (token as any).first_six_digits) {
-        try {
-          const methods = await mp.getPaymentMethods({ bin: (token as any).first_six_digits });
-          const m = methods?.results?.[0] || methods?.[0];
-          if (m?.id) pmId = m.id;
-        } catch { /* ignore */ }
-      }
-
-      return { token: token.id, payment_method_id: pmId || selectedSavedCard.brand, mp_card_id: selectedSavedCard.mp_card_id };
-    }
-
-    if (!cardHolder.trim()) throw new Error('Informe o nome do titular do cartao.');
-
-    const tokenId = await createTokenFromFields(cardHolder, cpf);
-    return { token: tokenId, payment_method_id: paymentMethodId, issuer_id: issuerId };
-  };
 
   const createMercadoPagoPayment = async (paymentMethod: PaymentMethod) => {
     if (!session) throw new Error('Entre na sua conta para pagar online.');
@@ -250,12 +53,6 @@ export default function Pagamento() {
       referralCreditId,
       paymentMethod,
     };
-
-    const deviceSessionId = isCardPayment
-      ? await getDeviceSessionId()
-      : (window as unknown as { MP_DEVICE_SESSION_ID?: string }).MP_DEVICE_SESSION_ID || undefined;
-    const cardPayload = isCardPayment ? await getCardToken() : {};
-    const cpf = cardCpf.replace(/\D/g, '');
 
     const { data, error } = await supabase.functions.invoke('create-mercado-pago-payment', {
       body: {
@@ -280,20 +77,12 @@ export default function Pagamento() {
         paymentMethod,
         payer: {
           email: session.user.email,
-          identification: isCardPayment ? { type: 'CPF', number: cpf } : undefined,
         },
-        installments: 1,
-        device_session_id: deviceSessionId,
-        ...cardPayload,
       },
     });
 
     if (error) throw error;
     if (data?.success === false) throw new Error(`MP ${data.mp_status}: ${JSON.stringify(data.mp_error)}, email: ${data.payer_email_used}`);
-
-    if (isCardPayment && cpf.length === 11 && cpf !== savedCpf) {
-      supabase.from('profiles').update({ cpf }).eq('id', session.user.id).then(() => {});
-    }
 
     sessionStorage.setItem('mercadoPagoPendingOrder', JSON.stringify({
       ...orderState,
@@ -313,16 +102,7 @@ export default function Pagamento() {
       total: finalTotal.toFixed(2).replace('.', ','),
     };
 
-    if (data?.three_d_secure_url) {
-      setPendingNavigationState(nextState);
-      setThreeDSecureUrl(data.three_d_secure_url);
-      setIsCreatingPayment(false);
-      return;
-    }
-
-    navigate(paymentMethod === 'pix' ? '/pagamento/pix' : '/validando-pagamento', {
-      state: nextState,
-    });
+    navigate('/pagamento/pix', { state: nextState });
   };
 
   const handleFinalize = async () => {
@@ -331,7 +111,7 @@ export default function Pagamento() {
     setIsCreatingPayment(true);
 
     try {
-      if (selectedMethod === 'cash' || selectedMethod === 'machine') {
+      if (selectedMethod === 'cash') {
         const order = await addActiveOrder({
           items,
           totalPrice: finalTotal,
@@ -340,7 +120,7 @@ export default function Pagamento() {
           address,
           payment_method: selectedMethod,
         });
-        navigate('/pagamento-confirmado', {
+        navigate('/pagamento-presencial', {
           state: {
             modality,
             address,
@@ -388,7 +168,11 @@ export default function Pagamento() {
       <main className="pt-24 pb-40 px-6 max-w-md mx-auto">
         <div className="mb-8">
           <h2 className="font-display text-3xl font-extrabold tracking-tight mb-2">Finalize seu pedido</h2>
-          <p className="text-[#5d3f3e] font-medium">Pague dentro do app com Mercado Pago.</p>
+          <p className="text-[#5d3f3e] font-medium">
+            {modality === 'counter'
+              ? 'Pague com Pix no app ou finalize o pagamento no balcao.'
+              : 'Pague com Pix no app ou finalize o pagamento na entrega.'}
+          </p>
         </div>
 
         <section className="bg-white p-5 rounded-3xl shadow-sm border border-[#e5e2e1] mb-8">
@@ -440,142 +224,20 @@ export default function Pagamento() {
 
           <button
             type="button"
-            onClick={() => selectMethod('credit_card')}
-            className={`w-full rounded-lg p-5 flex items-center justify-between transition-all text-left ${selectedMethod === 'credit_card' ? 'ring-2 ring-[#bd002a] bg-[#bd002a]/5' : 'bg-white hover:bg-[#f6f3f2]'}`}
+            onClick={() => selectMethod('cash')}
+            className={`w-full rounded-lg p-5 flex items-center justify-between transition-all text-left ${selectedMethod === 'cash' ? 'ring-2 ring-[#bd002a] bg-[#bd002a]/5' : 'bg-white hover:bg-[#f6f3f2]'}`}
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#fd6c70]/10 rounded-full flex items-center justify-center text-[#ac3139]">
-                <CreditCard className="w-6 h-6" />
-              </div>
-              <div>
-                <p className="font-display font-bold">Cartao de credito</p>
-                <p className="text-xs font-medium text-[#5d3f3e]">Seus dados ficam 100% com o Mercado Pago</p>
-              </div>
-            </div>
-            {selectedMethod === 'credit_card' && <CheckCircle2 className="text-[#bd002a] w-6 h-6" />}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => selectMethod('debit_card')}
-            className={`w-full rounded-lg p-5 flex items-center justify-between transition-all text-left ${selectedMethod === 'debit_card' ? 'ring-2 ring-[#bd002a] bg-[#bd002a]/5' : 'bg-white hover:bg-[#f6f3f2]'}`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-[#5d3f3e]/10 rounded-full flex items-center justify-center text-[#5d3f3e]">
+              <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
                 <Wallet className="w-6 h-6" />
               </div>
               <div>
-                <p className="font-display font-bold">Cartao de debito</p>
-                <p className="text-xs font-medium text-[#5d3f3e]">Pague direto pelo app com segurança</p>
+                <p className="font-display font-bold">{modality === 'counter' ? 'Pagar no caixa' : 'Pagar na entrega'}</p>
+                <p className="text-xs font-medium text-[#5d3f3e]">Dinheiro, cartao ou VR</p>
               </div>
             </div>
-            {selectedMethod === 'debit_card' && <CheckCircle2 className="text-[#bd002a] w-6 h-6" />}
+            {selectedMethod === 'cash' && <CheckCircle2 className="text-[#bd002a] w-6 h-6" />}
           </button>
-
-          {isCardPayment && savedCards.length > 0 && (
-            <div className="bg-white border border-[#e5e2e1] rounded-lg p-5 space-y-3">
-              <p className="text-xs font-bold text-[#5d3f3e] uppercase tracking-wider">Cartões salvos</p>
-              {savedCards.map((card) => (
-                <button
-                  key={card.id}
-                  type="button"
-                  onClick={() => { setSelectedSavedCard(card); setSavedCardCvv(''); }}
-                  className={`w-full flex items-center justify-between rounded-xl px-4 py-3 text-left transition-all ${selectedSavedCard?.id === card.id ? 'ring-2 ring-[#bd002a] bg-[#bd002a]/5' : 'bg-[#f6f3f2] hover:bg-[#ede9e8]'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="w-5 h-5 text-[#5d3f3e]" />
-                    <div>
-                      <p className="text-sm font-bold text-[#1c1b1b]">{card.brand.toUpperCase()} •••• {card.last_four}</p>
-                      <p className="text-xs text-[#5d3f3e]">{card.holder_name} · {String(card.exp_month).padStart(2, '0')}/{String(card.exp_year).slice(-2)}</p>
-                    </div>
-                  </div>
-                  {selectedSavedCard?.id === card.id && <CheckCircle2 className="text-[#bd002a] w-5 h-5" />}
-                </button>
-              ))}
-              {selectedSavedCard && (
-                <div className="bg-[#fdf5f6] border border-[#bd002a]/20 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Lock className="w-3.5 h-3.5 text-[#bd002a]" />
-                    <p className="text-xs font-bold text-[#bd002a] uppercase tracking-wider">Código de segurança</p>
-                  </div>
-                  <p className="text-xs text-[#5d3f3e] -mt-1">
-                    3 dígitos no verso do cartão terminado em {selectedSavedCard.last_four}
-                  </p>
-                  <input
-                    value={savedCardCvv}
-                    onChange={(e) => setSavedCardCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                    placeholder="• • •"
-                    inputMode="numeric"
-                    maxLength={4}
-                    className="w-28 bg-white border border-[#e5e2e1] rounded-xl px-4 py-3 text-base font-bold tracking-[0.3em] text-center outline-none focus:border-[#bd002a] focus:ring-1 focus:ring-[#bd002a]/30"
-                  />
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setSelectedSavedCard(null)}
-                className={`w-full text-xs font-bold text-[#5d3f3e] py-2 rounded-xl transition-all ${!selectedSavedCard ? 'bg-[#bd002a]/10 text-[#bd002a]' : 'hover:bg-[#f6f3f2]'}`}
-              >
-                + Usar novo cartão
-              </button>
-            </div>
-          )}
-
-          {isCardPayment && !selectedSavedCard && (
-            <div className="bg-white border border-[#e5e2e1] rounded-lg p-5 space-y-4">
-              <div id="pg-card-number" className="h-[52px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl" />
-              <input value={cardHolder} onChange={(event) => setCardHolder(event.target.value)} placeholder="Nome impresso no cartao" className="w-full bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]" />
-              <div className="grid grid-cols-2 gap-3">
-                <div id="pg-expiration" className="h-[52px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl" />
-                <div id="pg-cvv" className="h-[52px] bg-[#f6f3f2] border border-[#e5e2e1] rounded-xl" />
-              </div>
-              <p className="text-[11px] text-[#5d3f3e] leading-relaxed">
-                🔒 Seus dados de cartão nunca passam pelos nossos servidores. O Mercado Pago processa tudo de forma criptografada — a mesma tecnologia usada por milhões de lojas no Brasil.
-              </p>
-            </div>
-          )}
-
-          {isCardPayment && (
-            <input
-              value={cardCpf}
-              onChange={(event) => setCardCpf(event.target.value.replace(/\D/g, '').slice(0, 11))}
-              placeholder="CPF do titular"
-              inputMode="numeric"
-              maxLength={11}
-              className="w-full bg-white border border-[#e5e2e1] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#bd002a]"
-            />
-          )}
-
-
-          {modality === 'delivery' && (
-            <>
-              <button type="button" onClick={() => selectMethod('cash')} className={`w-full rounded-lg p-5 flex items-center justify-between transition-all text-left ${selectedMethod === 'cash' ? 'ring-2 ring-[#bd002a] bg-[#bd002a]/5' : 'bg-white hover:bg-[#f6f3f2]'}`}>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600">
-                    <Banknote className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="font-display font-bold">Dinheiro</p>
-                    <p className="text-xs font-medium text-[#5d3f3e]">Pagar na entrega</p>
-                  </div>
-                </div>
-                {selectedMethod === 'cash' && <CheckCircle2 className="text-[#bd002a] w-6 h-6" />}
-              </button>
-
-              <button type="button" onClick={() => selectMethod('machine')} className={`w-full rounded-lg p-5 flex items-center justify-between transition-all text-left ${selectedMethod === 'machine' ? 'ring-2 ring-[#bd002a] bg-[#bd002a]/5' : 'bg-white hover:bg-[#f6f3f2]'}`}>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
-                    <CreditCard className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="font-display font-bold">Maquininha / Vale Refeicao</p>
-                    <p className="text-xs font-medium text-[#5d3f3e]">Cartao, debito ou VR na entrega</p>
-                  </div>
-                </div>
-                {selectedMethod === 'machine' && <CheckCircle2 className="text-[#bd002a] w-6 h-6" />}
-              </button>
-            </>
-          )}
         </section>
 
         {paymentError && (
@@ -584,27 +246,6 @@ export default function Pagamento() {
           </div>
         )}
       </main>
-
-      {threeDSecureUrl && (
-        <div className="fixed inset-0 z-[200] flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#e5e2e1]">
-            <span className="font-display font-bold text-sm text-[#1c1b1b]">Verificação do banco</span>
-            <button
-              type="button"
-              onClick={() => { setThreeDSecureUrl(null); setPendingNavigationState(null); }}
-              className="text-[#5d3f3e] p-2 rounded-full active:scale-95 transition-transform"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <iframe
-            src={threeDSecureUrl}
-            className="flex-1 w-full border-0 bg-white"
-            title="Verificação 3DS"
-            allow="payment"
-          />
-        </div>
-      )}
 
       <nav className="fixed bottom-0 left-0 w-full z-50 bg-white rounded-t-[2.5rem] shadow-[0_-12px_40px_rgba(0,0,0,0.05)] px-6 py-4 pb-8 flex justify-between items-center gap-4">
         <div className="flex flex-col whitespace-nowrap">

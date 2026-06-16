@@ -5,8 +5,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-type PaymentMethod = 'pix' | 'credit_card' | 'debit_card';
-
 type CheckoutItem = {
   productId: string;
   name: string;
@@ -22,21 +20,15 @@ type CheckoutItem = {
 
 type PaymentRequest = {
   items: CheckoutItem[];
-  paymentMethod: PaymentMethod;
+  paymentMethod: 'pix';
   modality: 'counter' | 'delivery';
   address?: { block: string; room: string; complement?: string };
   deliveryFee?: number;
   couponDiscount?: number;
-  token?: string;
-  payment_method_id?: string;
-  issuer_id?: string;
-  installments?: number;
-  mp_card_id?: string;
   payer?: {
     email?: string;
     identification?: { type?: string; number?: string };
   };
-  device_session_id?: string;
   referrerId?: string;
   referralCreditId?: string;
 };
@@ -53,6 +45,27 @@ const FREE_DELIVERY_MINIMUM = 20;
 const DELIVERY_FEE_BELOW_MINIMUM = 4;
 const calculateDeliveryFee = (deliverySubtotal: number, modality: 'counter' | 'delivery') =>
   modality === 'counter' || deliverySubtotal >= FREE_DELIVERY_MINIMUM ? 0 : DELIVERY_FEE_BELOW_MINIMUM;
+const getPixTransactionData = (payment: any) => {
+  const paymentMethod = payment?.payment_method || {};
+  return {
+    qrCode:
+      paymentMethod.qr_code ||
+      payment?.point_of_interaction?.transaction_data?.qr_code ||
+      paymentMethod.transaction_data?.qr_code ||
+      null,
+    qrCodeBase64:
+      paymentMethod.qr_code_base64 ||
+      payment?.point_of_interaction?.transaction_data?.qr_code_base64 ||
+      paymentMethod.transaction_data?.qr_code_base64 ||
+      null,
+    ticketUrl:
+      paymentMethod.ticket_url ||
+      payment?.ticket_url ||
+      payment?.point_of_interaction?.transaction_data?.ticket_url ||
+      paymentMethod.transaction_data?.ticket_url ||
+      null,
+  };
+};
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -76,7 +89,7 @@ Deno.serve(async (req) => {
 
   const items = Array.isArray(payload.items) ? payload.items : [];
   if (items.length === 0) return jsonResponse({ error: 'Cart is empty' }, 400);
-  if (!['pix', 'credit_card', 'debit_card'].includes(payload.paymentMethod)) {
+  if (payload.paymentMethod !== 'pix') {
     return jsonResponse({ error: 'Invalid payment method' }, 400);
   }
 
@@ -91,7 +104,7 @@ Deno.serve(async (req) => {
 
   const { data: profile } = await serviceClient
     .from('profiles')
-    .select('name, phone, email, mp_customer_id, created_at')
+    .select('name, phone, email')
     .eq('id', userId)
     .single();
 
@@ -207,68 +220,17 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Payer email is required' }, 400);
   }
 
-  const payerAliasEmail = `cliente${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`;
-  const customerEmail = payload.payer?.email || profile?.email || userData.user.email || payerAliasEmail;
-  const payerEmail = payload.paymentMethod === 'pix' ? payerAliasEmail : customerEmail;
+  // Alias email: Pix rejects when payer email matches the receiver's email.
+  const payerEmail = `cliente${userId.replace(/-/g, '').slice(0, 12)}@meucosechas.app`;
 
   const nameParts = (profile?.name || '').trim().split(/\s+/);
   const payerFirstName = nameParts[0] || '';
   const payerLastName = nameParts.slice(1).join(' ') || payerFirstName;
 
-  // Resolve card payment method
-  let mpPaymentMethod: string | undefined =
-    payload.paymentMethod === 'pix' ? 'pix' : payload.payment_method_id;
-  let resolvedIssuerId: string | number | undefined = payload.issuer_id;
-
-  if (payload.paymentMethod !== 'pix' && (!mpPaymentMethod || mpPaymentMethod === 'unknown')) {
-    if (profile?.mp_customer_id && payload.mp_card_id) {
-      try {
-        const cardRes = await fetch(
-          `https://api.mercadopago.com/v1/customers/${profile.mp_customer_id}/cards/${payload.mp_card_id}`,
-          { headers: { Authorization: `Bearer ${accessToken}` } },
-        );
-        const cardData = await cardRes.json();
-        const resolvedPmId = cardData?.payment_method?.id || cardData?.payment_method_id;
-        console.log('[payment] card lookup status:', cardRes.status, 'payment_method:', JSON.stringify(cardData?.payment_method));
-        if (resolvedPmId) {
-          mpPaymentMethod = resolvedPmId;
-          if (cardData.issuer?.id) resolvedIssuerId = cardData.issuer.id;
-          serviceClient
-            .from('saved_cards')
-            .update({ brand: resolvedPmId })
-            .eq('mp_card_id', payload.mp_card_id)
-            .then(() => console.log('[payment] auto-healed saved_cards brand:', resolvedPmId))
-            .catch(() => {});
-        }
-      } catch {
-        // validation below will reject if still unresolved
-      }
-    }
-  }
-
-  if (payload.paymentMethod !== 'pix') {
-    if (!payload.token) return jsonResponse({ error: 'Card token is required' }, 400);
-    if (!mpPaymentMethod || mpPaymentMethod === 'unknown') {
-      return jsonResponse({ error: 'Could not determine payment method for this card' }, 400);
-    }
-  }
-
-  // Build transaction payment_method for Orders API
-  const transactionPaymentMethod: Record<string, unknown> =
-    payload.paymentMethod === 'pix'
-      ? { id: 'pix', type: 'bank_transfer' }
-      : {
-          id: mpPaymentMethod,
-          type: payload.paymentMethod === 'debit_card' ? 'debit_card' : 'credit_card',
-          token: payload.token,
-          installments: Math.max(1, Number(payload.installments) || 1),
-        };
-
-  const mpOrderPayload: Record<string, unknown> = {
+  const mpOrderPayload = {
     type: 'online',
     external_reference: savedOrder.id,
     processing_mode: 'automatic',
-    capture_mode: 'automatic',
     total_amount: total.toFixed(2),
     payer: {
       email: payerEmail,
@@ -280,33 +242,17 @@ Deno.serve(async (req) => {
       payments: [
         {
           amount: total.toFixed(2),
-          payment_method: transactionPaymentMethod,
+          payment_method: { id: 'pix', type: 'bank_transfer' },
         },
       ],
     },
   };
-
-  // 3DS for card payments: force challenge on every transaction to shift
-  // fraud liability to the issuing bank, reducing reliance on MP's antifraud score.
-  if (payload.paymentMethod !== 'pix') {
-    mpOrderPayload.config = {
-      online: {
-        transaction_security: {
-          validation: 'always',
-          liability_shift: 'required',
-        },
-      },
-    };
-  }
 
   const mpHeaders: Record<string, string> = {
     Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
     'X-Idempotency-Key': savedOrder.id,
   };
-  if (payload.device_session_id) {
-    mpHeaders['X-meli-session-id'] = payload.device_session_id;
-  }
 
   const mpResponse = await fetch('https://api.mercadopago.com/v1/orders', {
     method: 'POST',
@@ -321,7 +267,6 @@ Deno.serve(async (req) => {
   const mpData = (mpResponse.status === 402 && mpRaw?.data) ? mpRaw.data : mpRaw;
 
   const mpStatus = String(mpData?.status || '');
-  // Prefer payment-level detail (e.g. "high_risk", "pending_challenge") over order-level ("failed")
   const mpStatusDetail = String(
     mpData?.transactions?.payments?.[0]?.status_detail || mpData?.status_detail || '',
   );
@@ -339,19 +284,7 @@ Deno.serve(async (req) => {
 
   // Extract Pix QR code — Orders API puts it in payment_method.transaction_data or point_of_interaction
   const pixPayment = mpData?.transactions?.payments?.[0];
-  const txData =
-    pixPayment?.point_of_interaction?.transaction_data ||
-    pixPayment?.payment_method?.transaction_data ||
-    {};
-  const qrCode = txData.qr_code || null;
-  const qrCodeBase64 = txData.qr_code_base64 || null;
-  const ticketUrl = txData.ticket_url || pixPayment?.ticket_url || null;
-
-  // 3DS challenge URL — present when status is action_required / pending_challenge
-  const threeDSecureUrl =
-    mpStatusDetail === 'pending_challenge'
-      ? (pixPayment?.payment_method?.transaction_security?.url || null)
-      : null;
+  const { qrCode, qrCodeBase64, ticketUrl } = getPixTransactionData(pixPayment);
 
   // Update order status immediately for synchronous rejections
   if (mpStatus === 'failed') {
@@ -397,6 +330,5 @@ Deno.serve(async (req) => {
     qr_code: qrCode,
     qr_code_base64: qrCodeBase64,
     ticket_url: ticketUrl,
-    three_d_secure_url: threeDSecureUrl,
   });
 });

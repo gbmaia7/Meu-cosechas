@@ -1,26 +1,24 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useEffect, useState } from 'react';
-import { MoreVertical, Store, ArrowRight, Bike, MapPin } from 'lucide-react';
+import { MoreVertical, Store, ArrowRight, Bike, Wallet } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { calculateDeliveryFee, calculateDeliverySubtotal } from '../lib/deliveryFee';
 
-export default function PagamentoConfirmado() {
+export default function PagamentoPresencial() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items, totalPrice, clearCart, addActiveOrder, trackActiveOrder, userPoints } = useCart();
-  
+  const { items, totalPrice, clearCart, addActiveOrder, trackActiveOrder } = useCart();
+
   const [isProcessing, setIsProcessing] = useState(false)
 
   const modality = location.state?.modality || 'counter';
   const address = location.state?.address;
-  const paymentMethod = location.state?.paymentMethod || 'pix';
+  const paymentMethod = location.state?.paymentMethod || 'cash';
   const existingOrder = location.state?.existingOrder === true;
   const orderId = location.state?.orderId;
   const pickupCode = location.state?.pickupCode || location.state?.pickup_code || null;
   const deliveryPin = location.state?.deliveryPin || location.state?.delivery_pin || null;
-  const orderDisplayCode = pickupCode || (orderId ? `#${String(orderId).slice(0, 8)}` : '-');
-  const isReward = location.state?.isReward || false;
   const couponDiscount = location.state?.couponDiscount ?? 0;
   const referrerId = location.state?.referrerId ?? null;
 
@@ -45,31 +43,37 @@ export default function PagamentoConfirmado() {
       {/* TopAppBar */}
       <header className="bg-[#fcf9f8]/70 backdrop-blur-xl fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4">
         <div className="w-10"></div> {/* Spacer for center alignment */}
-        <h1 className="font-display font-bold tracking-tight text-xl text-[#1c1b1b]">Pedido Confirmado</h1>
+        <h1 className="font-display font-bold tracking-tight text-xl text-[#1c1b1b]">Pedido Recebido</h1>
         <div className="w-10 flex justify-end">
           <MoreVertical className="w-6 h-6 text-[#5d3f3e]" />
         </div>
       </header>
-      
+
       <main className="pt-24 pb-32 px-6 max-w-lg mx-auto flex flex-col items-center">
-        {/* Success State */}
+        {/* Pending Payment State */}
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-24 h-24 bg-[#008388]/10 rounded-full flex items-center justify-center mb-6">
-            <span className="material-symbols-outlined text-[#008388] text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                check_circle
-            </span>
+          <div className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mb-6">
+            <Wallet className="w-12 h-12 text-amber-700" />
           </div>
-          <h2 className="text-[#00686c] font-display font-extrabold text-3xl mb-2 tracking-tight">Pagamento confirmado!</h2>
-          <p className="text-[#5d3f3e] font-medium">Seu pedido já está sendo preparado com ingredientes frescos.</p>
+          <h2 className="text-amber-800 font-display font-extrabold text-2xl mb-2 tracking-tight">
+            {modality === 'counter'
+              ? 'Dirija-se ao caixa, mostre seu código e realize o pagamento'
+              : 'Pedido recebido!'}
+          </h2>
+          <p className="text-[#5d3f3e] font-medium">
+            {modality === 'counter'
+              ? 'A gente comeca a preparar assim que o pagamento for confirmado.'
+              : 'Seu pedido ja esta sendo preparado. O entregador vai cobrar o pagamento na entrega.'}
+          </p>
         </div>
-        
+
         {/* Order Summary Card */}
         <div className="bg-white rounded-lg shadow-[0_-12px_40px_rgba(28,27,27,0.05)] p-6 mb-6 w-full mt-4">
           <div className="flex justify-between items-center mb-6">
             <span className="text-[#5d3f3e] text-sm font-semibold uppercase tracking-wider">Pedido</span>
-            <span className="text-[#e8173a] font-bold text-lg">{orderDisplayCode}</span>
+            <span className="text-[#e8173a] font-bold text-lg">{pickupCode || `#${String(orderId || '').slice(0, 8)}`}</span>
           </div>
-          
+
           <div className="space-y-4 mb-6">
             {orderSnapshot.map((item, i) => {
               const isRewardItem = item.name.startsWith('[CLUBE]')
@@ -90,7 +94,7 @@ export default function PagamentoConfirmado() {
               )
             })}
           </div>
-          
+
           <div className="border-t border-dashed border-[#e7bcbb]/30 pt-6 space-y-3">
             {!isAllReward && (
               <div className="flex justify-between text-sm">
@@ -113,7 +117,7 @@ export default function PagamentoConfirmado() {
               </div>
             )}
             <div className="flex justify-between items-center pt-2">
-              <span className="text-[#1c1b1b] font-bold text-lg">Total</span>
+              <span className="text-[#1c1b1b] font-bold text-lg">Total a pagar</span>
               {computedTotal === 0
                 ? <span className="text-red-600 font-display font-extrabold text-2xl">Grátis</span>
                 : <span className="text-[#e8173a] font-display font-extrabold text-2xl">R$ {computedTotal.toFixed(2).replace('.', ',')}</span>
@@ -121,7 +125,19 @@ export default function PagamentoConfirmado() {
             </div>
           </div>
         </div>
-        
+
+        {/* Payment instructions, gating message for balcao */}
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 w-full">
+          <p className="text-xs text-amber-900 font-medium leading-relaxed">
+            <span className="font-bold">
+              {modality === 'counter' ? 'Atenção: ' : 'Pagamento: '}
+            </span>
+            {modality === 'counter'
+              ? 'Seu pedido so entra em preparo depois que o pagamento for confirmado no caixa.'
+              : 'O entregador vai cobrar dinheiro ou cartao na hora da entrega.'}
+          </p>
+        </div>
+
         {/* Modality Section */}
         <div className="bg-[#f6f3f2] rounded-lg p-5 flex items-center justify-center gap-4 mb-6 w-full text-center">
           <div className="bg-white p-3 rounded-md shadow-sm flex-shrink-0">
@@ -147,26 +163,18 @@ export default function PagamentoConfirmado() {
             )}
           </div>
         </div>
-        
-        {/* Loyalty Points Badge */}
+
+        {/* Loyalty Points info — credited only after payment confirmation */}
         {validItemsCount > 0 && (
-          <div className="bg-[#FDECEA] rounded-full px-6 py-4 flex items-center justify-center gap-4 mb-10 w-full text-center">
-            <div className="w-10 h-10 bg-[#e8173a] rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-white text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                redeem
-              </span>
-            </div>
-            <div className="text-left">
-              <p className="text-[#8b1724] font-bold text-sm leading-none mb-1">
-                + {validItemsCount} ponto{validItemsCount > 1 ? 's' : ''} adicionado{validItemsCount > 1 ? 's' : ''} ao seu Clube Cosechas
-              </p>
-              <p className="text-[#8b1724]/70 text-xs font-medium">
-                Você agora tem {userPoints + validItemsCount} pontos.
-              </p>
-            </div>
+          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-3 mb-10 w-full">
+            <span className="text-blue-600 mt-0.5 shrink-0">ℹ️</span>
+            <p className="text-xs text-blue-800 font-medium leading-relaxed">
+              <span className="font-bold">Pontos do Clube:</span> Seus pontos serão
+              creditados depois que {modality === 'counter' ? 'a loja confirmar seu pagamento no caixa' : 'o entregador confirmar seu pagamento'}.
+            </p>
           </div>
         )}
-        
+
         {/* Primary CTA */}
         <button
           disabled={isProcessing}
@@ -183,7 +191,7 @@ export default function PagamentoConfirmado() {
                 modality,
                 address,
                 payment_method: paymentMethod,
-                payment_status: 'paid',
+                payment_status: 'pay_on_delivery',
                 pickup_code: pickupCode,
                 delivery_pin: deliveryPin,
               })
@@ -192,7 +200,7 @@ export default function PagamentoConfirmado() {
               await addActiveOrder({
                 items: [...orderSnapshot],
                 totalPrice: computedTotal,
-                status: 'preparing',
+                status: 'new',
                 modality,
                 address,
                 payment_method: paymentMethod,
@@ -224,7 +232,7 @@ export default function PagamentoConfirmado() {
           className="w-full bg-gradient-to-r from-[#bd002a] to-[#e8173a] text-white font-bold py-5 rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:pointer-events-none"
         >
           Acompanhar pedido
-          <span className="material-symbols-outlined text-xl">arrow_forward</span>
+          <ArrowRight className="w-5 h-5" />
         </button>
       </main>
     </div>
