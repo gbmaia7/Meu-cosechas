@@ -239,10 +239,7 @@ export default function HomeComSacola() {
             <h3 className="font-bold text-[13px] leading-tight mb-1">Indique e Ganhe</h3>
             <p className="text-[10px] text-[#5d3f3e] leading-snug mb-3 flex-grow">Indique um amigo e ganhe os dois R$5 off</p>
             <div className="mt-auto">
-              {isAuthenticated && (
-                <p className="font-extrabold text-[#00686c] mb-2 tracking-wide text-[11px]">SEUS CRÉDITOS: R$5</p>
-              )}
-              <button 
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(isAuthenticated ? '/indique-ganhe/logado' : '/indique-ganhe');
