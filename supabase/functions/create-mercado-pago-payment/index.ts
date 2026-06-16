@@ -286,12 +286,13 @@ Deno.serve(async (req) => {
     },
   };
 
-  // 3DS for card payments: triggers challenge only when MP deems risky (on_fraud_risk)
+  // 3DS for card payments: force challenge on every transaction to shift
+  // fraud liability to the issuing bank, reducing reliance on MP's antifraud score.
   if (payload.paymentMethod !== 'pix') {
     mpOrderPayload.config = {
       online: {
         transaction_security: {
-          validation: 'on_fraud_risk',
+          validation: 'always',
           liability_shift: 'required',
         },
       },
