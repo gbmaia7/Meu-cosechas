@@ -86,6 +86,7 @@ Deno.serve(async (req) => {
     order_id: orderId,
     provider_payment_id: payment.provider_payment_id,
     provider_status: mpData.status,
+    status_detail: mpData.status_detail || null,
     payment_status: mapped.payment_status,
     order_status: safeStatus,
     payment_method: payment.payment_method,

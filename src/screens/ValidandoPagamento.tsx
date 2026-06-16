@@ -7,6 +7,7 @@ export default function ValidandoPagamento() {
   const navigate = useNavigate();
   const location = useLocation();
   const [validationError, setValidationError] = useState('');
+  const [isHighRiskRejection, setIsHighRiskRejection] = useState(false);
   const [statusMessage, setStatusMessage] = useState('Por favor, aguarde enquanto processamos o seu pedido.');
 
   const modality = location.state?.modality || 'counter';
@@ -58,7 +59,12 @@ export default function ValidandoPagamento() {
       }
 
       if (data?.payment_status === 'failed') {
-        setValidationError('Pagamento recusado ou cancelado. Escolha outra forma de pagamento.');
+        if (data?.status_detail === 'cc_rejected_high_risk') {
+          setIsHighRiskRejection(true);
+          setValidationError('Cartão recusado por análise de risco. Para novos clientes, recomendamos usar o Pix no primeiro pedido — é mais rápido e sem burocracia.');
+        } else {
+          setValidationError('Pagamento recusado. Verifique os dados do cartão ou escolha outra forma de pagamento.');
+        }
         return;
       }
 
@@ -95,7 +101,7 @@ export default function ValidandoPagamento() {
           onClick={() => navigate('/pagamento', { state: { modality, address, couponDiscount, referrerId } })}
           className="mt-6 bg-[#bd002a] text-white rounded-full px-6 py-3 font-display font-bold text-sm active:scale-95 transition-transform"
         >
-          Escolher outro pagamento
+          {isHighRiskRejection ? 'Pagar com Pix' : 'Escolher outro pagamento'}
         </button>
       )}
     </div>
