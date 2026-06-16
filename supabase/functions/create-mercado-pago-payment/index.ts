@@ -286,8 +286,6 @@ Deno.serve(async (req) => {
         ...(phoneAreaCode && phoneNumber ? { phone: { area_code: phoneAreaCode, number: phoneNumber } } : {}),
         ...(profile?.created_at ? { registration_date: profile.created_at } : {}),
         is_first_purchase_online: isFirstPurchase,
-        buyer_status: 'Registered',
-        authentication_type: 'Gmail',
       },
     },
     payer: {
