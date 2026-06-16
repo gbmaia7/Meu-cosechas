@@ -89,6 +89,9 @@ Status propostos: `pending`, `claimed`, `expired`, `cancelled`.
 * Pedido aprovado pelo Mercado Pago muda para status `new`.
 * Pedido pendente de pagamento nao deve aparecer na loja/entregador.
 * Pedidos `pending_payment` expiram apos 40 minutos (pg_cron).
+* Pedidos de balcao presenciais (`modality = counter`, `status = new`,
+  `payment_status = pay_on_delivery`) expiram apos 5 minutos sem confirmacao no
+  caixa e viram `cancelled` + `payment_status = failed`.
 * Entrega usa PIN validado no backend; PIN claro nao e exposto para
   loja/entregador.
 * `provider_payment_id` em `order_payments` e o ID do pagamento no MP
@@ -114,3 +117,5 @@ Status propostos: `pending`, `claimed`, `expired`, `cancelled`.
 * 2026-06-08: adicionada proposta de modelo para eventos de compras de balcao
   via Teknisa.
 * 2026-06-08: modelo implementado localmente em migration versionada.
+* 2026-06-16: adicionada regra de expiracao de 5 minutos para pedidos de
+  balcao presenciais nao pagos.

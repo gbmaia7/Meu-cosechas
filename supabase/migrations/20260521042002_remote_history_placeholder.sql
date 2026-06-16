@@ -1,0 +1,2 @@
+-- Placeholder for a migration already recorded in the remote Supabase history.
+-- The original SQL was not present in this repository when migration history was reconciled.

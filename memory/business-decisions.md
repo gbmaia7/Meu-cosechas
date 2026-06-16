@@ -43,6 +43,17 @@ Registrar decisoes de negocio, produto e operacao.
 * Impacto no produto: telas de confirmacao usam `pickup_code` quando existir
   (ex.: `C-008`) e so usam fallback tecnico se o pedido ainda nao tiver codigo.
 
+### 2026-06-16
+
+* Decisao: pedido de balcao com pagamento presencial expira em 5 minutos se a
+  loja nao confirmar o pagamento no caixa.
+* Motivo: evitar que pedidos nao pagos fiquem ocupando o painel da loja e sejam
+  preparados por engano.
+* Impacto no produto: pedidos `counter` com `status = new` e
+  `payment_status = pay_on_delivery` viram `cancelled` +
+  `payment_status = failed` automaticamente apos 5 minutos; a acao manual
+  "Pago" so avanca se o pedido ainda estiver pendente.
+
 ## Pendencias
 
 * Necessita validacao: regra para tentativa repetida de PIN errado.

@@ -39,10 +39,12 @@ confirmar entrega. O cliente acompanha o pedido em `AcompanharPedido.tsx`.
 3. Pedidos de balcao "Presencial" aparecem em vermelho na coluna "Novo" —
    loja cobra no caixa (dinheiro ou cartao) e clica "Pago" (credita pontos e
    avanca direto para "Em preparo").
-4. Demais pedidos: loja aceita/prepara normalmente.
-5. Loja marca pedido como pronto.
-6. Para delivery, loja marca como saiu para entrega.
-7. Loja nao conclui entrega em rota.
+4. Se a loja nao confirmar o pagamento no caixa em ate 5 minutos, o pedido de
+   balcao presencial e cancelado automaticamente e passa para "Cancelado".
+5. Demais pedidos: loja aceita/prepara normalmente.
+6. Loja marca pedido como pronto.
+7. Para delivery, loja marca como saiu para entrega.
+8. Loja nao conclui entrega em rota.
 
 ### Entregador
 
@@ -74,3 +76,5 @@ confirmar entrega. O cliente acompanha o pedido em `AcompanharPedido.tsx`.
 * 2026-06-16: identificadas telas `PagamentoVR.tsx`/`PagamentoConfirmadoVR.tsx`
   (rotas `/pagamento/vr`, `/pagamento-confirmado-vr`) como codigo morto — nada
   navega para elas. Nao removidas nesta tarefa; avaliar remocao depois.
+* 2026-06-16: pedido de balcao presencial nao confirmado no caixa expira em 5
+  minutos e vira `cancelled`.

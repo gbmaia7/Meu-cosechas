@@ -172,3 +172,33 @@ Registrar pendencias operacionais, tecnicas e de produto.
 * Contexto: auditoria encontrou `loja123456` em scripts SQL de seed/criacao de
   usuario. Isso e aceitavel para demo/local, mas perigoso em producao.
 * Status: aberto.
+
+### Expiracao de pedidos presenciais de balcao
+
+* Pendencia: cancelar automaticamente pedidos de balcao com pagamento no caixa
+  nao confirmado.
+* Prioridade: alta.
+* Contexto: pedidos presenciais de balcao aparecem no painel da loja como
+  `new` + `payment_status = pay_on_delivery`; sem expiracao, pedidos nao pagos
+  podem permanecer visiveis e serem preparados por engano.
+* Status: **concluido em 2026-06-16**. Definido prazo de 5 minutos; migration
+  `20260616120000_expire_counter_pay_on_delivery_orders.sql` agenda o cron
+  `expire-counter-pay-on-delivery-orders` a cada minuto para marcar esses
+  pedidos como `cancelled` + `payment_status = failed`, com `cancelled_at` e
+  motivo operacional. Migration aplicada no Supabase remoto em 2026-06-16 apos
+  reconciliacao do historico de migrations.
+
+### Drift de migrations Supabase
+
+* Pendencia: reconciliar historico remoto/local de migrations para permitir
+  `supabase db push` seguro.
+* Prioridade: alta.
+* Contexto: o remoto tinha migrations registradas que nao existiam localmente, e
+  o local tinha migrations antigas ja refletidas no banco, mas sem registro
+  remoto pelo mesmo timestamp. Isso bloqueava `supabase db push`.
+* Status: **concluido em 2026-06-16**. Criados placeholders locais para as
+  migrations ja registradas no remoto; executado `supabase migration repair
+  --status applied` apenas para migrations locais antigas ja consideradas
+  aplicadas; `supabase db push --linked --dry-run` passou a mostrar somente a
+  migration nova de expiracao presencial e, apos o push, retornou `Remote
+  database is up to date`.

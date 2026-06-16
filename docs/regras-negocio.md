@@ -45,6 +45,9 @@ tratada como "Necessita validacao".
 * Balcao com dinheiro/maquininha: pedido entra como `new` +
   `pay_on_delivery`; loja so credita pontos e avanca para `preparing` depois
   que o operador clicar "Pago" (apos cobrar no caixa).
+* Balcao com pagamento presencial expira em 5 minutos se a loja nao confirmar
+  o pagamento no caixa; o pedido vira `cancelled` + `payment_status = failed`
+  com motivo operacional.
 * Entrega com dinheiro/maquininha: pedido segue preparo normalmente; pontos
   so sao creditados quando o entregador confirma com o PIN de seguranca.
 
@@ -66,6 +69,10 @@ tratada como "Necessita validacao".
 * Pedidos em `pending_payment` ha mais de 40 minutos sao marcados como `expired` + `payment_status = failed`.
 * Job pg_cron `expire-pending-payment-orders` roda a cada 5 minutos.
 * Se webhook do Mercado Pago chegar apos expiracao, o pedido pode ser aprovado (MP e fonte de verdade).
+* Pedidos de balcao com `status = new`, `modality = counter` e
+  `payment_status = pay_on_delivery` ha mais de 5 minutos sao marcados como
+  `cancelled` + `payment_status = failed` pelo job
+  `expire-counter-pay-on-delivery-orders`, que roda a cada minuto.
 
 ## Pendencias
 
@@ -87,3 +94,5 @@ tratada como "Necessita validacao".
   exigir confirmacao manual ("Pago") antes de creditar pontos e preparar.
 * 2026-06-16: unificada a escolha dinheiro/maquininha em uma opcao
   "Presencial" no app.
+* 2026-06-16: definido prazo de 5 minutos para expirar pedido de balcao com
+  pagamento presencial nao confirmado no caixa.

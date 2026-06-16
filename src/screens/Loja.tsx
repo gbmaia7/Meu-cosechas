@@ -490,13 +490,19 @@ export default function Loja() {
     setStatusError('');
 
     const timestamp = new Date().toISOString();
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('orders')
       .update({ status: 'preparing', payment_status: 'paid', accepted_at: timestamp, prepared_at: timestamp })
-      .eq('id', order.id);
+      .eq('id', order.id)
+      .eq('status', 'new')
+      .eq('modality', 'counter')
+      .eq('payment_status', 'pay_on_delivery')
+      .select('id')
+      .maybeSingle();
 
-    if (error) {
-      setStatusError('Nao foi possivel confirmar o pagamento.');
+    if (error || !data) {
+      setStatusError('Nao foi possivel confirmar o pagamento. O pedido pode ter expirado.');
+      await loadOrders();
       return;
     }
 
