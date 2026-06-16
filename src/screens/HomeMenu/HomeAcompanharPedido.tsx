@@ -19,7 +19,8 @@ import {
   ChevronRight
 , Crown} from 'lucide-react';
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 import { 
   PRODUCTS, 
   CATEGORY_COLORS, 
@@ -48,6 +49,24 @@ export default function HomeAcompanharPedido() {
   const [selectedCategory, setSelectedCategory] = useState('Mais pedidos');
   const [manualAvailability, setManualAvailability] = useState<'AUTO' | 'AVAILABLE' | 'UNAVAILABLE'>('AUTO');
   const [manualDay, setManualDay] = useState<number>(new Date().getDay());
+  const [creditBalance, setCreditBalance] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from('credits')
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('is_used', false)
+        .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
+        .then(({ data }) => {
+          const total = (data ?? []).reduce((sum, r) => sum + Number(r.amount), 0);
+          setCreditBalance(total);
+        });
+    });
+  }, [isAuthenticated]);
 
   const agora = new Date();
   const diaSemana = agora.getDay(); // 0=Dom, 1=Seg... 6=Sab
@@ -227,6 +246,11 @@ export default function HomeAcompanharPedido() {
             <h3 className="font-bold text-[13px] leading-tight mb-1">Indique e Ganhe</h3>
             <p className="text-[10px] text-[#5d3f3e] leading-snug mb-3 flex-grow">Indique um amigo e ganhe os dois R$5 off</p>
             <div className="mt-auto">
+              {isAuthenticated && (
+                <p className="font-extrabold text-[#00686c] mb-2 tracking-wide text-[11px]">
+                  SEUS CRÉDITOS: R${creditBalance.toFixed(2).replace('.', ',')}
+                </p>
+              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
