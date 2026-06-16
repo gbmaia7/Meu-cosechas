@@ -38,6 +38,46 @@ Registrar bugs recorrentes, causa provavel, prevencao e status.
 * Prevencao: NUNCA colocar `security.js` em `index.html`. Sempre incluir `view`,
   `output` E `public_key` ao carregar dinamicamente.
 * Status: corrigido em 2026-06-14. Confirmado funcionando em producao.
+* Observacao: fluxo de cartao online foi removido em 2026-06-16; manter este
+  registro apenas como historico para evitar reintroduzir Secure Fields sem
+  revisao completa.
+
+### Pix Orders API sem QR na tela
+
+* Bug: tela `/pagamento/pix` abria sem QR Code e sem codigo Pix copia-e-cola.
+* Local: `supabase/functions/create-mercado-pago-payment/index.ts`,
+  `supabase/functions/get-mercado-pago-payment/index.ts`,
+  `src/screens/PagamentoPix.tsx`.
+* Causa: a Orders API retornou `qr_code`, `qr_code_base64` e `ticket_url`
+  diretamente em `transactions.payments[0].payment_method`, mas o backend
+  procurava apenas em `payment_method.transaction_data` ou
+  `point_of_interaction.transaction_data`.
+* Prevencao: sempre testar a resposta real salva em `order_payments.raw_response`
+  ao alterar payload Mercado Pago; manter extracao tolerante para os caminhos
+  conhecidos.
+* Status: corrigido em 2026-06-16.
+
+### Pix Orders API rejeitando `bank_transfer`
+
+* Bug: Mercado Pago retornava `property_value` dizendo que
+  `payment_method.type = 'bank_transfer'` era invalido.
+* Local: `supabase/functions/create-mercado-pago-payment/index.ts`.
+* Causa: payload Pix enviava `capture_mode: 'automatic'`, campo de cartao que
+  fazia o validador da Orders API cair em schema de cartao.
+* Prevencao: payload Pix nao deve enviar `capture_mode`; esse campo pertence ao
+  fluxo de cartao.
+* Status: corrigido e Edge Function deployada em 2026-06-16.
+
+### Codigo falso na confirmacao do pedido
+
+* Bug: tela `pagamento-confirmado` exibia `#82931`, divergindo do codigo visto
+  pela loja/acompanhamento, como `C-008`.
+* Local: `src/screens/PagamentoConfirmado.tsx`, `src/screens/AcompanharPedido.tsx`,
+  `src/screens/PagamentoConfirmadoVR.tsx`.
+* Causa: codigo hardcoded de preview permaneceu em telas de producao.
+* Prevencao: telas de pedido devem exibir `pickup_code`/codigo operacional
+  quando existir; buscar por numeros fixos antes de release.
+* Status: corrigido em 2026-06-16.
 
 ## Pendencias
 

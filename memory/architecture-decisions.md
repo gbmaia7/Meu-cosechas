@@ -50,6 +50,33 @@ Registrar decisoes tecnicas relevantes para evitar redescoberta e inconsistencia
 * Impacto: configurar Vonage como phone provider no Supabase Dashboard (sem alteracao de codigo — frontend continua usando `supabase.auth.signInWithOtp`).
 * Arquivos afetados: configuracao no Supabase Dashboard (Authentication > Phone Provider).
 
+### 2026-06-16
+
+* Decisao: remover cartao online do fluxo digital e manter Pix automatico via
+  Mercado Pago Orders API.
+* Motivo: reduzir custo tecnico recorrente de Secure Fields, 3DS, antifraude e
+  cartoes salvos; cartao passa a ser resolvido operacionalmente na maquininha.
+* Impacto: `Pagamento.tsx` oferece Pix ou pagamento presencial; cartao/dinheiro
+  usam `payment_method = 'cash'` e `payment_status = 'pay_on_delivery'`;
+  `PagamentoPresencial.tsx` virou a tela dedicada para pagamento no caixa ou na
+  entrega; rotas/telas/funcoes de cartao salvo foram removidas.
+* Arquivos afetados: `src/screens/Pagamento.tsx`,
+  `src/screens/PagamentoPresencial.tsx`, `src/routes/index.tsx`,
+  `supabase/functions/create-mercado-pago-payment/index.ts`.
+
+### 2026-06-16
+
+* Decisao: Pix na Orders API deve usar fetch raw e extrair QR diretamente de
+  `transactions.payments[0].payment_method` quando presente.
+* Motivo: a resposta real do Mercado Pago pode retornar `qr_code`,
+  `qr_code_base64` e `ticket_url` diretamente em `payment_method`, nao apenas em
+  `transaction_data`.
+* Impacto: `create-mercado-pago-payment` salva QR no momento da criacao;
+  `get-mercado-pago-payment` tambem recupera/salva QR para pedidos ja criados.
+* Arquivos afetados: `supabase/functions/create-mercado-pago-payment/index.ts`,
+  `supabase/functions/get-mercado-pago-payment/index.ts`,
+  `src/screens/PagamentoPix.tsx`.
+
 ## Pendencias
 
 * A definir: padrao oficial de migrations. (resolvido em 2026-06-04 — ver docs/database.md)

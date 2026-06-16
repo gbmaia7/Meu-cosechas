@@ -25,6 +25,7 @@ import PagamentoConfirmadoVR from '../screens/PagamentoConfirmadoVR';
 import AcompanharPedido from '../screens/AcompanharPedido';
 import Loja from '../screens/Loja';
 import Entregador from '../screens/Entregador';
+import ProtectedRoleRoute from './ProtectedRoleRoute';
 
 
 export function AppRoutes() {
@@ -56,8 +57,22 @@ export function AppRoutes() {
       <Route path="/pagamento-presencial" element={<PagamentoPresencial />} />
       <Route path="/pagamento-confirmado-vr" element={<PagamentoConfirmadoVR />} />
       <Route path="/acompanhar-pedido" element={<AcompanharPedido />} />
-      <Route path="/loja" element={<Loja />} />
-      <Route path="/entregador" element={<Entregador />} />
+      <Route
+        path="/loja"
+        element={
+          <ProtectedRoleRoute allowedRoles={['store', 'admin']}>
+            <Loja />
+          </ProtectedRoleRoute>
+        }
+      />
+      <Route
+        path="/entregador"
+        element={
+          <ProtectedRoleRoute allowedRoles={['delivery', 'store', 'admin']}>
+            <Entregador />
+          </ProtectedRoleRoute>
+        }
+      />
     </Routes>
   );
 }

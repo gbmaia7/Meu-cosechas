@@ -19,7 +19,10 @@ Registrar pendencias operacionais, tecnicas e de produto.
 * Contexto: gateway oficial definido como Mercado Pago Checkout Transparente; InfinitePay nao sera usado.
 * Responsavel: A definir.
 * Proximo passo: configurar `VITE_MERCADO_PAGO_PUBLIC_KEY`, `MERCADO_PAGO_ACCESS_TOKEN` e webhook no painel Mercado Pago.
-* Status: aberto.
+* Status: **obsoleto/parcialmente concluido em 2026-06-16**. Cartao online foi
+  removido; `VITE_MERCADO_PAGO_PUBLIC_KEY` nao e mais requisito do frontend.
+  Pendencia remanescente: validar webhook Mercado Pago e credenciais de
+  producao para Pix Orders API.
 
 ### Validacao de assinatura do webhook — MERCADO_PAGO_WEBHOOK_SECRET
 
@@ -94,3 +97,78 @@ Registrar pendencias operacionais, tecnicas e de produto.
   * O documento externo deve conter: objetivo, URL real de producao,
     headers obrigatorios, algoritmo HMAC, exemplos curl, payloads finais,
     respostas esperadas, tabela de erros e checklist de homologacao.
+
+### Go-live Pix Orders API
+
+* Pendencia: executar teste end-to-end de producao controlado apos deploy final
+  do frontend.
+* Prioridade: alta.
+* Contexto: `create-mercado-pago-payment` e `get-mercado-pago-payment` foram
+  deployadas em 2026-06-16; o frontend foi enviado para `main` no commit
+  `4a20ad7`.
+* Checklist minimo:
+  1. Criar pedido Pix real de baixo valor.
+  2. Confirmar QR Code e copia-e-cola em `/pagamento/pix`.
+  3. Pagar ou simular confirmacao e validar webhook/polling.
+  4. Confirmar que loja ve o pedido apenas apos `payment_status = paid`.
+  5. Confirmar que `pagamento-confirmado`, loja e acompanhamento mostram o
+     mesmo `pickup_code`.
+* Status: aberto.
+
+### Documentos legados de cartao online
+
+* Pendencia: atualizar docs/playbooks que ainda citam Secure Fields, cartao
+  online, `VITE_MERCADO_PAGO_PUBLIC_KEY` como obrigatoria e funcoes `save-card`.
+* Prioridade: media.
+* Contexto: `docs/pagamentos-mercado-pago.md` foi atualizado, mas auditoria de
+  2026-06-16 encontrou referencias antigas em `docs/security.md`,
+  `docs/deployment.md`, `docs/testing.md`, `docs/environments.md` e
+  `playbooks/release-checklist.md`.
+* Status: aberto.
+
+### Route guards de operacao
+
+* Pendencia: adicionar/validar protecao frontend para `/loja` e `/entregador`.
+* Prioridade: alta.
+* Contexto: RLS/RPC protegem dados sensiveis no backend, mas as rotas continuam
+  registradas diretamente no frontend. A propria documentacao marca route
+  guards como pendencia.
+* Status: **concluido em 2026-06-16**. Criado `ProtectedRoleRoute`; `/loja`
+  aceita `store`/`admin`, `/entregador` aceita `delivery`/`store`/`admin`.
+  Usuarios sem sessao ainda veem o login interno das telas; usuarios logados
+  com role errada sao bloqueados antes da tela operacional. RLS/RPC seguem como
+  camada de seguranca real.
+
+### Observabilidade de pagamentos
+
+* Pendencia: definir rotina operacional para checar falhas de Edge Functions,
+  webhooks nao processados e pagamentos pendentes/expirados.
+* Prioridade: alta.
+* Contexto: Pix depende de Orders API + webhook/polling. Sem painel/rotina,
+  falhas podem virar pedidos parados em `pending_payment`.
+* Status: aberto.
+
+### Dependencias com vulnerabilidades conhecidas
+
+* Pendencia: revisar e aplicar atualizacoes de dependencias apos teste de
+  regressao.
+* Prioridade: alta.
+* Contexto: `npm audit --omit=dev` em 2026-06-16 retornou 10 vulnerabilidades
+  (7 high), incluindo `vite`/`esbuild`, `react-router`, `protobufjs`, `ws`,
+  `express`/`qs` e `@babel/core`. `npm audit fix` existe, mas pode alterar
+  dependencias centrais e deve ser validado separadamente.
+* Status: **concluido em 2026-06-16**. Executado `npm audit fix` e, para
+  remover as vulnerabilidades restantes de `vite`/`esbuild`, `npm audit fix
+  --force`. O projeto passou em `npm run lint`, `npm run build` e `npm audit
+  --omit=dev` retornou 0 vulnerabilidades. Atencao operacional: `vite@8.0.16`
+  exige Node `^20.19.0 || >=22.12.0`; validar que o ambiente de deploy usa uma
+  versao compativel.
+
+### Scripts demo com credenciais fixas
+
+* Pendencia: garantir que scripts demo/criacao de usuario de loja nao sejam
+  executados em producao com senha padrao.
+* Prioridade: media.
+* Contexto: auditoria encontrou `loja123456` em scripts SQL de seed/criacao de
+  usuario. Isso e aceitavel para demo/local, mas perigoso em producao.
+* Status: aberto.

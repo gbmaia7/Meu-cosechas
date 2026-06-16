@@ -25,6 +25,24 @@ Registrar decisoes de negocio, produto e operacao.
 * Impacto no produto: se o telefone ja estiver verificado, pontos entram na
   hora; se nao estiver, ficam pendentes por prazo limitado ate verificacao.
 
+### 2026-06-16
+
+* Decisao: no app, pagamento digital fica restrito a Pix; cartao, dinheiro e VR
+  sao pagamentos presenciais.
+* Motivo: simplificar operacao e reduzir risco/custo tecnico de pagamento de
+  cartao online para um negocio de pequeno porte.
+* Impacto no produto: clientes escolhem Pix no app ou "Pagar no caixa/na
+  entrega"; loja confirma pagamento presencial no balcao pelo botao "Pago"; no
+  delivery, o entregador cobra e confirma a entrega com PIN.
+
+### 2026-06-16
+
+* Decisao: codigo exibido ao cliente deve ser o mesmo codigo operacional visto
+  pela loja e no acompanhamento do pedido.
+* Motivo: evitar divergencia entre tela de confirmacao, loja e atendimento.
+* Impacto no produto: telas de confirmacao usam `pickup_code` quando existir
+  (ex.: `C-008`) e so usam fallback tecnico se o pedido ainda nao tiver codigo.
+
 ## Pendencias
 
 * Necessita validacao: regra para tentativa repetida de PIN errado.
