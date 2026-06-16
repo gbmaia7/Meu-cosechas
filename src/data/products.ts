@@ -28,7 +28,7 @@ export interface Product {
   }[];
   extras?: Extra[];
   glutenWarning?: boolean;
-  baseOptions?: { label: string }[];
+  baseOptions?: { label: string; price?: number }[];
 }
 
 export type CategoryKey = 
@@ -77,7 +77,7 @@ export const EXTRA_MILKSHAKE: Extra[] = [
   { id: 'extra-sorvete', name: 'Sorvete', description: 'Super cremoso', price: 3.00, icon: 'icecream' },
   { id: 'extra-aveia', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
   { id: 'extra-whey', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
-  { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
+  { id: 'extra-colageno', name: 'Colágeno', description: 'Melhora pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
@@ -85,7 +85,7 @@ export const EXTRA_FITNESS: Extra[] = [
   { id: 'extra-aveia-fit', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
   { id: 'extra-mel-fit', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
   { id: 'extra-whey', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
-  { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
+  { id: 'extra-colageno', name: 'Colágeno', description: 'Melhora pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
@@ -93,7 +93,7 @@ export const FUNCIONAL_EXTRAS: Extra[] = [
   { id: 'extra-aveia-f', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
   { id: 'extra-mel-f', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
   { id: 'extra-whey-f', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
-  { id: 'extra-colageno-f', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
+  { id: 'extra-colageno-f', name: 'Colágeno', description: 'Melhora pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina-f', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
@@ -224,7 +224,7 @@ export const COMECE_BEM: Product[] = [
 export const EXTRA_CARIBE: Extra[] = [
   { id: 'extra-aveia-caribe', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
   { id: 'extra-mel-caribe', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
-  { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
+  { id: 'extra-colageno', name: 'Colágeno', description: 'Melhora pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
@@ -293,7 +293,7 @@ export const EXTRA_MIX_FRUTAS: Extra[] = [
   { id: 'extra-cha-verde', name: 'Chá Verde', description: 'Mais energia e antioxidante', price: 3.00, icon: 'leaf' },
   { id: 'extra-suco-laranja', name: 'Suco de Laranja', description: 'Vitamina C extra', price: 3.00, icon: 'citrus' },
   { id: 'extra-whey', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
-  { id: 'extra-colageno', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
+  { id: 'extra-colageno', name: 'Colágeno', description: 'Melhora pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
@@ -301,7 +301,7 @@ export const EXTRA_ESPECIAIS: Extra[] = [
   { id: 'extra-aveia-e', name: 'Aveia', description: 'Fibra natural', price: 3.00, icon: 'grain', glutenFree: false },
   { id: 'extra-mel-e', name: 'Mel de Abelha', description: 'Adoçante natural', price: 3.00, icon: 'health_and_safety' },
   { id: 'extra-whey-e', name: 'Whey Protein', description: 'Mais músculo e saciedade', price: 6.00, icon: 'bolt' },
-  { id: 'extra-colageno-e', name: 'Colágeno', description: 'Pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
+  { id: 'extra-colageno-e', name: 'Colágeno', description: 'Melhora pele, cabelo e articulações', price: 5.00, icon: 'local_florist' },
   { id: 'extra-creatina-e', name: 'Creatina', description: 'Mais energia e desempenho', price: 5.00, icon: 'sync_alt' },
 ];
 
@@ -530,15 +530,20 @@ export const PRODUCTS: Product[] = [
   ...PROMOCAO_SEU_COSECHAS,
   {
     id: '1',
-    name: 'Colibri Roxo com Iogurte',
+    name: 'Colibri Roxo',
     category: 'Premium',
-    description: 'Amora, blueberry, morango e cranberry batidos com iogurte.',
+    description: 'Amora, blueberry, morango e cranberry.',
     priceDisplay: 'a partir de R$ 21,50',
     points: 1,
     image: 'https://i.imgur.com/snuE7CH.png',
     sizes: [
       { label: 'M', price: 21.50, volume: '500ml' },
       { label: 'G', price: 23.50, volume: '700ml' },
+    ],
+    baseOptions: [
+      { label: 'Iogurte' },
+      { label: 'Sorvete' },
+      { label: 'Iogurte Grego', price: 5.00 },
     ],
     extras: EXTRA_FITNESS
   },
@@ -692,9 +697,9 @@ export const PRODUCTS: Product[] = [
   },
   {
     id: '14',
-    name: 'Berrynana com Iogurte',
+    name: 'Berrynana',
     category: 'Premium',
-    description: 'Morango, banana e amora batidos com iogurte.',
+    description: 'Morango, banana e amora.',
     priceDisplay: 'a partir de R$ 21,50',
     points: 1,
     image: 'https://i.imgur.com/vx5gjRR.png',
@@ -702,13 +707,18 @@ export const PRODUCTS: Product[] = [
       { label: 'M', price: 21.50, volume: '500ml' },
       { label: 'G', price: 23.50, volume: '700ml' },
     ],
+    baseOptions: [
+      { label: 'Iogurte' },
+      { label: 'Sorvete' },
+      { label: 'Iogurte Grego', price: 5.00 },
+    ],
     extras: EXTRA_FITNESS
   },
   {
     id: '15',
-    name: 'Borboleta Laranja com Iogurte',
+    name: 'Borboleta Laranja',
     category: 'Premium',
-    description: 'Laranja, manga e pêssego batidos com iogurte.',
+    description: 'Laranja, manga e pêssego.',
     priceDisplay: 'a partir de R$ 21,50',
     points: 1,
     image: 'https://i.imgur.com/22fcwYg.png',
@@ -716,33 +726,9 @@ export const PRODUCTS: Product[] = [
       { label: 'M', price: 21.50, volume: '500ml' },
       { label: 'G', price: 23.50, volume: '700ml' },
     ],
-    extras: EXTRA_FITNESS
-  },
-  {
-    id: '16',
-    name: 'Colibri Roxo com Sorvete',
-    category: 'Premium',
-    description: 'Amora, blueberry, morango e cranberry batidos com sorvete.',
-    priceDisplay: 'a partir de R$ 21,50',
-    points: 1,
-    image: 'https://i.imgur.com/snuE7CH.png',
-    sizes: [
-      { label: 'M', price: 21.50, volume: '500ml' },
-      { label: 'G', price: 23.50, volume: '700ml' },
-    ],
-    extras: EXTRA_FITNESS
-  },
-  {
-    id: '17',
-    name: 'Berrynana com Sorvete',
-    category: 'Premium',
-    description: 'Morango, banana e amora batidos com sorvete.',
-    priceDisplay: 'a partir de R$ 21,50',
-    points: 1,
-    image: 'https://i.imgur.com/vx5gjRR.png',
-    sizes: [
-      { label: 'M', price: 21.50, volume: '500ml' },
-      { label: 'G', price: 23.50, volume: '700ml' },
+    baseOptions: [
+      { label: 'Iogurte' },
+      { label: 'Iogurte Grego', price: 5.00 },
     ],
     extras: EXTRA_FITNESS
   },

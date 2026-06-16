@@ -394,42 +394,10 @@ export default function HomeAcompanharPedido() {
 
           {/* Premium Section */}
           {selectedCategory === 'Premium' && (
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-1 bg-purple-500 rounded-full" />
-                  <h4 className="font-black text-xs uppercase tracking-widest text-purple-600">Iogurte</h4>
-                </div>
-                <div className="space-y-4">
-                  {PRODUCTS.filter(p => p.category === 'Premium' && p.name.toLowerCase().includes('iogurte')).map(prod => (
-                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-1 bg-purple-500 rounded-full" />
-                  <h4 className="font-black text-xs uppercase tracking-widest text-purple-600">Sorvete</h4>
-                </div>
-                <div className="space-y-4">
-                  {PRODUCTS.filter(p => p.category === 'Premium' && p.name.toLowerCase().includes('sorvete')).map(prod => (
-                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-4 w-1 bg-blue-400 rounded-full" />
-                  <h4 className="font-black text-xs uppercase tracking-widest text-blue-500">Água</h4>
-                </div>
-                <div className="space-y-4">
-                  {PRODUCTS.filter(p => p.category === 'Premium' && !p.name.toLowerCase().includes('iogurte') && !p.name.toLowerCase().includes('sorvete')).map(prod => (
-                    <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
-                  ))}
-                </div>
-              </div>
+            <div className="space-y-4">
+              {PRODUCTS.filter(p => p.category === 'Premium').map(prod => (
+                <ProductCard key={prod.id} prod={prod} onImageClick={handleImageClick} onPlusClick={handlePlusClick} />
+              ))}
             </div>
           )}
 

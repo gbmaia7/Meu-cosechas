@@ -63,17 +63,22 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
       : parseFloat(product.priceDisplay.replace(/[^\d,]/g, '').replace(',', '.'));
   }, [product, selectedSizeIndex]);
 
+  const selectedBasePrice = useMemo(() => {
+    if (!product?.baseOptions || !selectedBase) return 0;
+    return product.baseOptions.find(o => o.label === selectedBase)?.price ?? 0;
+  }, [product, selectedBase]);
+
   const baseUnitPrice = useMemo(() => {
     if (!product) return 0;
     const basePrice = isReward ? 0 : originalProductPrice;
     const extrasPrice = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
-    return Math.max(0, basePrice + extrasPrice - discountAmount);
-  }, [product, isReward, originalProductPrice, selectedExtras, discountAmount]);
+    return Math.max(0, basePrice + extrasPrice + selectedBasePrice - discountAmount);
+  }, [product, isReward, originalProductPrice, selectedExtras, selectedBasePrice, discountAmount]);
 
   const originalTotalPrice = useMemo(() => {
     const extrasPrice = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
-    return originalProductPrice + extrasPrice;
-  }, [originalProductPrice, selectedExtras]);
+    return originalProductPrice + extrasPrice + selectedBasePrice;
+  }, [originalProductPrice, selectedExtras, selectedBasePrice]);
 
   const totalPrice = useMemo(() => baseUnitPrice, [baseUnitPrice]);
 
@@ -253,7 +258,11 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
             {product.baseOptions && product.baseOptions.length > 0 && (
               <section className="space-y-3">
                 <h3 className="text-xs font-bold text-[#1c1b1b]">
-                  {product.id === 'salada-2' ? 'Escolhe seu acompanhamento (obrigatório):' : 'Escolha sua base (obrigatório):'}
+                  {product.id === 'salada-2'
+                    ? 'Escolhe seu acompanhamento (obrigatório):'
+                    : product.baseOptions?.some(o => o.label === 'Iogurte' || o.label === 'Sorvete')
+                      ? 'Batido com (obrigatório):'
+                      : 'Escolha sua base (obrigatório):'}
                 </h3>
                 <div className="flex gap-3">
                   {product.baseOptions.map((option) => (
@@ -266,12 +275,19 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
                           : 'border-[#e5e2e1] bg-white text-[#5d3f3e]'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
                         selectedBase === option.label ? 'border-[#bd002a]' : 'border-[#e5e2e1]'
                       }`}>
                         {selectedBase === option.label && <div className="w-2.5 h-2.5 rounded-full bg-[#bd002a]" />}
                       </div>
-                      <span className="font-bold text-sm">{option.label}</span>
+                      <div className="flex flex-col items-start">
+                        <span className="font-bold text-sm">{option.label}</span>
+                        {option.price ? (
+                          <span className="text-[10px] font-semibold text-[#008388]">
+                            +{option.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        ) : null}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -280,28 +296,98 @@ export default function ProductBottomSheet({ product, onClose, onAdd, isReward, 
 
             {/* Extras Section */}
             {product.extras && product.extras.length > 0 && (() => {
+              const FEATURED = ['Mel de Abelha', 'Whey Protein'];
               const extrasOrder = [
-                'Iogurte', 'Iogurte Natural', 'Iogurte Natural extra', 
-                'Sorvete', 'Sorvete extra', 
-                'Granola', 'Aveia', 'Mel de Abelha', 
+                'Iogurte', 'Iogurte Natural', 'Iogurte Natural extra',
+                'Sorvete', 'Sorvete extra',
+                'Granola', 'Aveia', 'Mel de Abelha',
                 'Leite Desnatado', 'Leite de Soja'
               ];
               const fitOrder = ['Whey Protein', 'Colágeno', 'Creatina'];
 
+              const featuredGroup = product.extras.filter(e => FEATURED.includes(e.name));
+
               const extrasGroup = product.extras
-                .filter(e => extrasOrder.includes(e.name))
+                .filter(e => extrasOrder.includes(e.name) && !FEATURED.includes(e.name))
                 .sort((a, b) => extrasOrder.indexOf(a.name) - extrasOrder.indexOf(b.name));
 
               const fitGroup = product.extras
-                .filter(e => fitOrder.includes(e.name))
+                .filter(e => fitOrder.includes(e.name) && !FEATURED.includes(e.name))
                 .sort((a, b) => fitOrder.indexOf(a.name) - fitOrder.indexOf(b.name));
 
-              if (extrasGroup.length === 0 && fitGroup.length === 0) return null;
+              if (featuredGroup.length === 0 && extrasGroup.length === 0 && fitGroup.length === 0) return null;
 
               return (
                 <section className="space-y-6">
                   <h2 className="font-display font-bold text-[#1c1b1b] text-base">Turbine seu pedido 💪</h2>
-                  
+
+                  {featuredGroup.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                        <h3 className="text-sm font-bold text-amber-600 uppercase tracking-wider">Mais pedidos</h3>
+                      </div>
+                      <div className="flex gap-4 overflow-x-auto pb-2 -mx-6 px-6 no-scrollbar">
+                        {featuredGroup.map((extra) => {
+                          const isSelected = selectedExtras.some(e => e.id === extra.id);
+                          return (
+                            <div
+                              key={extra.id}
+                              className="relative min-w-[160px] bg-amber-50 rounded-2xl p-4 border border-amber-200 shadow-sm flex flex-col justify-between"
+                            >
+                              <div className="absolute top-2 right-2">
+                                <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                              </div>
+                              <div className="flex flex-col items-center">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${
+                                  extra.icon === 'bolt' ? 'bg-yellow-100 text-yellow-600' :
+                                  extra.icon === 'local_florist' ? 'bg-pink-100 text-pink-600' :
+                                  extra.icon === 'sync_alt' ? 'bg-blue-100 text-blue-600' :
+                                  extra.icon === 'health_and_safety' ? 'bg-red-100 text-red-600' :
+                                  extra.icon === 'nutrition' ? 'bg-green-100 text-green-600' :
+                                  extra.icon === 'grain' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-amber-100 text-amber-700'
+                                }`}>
+                                  <ExtraIcon iconName={extra.icon} />
+                                </div>
+                                <h4 className="text-sm font-bold text-[#1c1b1b] text-center">{extra.name}</h4>
+                                <p className="text-[10px] text-[#5d3f3e] mt-1 leading-tight text-center">{extra.description}</p>
+                              </div>
+                              <div className="mt-4 flex flex-col items-center">
+                                <p className="text-sm font-bold text-[#1c1b1b] text-center">
+                                  {extra.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                </p>
+                                {extra.glutenFree === false && (
+                                  <span className="text-[9px] text-[#5d3f3e]/60 font-normal mt-0.5 mb-2">
+                                    contém glúten
+                                  </span>
+                                )}
+                                <button
+                                  onClick={() => toggleExtra(extra)}
+                                  className={`w-full py-2 rounded-full text-[10px] font-bold transition-all flex items-center justify-center gap-1 border ${
+                                    isSelected
+                                      ? 'bg-green-50 text-green-600 border-green-200'
+                                      : 'mt-2 border-amber-500 text-amber-600 hover:bg-amber-50'
+                                  }`}
+                                >
+                                  {isSelected ? (
+                                    <><Check className="w-3 h-3" /> ✓ Adicionado</>
+                                  ) : (
+                                    '+ Adicionar'
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {featuredGroup.length > 0 && (extrasGroup.length > 0 || fitGroup.length > 0) && (
+                    <div className="border-t border-[#f0eded]" />
+                  )}
+
                   {extrasGroup.length > 0 && (
                     <div className="space-y-4">
                       <h3 className="text-sm font-bold text-[#5d3f3e] uppercase tracking-wider">Extras</h3>
