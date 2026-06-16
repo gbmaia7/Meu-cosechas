@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus, AlertCircle, Crown, CupSoda, Utensils, User, UserPlus } from 'lucide-react';
+import { ArrowLeft, X, Minus, Plus, Edit, Trash2, Store, Bike, ArrowUp, ArrowRight, Tag, ShoppingBag, Check, Zap, Flower2, Activity, Apple, Wheat, Heart, PlusCircle, MapPin, Leaf, Citrus, AlertCircle, Crown, CupSoda, Utensils, User, UserPlus, Star, IceCream, Milk } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
@@ -34,9 +34,20 @@ const ExtraIcon = ({ iconName }: { iconName: string }) => {
     case 'health_and_safety': return <Heart className="w-4 h-4" />;
     case 'leaf': return <Leaf className="w-4 h-4" />;
     case 'citrus': return <Citrus className="w-4 h-4" />;
+    case 'icecream': return <IceCream className="w-4 h-4" />;
+    case 'milk': return <Milk className="w-4 h-4" />;
     default: return <PlusCircle className="w-4 h-4" />;
   }
 };
+
+const FEATURED_EXTRAS = ['Mel de Abelha', 'Whey Protein'];
+const EXTRAS_ORDER = [
+  'Iogurte', 'Iogurte Natural', 'Iogurte Natural extra',
+  'Sorvete', 'Sorvete extra',
+  'Granola', 'Aveia', 'Mel de Abelha',
+  'Leite Desnatado', 'Leite de Soja'
+];
+const FIT_EXTRAS_ORDER = ['Whey Protein', 'Colageno', 'Colágeno', 'Creatina'];
 
 export default function Sacola() {
   const navigate = useNavigate();
@@ -588,24 +599,94 @@ export default function Sacola() {
             <h2 className="font-display font-bold text-[#1c1b1b] px-1 text-base">Turbine seu pedido 💪</h2>
             
             {turbineSections.map((section: any) => {
-              const fullOrder = [
-                'Iogurte', 'Sorvete', 'Granola', 'Aveia', 'Mel de Abelha', 
-                'Leite Desnatado', 'Leite de Soja', 'Whey Protein', 'Colágeno', 'Creatina'
-              ];
+              const featuredGroup = section.availableOnly.filter((extra: Extra) => FEATURED_EXTRAS.includes(extra.name));
 
-              const sortedExtras = [...section.availableOnly].sort((a: Extra, b: Extra) => {
-                const indexA = fullOrder.indexOf(a.name);
-                const indexB = fullOrder.indexOf(b.name);
+              const sortedExtras = section.availableOnly
+                .filter((extra: Extra) => EXTRAS_ORDER.includes(extra.name) && !FEATURED_EXTRAS.includes(extra.name))
+                .sort((a: Extra, b: Extra) => {
+                const indexA = EXTRAS_ORDER.indexOf(a.name);
+                const indexB = EXTRAS_ORDER.indexOf(b.name);
                 return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
               });
+              const fitGroup = section.availableOnly
+                .filter((extra: Extra) => FIT_EXTRAS_ORDER.includes(extra.name) && !FEATURED_EXTRAS.includes(extra.name))
+                .sort((a: Extra, b: Extra) => FIT_EXTRAS_ORDER.indexOf(a.name) - FIT_EXTRAS_ORDER.indexOf(b.name));
 
-              if (sortedExtras.length === 0) return null;
+              if (featuredGroup.length === 0 && sortedExtras.length === 0 && fitGroup.length === 0) return null;
 
               return (
                 <div key={section.id} className="space-y-3">
                   <p className="text-[11px] font-bold text-[#5d3f3e] uppercase tracking-wider px-1">
                     {section.productName} {section.totalInGroup > 1 ? `— unidade ${section.unitIndex}` : ''}
                   </p>
+
+                  {featuredGroup.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 px-1">
+                        <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                        <h3 className="text-sm font-bold text-amber-600 uppercase tracking-wider">Mais pedidos</h3>
+                      </div>
+                      <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar">
+                        {featuredGroup.map((extra: Extra) => {
+                          const isSelected = section.originalItem.extras?.some((e: Extra) => e.id === extra.id);
+                          return (
+                            <div key={extra.id} className="relative min-w-[160px] bg-amber-50 rounded-2xl p-4 border border-amber-200 shadow-sm flex flex-col justify-between">
+                              <div className="absolute top-2 right-2">
+                                <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                              </div>
+                              <div className="flex flex-col items-center text-center">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${
+                                  extra.icon === 'bolt' ? 'bg-yellow-100 text-yellow-600' :
+                                  extra.icon === 'local_florist' ? 'bg-pink-100 text-pink-600' :
+                                  extra.icon === 'sync_alt' ? 'bg-blue-100 text-blue-600' :
+                                  extra.icon === 'health_and_safety' ? 'bg-red-100 text-red-600' :
+                                  extra.icon === 'nutrition' ? 'bg-green-100 text-green-600' :
+                                  extra.icon === 'grain' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-amber-100 text-amber-700'
+                                }`}>
+                                  <ExtraIcon iconName={extra.icon} />
+                                </div>
+                                <h4 className="text-xs font-bold text-[#1c1b1b] text-center">{extra.name}</h4>
+                                <p className="text-[9px] text-[#5d3f3e] mt-1 leading-tight text-center line-clamp-2">{extra.description}</p>
+                              </div>
+                              <div className="mt-4 flex flex-col items-center">
+                                <p className="text-xs font-black text-[#1c1b1b] text-center">
+                                  {extra.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                </p>
+                                {extra.glutenFree === false && (
+                                  <span className="text-[9px] text-[#5d3f3e]/60 font-normal mt-0.5 mb-2">
+                                    contém glúten
+                                  </span>
+                                )}
+                                <button
+                                  onClick={() => handleQuickToggleExtra(section.itemId, extra)}
+                                  className={`w-full py-2 rounded-full text-[10px] font-bold transition-all flex items-center justify-center gap-1 border ${
+                                    isSelected
+                                      ? 'bg-green-50 text-green-600 border-green-200 mt-2'
+                                      : 'mt-2 border-amber-500 text-amber-600 hover:bg-amber-50'
+                                  }`}
+                                >
+                                  {isSelected ? (
+                                    <><Check className="w-3 h-3" /> Adicionado</>
+                                  ) : (
+                                    '+ Adicionar'
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {featuredGroup.length > 0 && sortedExtras.length > 0 && (
+                    <div className="border-t border-[#f0eded]" />
+                  )}
+
+                  {sortedExtras.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold text-[#5d3f3e] uppercase tracking-wider px-1">Extras</h3>
                   
                   <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar">
                     {sortedExtras.map((extra: Extra) => (
@@ -658,6 +739,70 @@ export default function Sacola() {
                       </div>
                     ))}
                   </div>
+                  </div>
+                  )}
+
+                  {sortedExtras.length > 0 && fitGroup.length > 0 && (
+                    <div className="border-t border-[#f0eded]" />
+                  )}
+
+                  {fitGroup.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold text-[#5d3f3e] uppercase tracking-wider px-1">Linha Fit</h3>
+
+                    <div className="flex gap-4 overflow-x-auto pb-4 px-1 no-scrollbar">
+                    {fitGroup.map((extra: Extra) => (
+                      <div key={extra.id} className="min-w-[150px] bg-white rounded-2xl p-4 border border-[#eae7e7] shadow-sm flex flex-col justify-between">
+                        <div className="flex flex-col items-center text-center">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-3 ${
+                            extra.icon === 'bolt' ? 'bg-yellow-50 text-yellow-600' :
+                            extra.icon === 'local_florist' ? 'bg-pink-50 text-pink-600' :
+                            extra.icon === 'sync_alt' ? 'bg-blue-50 text-blue-600' :
+                            extra.icon === 'health_and_safety' ? 'bg-red-50 text-red-600' :
+                            extra.icon === 'nutrition' ? 'bg-green-50 text-green-600' :
+                            extra.icon === 'leaf' ? 'bg-green-50 text-[#16a34a]' :
+                            extra.icon === 'citrus' ? 'bg-orange-50 text-[#ea580c]' :
+                            'bg-[#f0eded] text-[#008388]'
+                          }`}>
+                            <ExtraIcon iconName={extra.icon} />
+                          </div>
+                          <h4 className="text-xs font-bold text-[#1c1b1b]">{extra.name}</h4>
+                          <p className="text-[9px] text-[#5d3f3e] mt-1 leading-tight line-clamp-2">{extra.description}</p>
+                        </div>
+                        <div className="mt-4 flex flex-col items-center">
+                          <p className="text-xs font-black text-[#1c1b1b] text-center">
+                            {extra.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </p>
+                          {extra.glutenFree === false && (
+                            <span className="text-[9px] text-[#5d3f3e]/60 font-normal mt-0.5 mb-2">
+                              contém glúten
+                            </span>
+                          )}
+                          {(() => {
+                            const isSelected = section.originalItem.extras?.some((e: Extra) => e.id === extra.id);
+                            return (
+                              <button
+                                onClick={() => handleQuickToggleExtra(section.itemId, extra)}
+                                className={`w-full py-2 rounded-full text-[10px] font-bold transition-all flex items-center justify-center gap-1 border ${
+                                  isSelected
+                                    ? 'bg-green-50 text-green-600 border-green-200 mt-2'
+                                    : 'mt-auto border-[#bd002a] text-[#bd002a] hover:bg-[#bd002a]/5 active:bg-green-50 active:text-green-600 active:border-green-200'
+                                }`}
+                              >
+                                {isSelected ? (
+                                  <><Check className="w-3 h-3" /> Adicionado</>
+                                ) : (
+                                  '+ Adicionar'
+                                )}
+                              </button>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    ))}
+                    </div>
+                  </div>
+                  )}
                 </div>
               );
             })}
