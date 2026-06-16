@@ -262,7 +262,6 @@ Deno.serve(async (req) => {
           type: payload.paymentMethod === 'debit_card' ? 'debit_card' : 'credit_card',
           token: payload.token,
           installments: Math.max(1, Number(payload.installments) || 1),
-          ...(resolvedIssuerId ? { issuer_id: String(resolvedIssuerId) } : {}),
         };
 
   const mpOrderPayload: Record<string, unknown> = {
@@ -285,7 +284,6 @@ Deno.serve(async (req) => {
         },
       ],
     },
-    notification_url: `${supabaseUrl}/functions/v1/webhook-mercado-pago`,
   };
 
   // 3DS for card payments: triggers challenge only when MP deems risky (on_fraud_risk)
@@ -315,16 +313,24 @@ Deno.serve(async (req) => {
     body: JSON.stringify(mpOrderPayload),
   });
 
-  const mpData = await mpResponse.json().catch(() => null);
-  const mpStatus = String(mpData?.status || '');
-  const mpStatusDetail = String(
-    mpData?.status_detail || mpData?.transactions?.payments?.[0]?.status_detail || '',
-  );
-  console.log('[create-mercado-pago-payment] orders api:', mpResponse.status, mpStatus, mpStatusDetail);
+  const mpRaw = await mpResponse.json().catch(() => null);
 
-  if (!mpResponse.ok) {
+  // Orders API wraps rejected payments in { errors, data } with HTTP 402.
+  // Unwrap so the rest of the code works uniformly.
+  const mpData = (mpResponse.status === 402 && mpRaw?.data) ? mpRaw.data : mpRaw;
+
+  const mpStatus = String(mpData?.status || '');
+  // Prefer payment-level detail (e.g. "high_risk", "pending_challenge") over order-level ("failed")
+  const mpStatusDetail = String(
+    mpData?.transactions?.payments?.[0]?.status_detail || mpData?.status_detail || '',
+  );
+  console.log('[create-mercado-pago-payment] orders api http:', mpResponse.status, 'status:', mpStatus, 'detail:', mpStatusDetail);
+
+  // Hard API errors (4xx that are NOT a payment rejection)
+  if (!mpResponse.ok && mpResponse.status !== 402) {
+    console.log('[create-mercado-pago-payment] api_error:', JSON.stringify(mpRaw));
     await serviceClient.from('orders').update({ status: 'payment_failed', payment_status: 'failed' }).eq('id', savedOrder.id);
-    return jsonResponse({ success: false, mp_status: mpResponse.status, mp_error: mpData, payer_email_used: payerEmail }, 200);
+    return jsonResponse({ success: false, mp_status: mpResponse.status, mp_error: mpRaw, payer_email_used: payerEmail }, 200);
   }
 
   // MP order ID used as provider_payment_id for polling via GET /v1/orders/{id}
@@ -345,6 +351,11 @@ Deno.serve(async (req) => {
     mpStatusDetail === 'pending_challenge'
       ? (pixPayment?.payment_method?.transaction_security?.url || null)
       : null;
+
+  // Update order status immediately for synchronous rejections
+  if (mpStatus === 'failed') {
+    await serviceClient.from('orders').update({ status: 'payment_failed', payment_status: 'failed' }).eq('id', savedOrder.id);
+  }
 
   const { data: savedPayment, error: paymentError } = await serviceClient
     .from('order_payments')

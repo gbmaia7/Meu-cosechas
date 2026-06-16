@@ -59,7 +59,8 @@ export default function ValidandoPagamento() {
       }
 
       if (data?.payment_status === 'failed') {
-        if (data?.status_detail === 'cc_rejected_high_risk') {
+        const isHighRisk = data?.status_detail === 'cc_rejected_high_risk' || data?.status_detail === 'high_risk';
+        if (isHighRisk) {
           setIsHighRiskRejection(true);
           setValidationError('Cartão recusado por análise de risco. Para novos clientes, recomendamos usar o Pix no primeiro pedido — é mais rápido e sem burocracia.');
         } else {

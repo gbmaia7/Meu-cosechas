@@ -72,8 +72,15 @@ Deno.serve(async (req) => {
   const mpResponse = await fetch(mpUrl, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
-  const mpData = await mpResponse.json().catch(() => null);
-  if (!mpResponse.ok) return jsonResponse({ error: 'Unable to fetch Mercado Pago payment', details: mpData }, 502);
+  const mpRaw = await mpResponse.json().catch(() => null);
+
+  // Orders API wraps rejected payments in { errors, data } with HTTP 402 — unwrap
+  const isOrdersApiRejection = useOrdersApi && mpResponse.status === 402 && mpRaw?.data;
+  if (!mpResponse.ok && !isOrdersApiRejection) {
+    return jsonResponse({ error: 'Unable to fetch Mercado Pago payment', details: mpRaw }, 502);
+  }
+
+  const mpData = isOrdersApiRejection ? mpRaw.data : mpRaw;
 
   let providerStatus: string;
   let statusDetail: string | null;
