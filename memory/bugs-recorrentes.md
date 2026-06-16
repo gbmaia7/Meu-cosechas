@@ -79,6 +79,29 @@ Registrar bugs recorrentes, causa provavel, prevencao e status.
   quando existir; buscar por numeros fixos antes de release.
 * Status: corrigido em 2026-06-16.
 
+### Codigo tecnico na entrega presencial
+
+* Bug: tela `pagamento-presencial` para entrega exibia fallback tecnico como
+  `#4ea42fef`, divergindo do codigo operacional visto pela loja/acompanhamento,
+  como `C-009`.
+* Local: `src/context/CartContext.tsx`, `src/screens/PagamentoPresencial.tsx`,
+  `supabase/functions/create-mercado-pago-payment/index.ts`.
+* Causa: geracao de `pickup_code` estava limitada a pedidos de balcao.
+* Prevencao: todo pedido operacional deve receber `pickup_code` no formato
+  `C-000`; fallback tecnico deve ser usado apenas para pedido antigo sem codigo.
+* Status: corrigido em 2026-06-16.
+
+### PIN vazando em mensagem para entregador
+
+* Bug: template do WhatsApp "Falar com o entregador" incluia o PIN de
+  seguranca do cliente.
+* Local: `src/screens/AcompanharPedido.tsx`.
+* Causa: mensagem de contato reutilizava `delivery_pin` como identificador do
+  pedido.
+* Prevencao: PIN so deve ser informado ao entregador no momento da entrega; para
+  contato via WhatsApp usar produto, codigo operacional e endereco.
+* Status: corrigido em 2026-06-16.
+
 ## Pendencias
 
 * A definir: politica de regressao visual para telas internas.

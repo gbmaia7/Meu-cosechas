@@ -15,6 +15,13 @@ import {
 
 const isClube = (name: string) => name.startsWith('[CLUBE]')
 
+const cleanProductName = (name: string) => name.replace(/^\[.*?\]\s*/, '');
+
+const formatDeliveryAddress = (address?: ActiveOrder['address']) => {
+  if (!address) return 'endereco informado no pedido';
+  return [address.block, address.room, address.complement].filter(Boolean).join(', ');
+};
+
 export default function AcompanharPedido() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -42,6 +49,9 @@ export default function AcompanharPedido() {
   const awaitingCashierPayment =
     activeOrder?.modality === 'counter' && activeOrder?.payment_status === 'pay_on_delivery';
   const orderDisplayCode = activeOrder?.pickup_code || (activeOrder?.id ? `#${activeOrder.id.slice(0, 8)}` : '');
+  const deliveryProductName = activeOrder?.items?.[0]?.name ? cleanProductName(activeOrder.items[0].name) : 'meu pedido';
+  const deliveryAddress = formatDeliveryAddress(activeOrder?.address);
+  const deliveryWhatsappMessage = `Ol\u00e1. Sou o cliente que fez o pedido "${deliveryProductName} (${orderDisplayCode})". Estou aguardando a entrega no endere\u00e7o ${deliveryAddress}.`;
 
   const [deliveryWhatsapp, setDeliveryWhatsapp] = useState('5521995435384');
 
@@ -263,7 +273,7 @@ export default function AcompanharPedido() {
             </p>
             <a
               href={`https://wa.me/${deliveryWhatsapp}?text=${encodeURIComponent(
-                `Olá! Sou o cliente do pedido ${activeOrder.pickup_code || ''}, meu PIN é ${activeOrder.delivery_pin}. Estou aguardando a entrega.`
+                deliveryWhatsappMessage
               )}`}
               target="_blank"
               rel="noopener noreferrer"

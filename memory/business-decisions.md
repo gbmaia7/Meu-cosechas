@@ -54,6 +54,16 @@ Registrar decisoes de negocio, produto e operacao.
   `payment_status = failed` automaticamente apos 5 minutos; a acao manual
   "Pago" so avanca se o pedido ainda estiver pendente.
 
+### 2026-06-16
+
+* Decisao: o codigo operacional `C-000` deve identificar pedidos de balcao e
+  entrega.
+* Motivo: evitar divergencia entre telas do cliente, loja, acompanhamento e
+  contato com entregador.
+* Impacto no produto: pedidos presenciais e Pix recebem `pickup_code` no mesmo
+  formato; mensagens de entrega usam produto + codigo operacional e nunca
+  incluem o PIN de seguranca.
+
 ## Pendencias
 
 * Necessita validacao: regra para tentativa repetida de PIN errado.

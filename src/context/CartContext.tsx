@@ -171,17 +171,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     let pickupCode: string | null = null;
     let deliveryPin: string | null = null;
 
-    if (order.modality === 'counter' || !order.modality) {
-      const today = new Date();
-      today.setHours(7, 0, 0, 0);
-      const { count } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('modality', 'counter')
-        .gte('created_at', today.toISOString());
-      const sequence = (count || 0) + 1;
-      pickupCode = `C-${String(sequence).padStart(3, '0')}`;
-    }
+    const today = new Date();
+    today.setHours(7, 0, 0, 0);
+    const { count } = await supabase
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .not('pickup_code', 'is', null)
+      .gte('created_at', today.toISOString());
+    const sequence = (count || 0) + 1;
+    pickupCode = `C-${String(sequence).padStart(3, '0')}`;
 
     if (order.modality === 'delivery') {
       deliveryPin = String(Math.floor(1000 + Math.random() * 9000));

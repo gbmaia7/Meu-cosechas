@@ -19,6 +19,7 @@ export default function PagamentoPresencial() {
   const orderId = location.state?.orderId;
   const pickupCode = location.state?.pickupCode || location.state?.pickup_code || null;
   const deliveryPin = location.state?.deliveryPin || location.state?.delivery_pin || null;
+  const orderDisplayCode = pickupCode || (orderId ? `#${String(orderId).slice(0, 8)}` : '-');
   const couponDiscount = location.state?.couponDiscount ?? 0;
   const referrerId = location.state?.referrerId ?? null;
 
@@ -71,7 +72,7 @@ export default function PagamentoPresencial() {
         <div className="bg-white rounded-lg shadow-[0_-12px_40px_rgba(28,27,27,0.05)] p-6 mb-6 w-full mt-4">
           <div className="flex justify-between items-center mb-6">
             <span className="text-[#5d3f3e] text-sm font-semibold uppercase tracking-wider">Pedido</span>
-            <span className="text-[#e8173a] font-bold text-lg">{pickupCode || `#${String(orderId || '').slice(0, 8)}`}</span>
+            <span className="text-[#e8173a] font-bold text-lg">{orderDisplayCode}</span>
           </div>
 
           <div className="space-y-4 mb-6">

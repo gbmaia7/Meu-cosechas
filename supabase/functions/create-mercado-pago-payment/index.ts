@@ -133,16 +133,17 @@ Deno.serve(async (req) => {
 
   let pickupCode: string | null = null;
   let deliveryPin: string | null = null;
-  if (payload.modality === 'counter') {
-    const today = new Date();
-    today.setHours(7, 0, 0, 0);
-    const { count } = await serviceClient
-      .from('orders')
-      .select('*', { count: 'exact', head: true })
-      .eq('modality', 'counter')
-      .gte('created_at', today.toISOString());
-    pickupCode = `C-${String((count || 0) + 1).padStart(3, '0')}`;
-  } else {
+
+  const today = new Date();
+  today.setHours(7, 0, 0, 0);
+  const { count } = await serviceClient
+    .from('orders')
+    .select('*', { count: 'exact', head: true })
+    .not('pickup_code', 'is', null)
+    .gte('created_at', today.toISOString());
+  pickupCode = `C-${String((count || 0) + 1).padStart(3, '0')}`;
+
+  if (payload.modality === 'delivery') {
     deliveryPin = String(Math.floor(1000 + Math.random() * 9000));
   }
 

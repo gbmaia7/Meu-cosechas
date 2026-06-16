@@ -22,7 +22,8 @@ tratada como "Necessita validacao".
 * Pedidos online devem nascer como `pending_payment`.
 * Loja e entregador nao devem operar pedido `pending_payment`.
 * Pedido online so entra na operacao quando pagamento for aprovado.
-* Retirada no balcao usa `pickup_code`.
+* Pedidos de balcao e entrega usam `pickup_code` como codigo operacional
+  exibido para cliente, loja e atendimento.
 * Entrega usa PIN de seguranca exibido ao cliente e validado no backend.
 * Entrega tem frete gratis para subtotal de produtos maior ou igual a R$20,00.
 * Entrega com subtotal abaixo de R$20,00 cobra taxa de R$4,00.
@@ -31,6 +32,7 @@ tratada como "Necessita validacao".
   gratis.
 * Loja nao deve visualizar PIN de entrega.
 * Entregador deve digitar o PIN informado pelo cliente para concluir entrega.
+* Mensagens automaticas para contato com entregador nao devem revelar o PIN.
 
 ### Pagamento
 
@@ -96,3 +98,5 @@ tratada como "Necessita validacao".
   "Presencial" no app.
 * 2026-06-16: definido prazo de 5 minutos para expirar pedido de balcao com
   pagamento presencial nao confirmado no caixa.
+* 2026-06-16: codigo operacional `C-000` passa a valer tambem para entrega; o
+  template "Falar com o entregador" deixa de incluir PIN.
