@@ -5,16 +5,11 @@ import { useCart } from '../context/CartContext';
 
 export default function PerfilNaoLogado() {
   const navigate = useNavigate();
-  const { isAuthenticated, setIsAuthenticated, totalItems } = useCart();
+  const { isAuthenticated, totalItems } = useCart();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  const handleToggleAuth = () => {
-    setIsAuthenticated(true);
-    navigate('/perfil/logado');
-  };
 
   return (
     <div className="bg-[#fcf9f8] font-body text-[#1c1b1b] antialiased min-h-screen pb-40">
@@ -33,16 +28,6 @@ export default function PerfilNaoLogado() {
       </header>
 
       <main className="pt-24 pb-12 px-4 max-w-xl mx-auto space-y-6">
-        {/* Simulator Toggle */}
-        <div className="flex justify-end gap-2 px-1">
-          <button 
-            onClick={handleToggleAuth}
-            className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
-          >
-            Simular: Fazer Login
-          </button>
-        </div>
-
         {/* Hero Section */}
         <section className="bg-white rounded-2xl p-8 text-center shadow-lg border border-[#e5e2e1]/50 relative overflow-hidden">
           <div className="w-20 h-20 bg-[#f6f3f2] rounded-full mx-auto flex items-center justify-center mb-6 border-4 border-white shadow-sm relative z-10">

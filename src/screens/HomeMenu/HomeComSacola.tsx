@@ -40,14 +40,12 @@ import ImageLightbox from '../../components/ImageLightbox';
 
 export default function HomeComSacola() {
   const navigate = useNavigate();
-  const { addToCart, totalItems, totalPrice, userPoints, isAuthenticated, setIsAuthenticated } = useCart();
+  const { addToCart, totalItems, totalPrice, userPoints, isAuthenticated } = useCart();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Mais pedidos');
   const [searchQuery, setSearchQuery] = useState('');
-  const [manualAvailability, setManualAvailability] = useState<'AUTO' | 'AVAILABLE' | 'UNAVAILABLE'>('AUTO');
-  const [manualDay, setManualDay] = useState<number>(new Date().getDay());
   const [creditBalance, setCreditBalance] = useState<number>(0);
 
   useEffect(() => {
@@ -71,17 +69,10 @@ export default function HomeComSacola() {
   const diaSemana = agora.getDay(); // 0=Dom, 1=Seg... 6=Sab
   const hora = agora.getHours();
   
-  const effectiveDay = manualAvailability === 'AUTO' ? diaSemana : manualDay;
-  const isPromoDayEffective = manualAvailability === 'AUTO' ? (diaSemana === 3 || diaSemana === 5) : (manualDay === 3 || manualDay === 5);
-  const productOfToday = BOA_DE_DIA[effectiveDay];
-
-  const effectiveBoaAvailability = manualAvailability === 'AUTO'
-    ? (!!productOfToday && hora < 16)
-    : (manualAvailability === 'AVAILABLE');
-
-  const effectivePromoAvailability = manualAvailability === 'AUTO'
-    ? (isPromoDayEffective && hora < 16)
-    : (manualAvailability === 'AVAILABLE');
+  const productOfToday = BOA_DE_DIA[diaSemana];
+  const isPromoDayEffective = diaSemana === 3 || diaSemana === 5;
+  const effectiveBoaAvailability = !!productOfToday && hora < 16;
+  const effectivePromoAvailability = isPromoDayEffective && hora < 16;
 
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const searchResults = normalizedSearchQuery
@@ -156,78 +147,6 @@ export default function HomeComSacola() {
       </header>
 
       <main className="mt-48 px-4 space-y-6">
-        {/* Simulator Toggle (Preview Only) */}
-        <div className="flex flex-col items-center gap-3 mb-2">
-          <div className="flex justify-center gap-2">
-            <button 
-              onClick={() => setIsAuthenticated(true)}
-              className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all ${isAuthenticated ? 'bg-[#bd002a] text-white shadow-sm' : 'border border-[#e5e2e1] text-[#5d3f3e]/60'}`}
-            >
-              Logado
-            </button>
-            <button 
-              onClick={() => setIsAuthenticated(false)}
-              className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all ${!isAuthenticated ? 'bg-[#bd002a] text-white shadow-sm' : 'border border-[#e5e2e1] text-[#5d3f3e]/60'}`}
-            >
-              Não logado
-            </button>
-          </div>
-
-          {(selectedCategory === 'Boa de hoje' || selectedCategory === 'Promoção Seu Cosechas') && (
-            <div className="flex flex-col gap-3 items-center w-full">
-              {selectedCategory === 'Boa de hoje' && (
-                <div className="flex gap-2 overflow-x-auto pb-1 w-full justify-center scrollbar-none px-4">
-                  {[
-                    { label: 'Dom', value: 0 },
-                    { label: 'Seg', value: 1 },
-                    { label: 'Ter', value: 2 },
-                    { label: 'Qua', value: 3 },
-                    { label: 'Qui', value: 4 },
-                    { label: 'Sex', value: 5 },
-                    { label: 'Sáb', value: 6 }
-                  ].map((day) => (
-                    <button
-                      key={day.value}
-                      onClick={() => {
-                        setManualDay(day.value);
-                        setManualAvailability('AVAILABLE'); // Auto switch to manual mode when selecting day
-                      }}
-                      className={`px-4 py-2 rounded-full text-[10px] font-bold transition-all whitespace-nowrap ${
-                        manualDay === day.value 
-                          ? 'bg-[#bd002a] text-white shadow-sm' 
-                          : 'border border-[#e5e2e1] text-[#5d3f3e]/60'
-                      }`}
-                    >
-                      {day.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-              
-              <div className="flex justify-center gap-2 bg-[#f0eded]/50 p-1 rounded-full">
-                <button 
-                  onClick={() => setManualAvailability('AVAILABLE')}
-                  className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all ${manualAvailability === 'AVAILABLE' ? 'bg-[#008388] text-white shadow-sm' : 'text-[#5d3f3e]/60'}`}
-                >
-                  Disponível
-                </button>
-                <button 
-                  onClick={() => setManualAvailability('UNAVAILABLE')}
-                  className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all ${manualAvailability === 'UNAVAILABLE' ? 'bg-[#bd002a] text-white shadow-sm' : 'text-[#5d3f3e]/60'}`}
-                >
-                  Indisponível
-                </button>
-                <button 
-                  onClick={() => setManualAvailability('AUTO')}
-                  className={`px-4 py-1.5 rounded-full text-[10px] font-bold transition-all ${manualAvailability === 'AUTO' ? 'bg-black text-white shadow-sm' : 'text-[#5d3f3e]/60'}`}
-                >
-                  Auto
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Engagement Cards (Bento Style) */}
         <section className="grid grid-cols-2 gap-3">
           <div className="bg-[#FDECEA] p-4 rounded-2xl border border-[#F3E0C1]/50 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col h-full">

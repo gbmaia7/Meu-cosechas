@@ -57,21 +57,6 @@ export default function IndiqueGanhe() {
       </header>
 
       <main className="max-w-md mx-auto pt-20">
-        {/* Simulator Toggle (Preview Only) */}
-        <div className="flex justify-end gap-2 px-6 mb-4">
-          <button 
-            className="text-[9px] font-bold text-[#008388] border border-[#008388] px-2 py-1 rounded-md bg-[#008388]/5"
-          >
-            Não logado
-          </button>
-          <button 
-            onClick={() => navigate('/indique-ganhe/logado')}
-            className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
-          >
-            Logado
-          </button>
-        </div>
-
         {/* Hero Banner */}
         <section className="mt-4 px-4">
           <div className="relative overflow-hidden bg-gradient-to-br from-[#bd002a] to-[#e8173a] rounded-2xl p-8 flex flex-col justify-center min-h-[200px] shadow-lg text-white">

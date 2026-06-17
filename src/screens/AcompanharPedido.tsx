@@ -26,7 +26,7 @@ export default function AcompanharPedido() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const { activeOrders, updateActiveOrderStatus, removeActiveOrder, userPoints, setUserPoints } = useCart();
+  const { activeOrders, updateActiveOrderStatus, removeActiveOrder } = useCart();
   
   const idFromUrl = searchParams.get('id');
   const activeOrder = idFromUrl 
@@ -139,29 +139,6 @@ export default function AcompanharPedido() {
       </header>
 
       <main className="pt-20 px-6 space-y-6">
-        {/* Dev Action Bar */}
-        <div className="flex flex-wrap gap-2 justify-end">
-            <button 
-                onClick={toggleOrderStatus}
-                className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
-            >
-                Simular Pedido: {orderStatus === 'preparing' ? 'Preparando' : 'Pronto'}
-            </button>
-            <button 
-                onClick={() => {
-                  if (userPoints < 5) setUserPoints(5);
-                  else if (userPoints < 7) setUserPoints(7);
-                  else if (userPoints < 10) setUserPoints(10);
-                  else if (userPoints < 12) setUserPoints(12);
-                  else if (userPoints < 14) setUserPoints(14);
-                  else setUserPoints(0);
-                }}
-                className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
-            >
-                Simular Pontos do Clube: {userPoints}
-            </button>
-        </div>
-
         {/* Status Area */}
         {awaitingCashierPayment ? (
           <section className="relative overflow-hidden bg-gradient-to-br from-amber-50 to-amber-100 rounded-lg p-8 text-center space-y-4">

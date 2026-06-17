@@ -6,16 +6,11 @@ import { useCart } from '../context/CartContext';
 
 export default function ClubeCosechasNaoLogado() {
   const navigate = useNavigate();
-  const { userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, totalItems } = useCart();
+  const { isAuthenticated, totalItems } = useCart();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  const handleToggleAuth = () => {
-    setIsAuthenticated(!isAuthenticated);
-    navigate(isAuthenticated ? '/clube/nao-logado' : '/clube/logado');
-  };
 
   const rewards = [
     { 
@@ -52,30 +47,6 @@ export default function ClubeCosechasNaoLogado() {
       </header>
 
       <main className="pt-24 pb-12 px-4 max-w-2xl mx-auto space-y-6">
-        {/* Simulator Toggle (Preview Only) */}
-        <div className="flex justify-end gap-2 px-1">
-          <button 
-            onClick={handleToggleAuth}
-            className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
-          >
-            Simular: {isAuthenticated ? 'Sair' : 'Entrar'}
-          </button>
-          {isAuthenticated && (
-            <button 
-              onClick={() => {
-                if (userPoints < 5) setUserPoints(5);
-                else if (userPoints < 7) setUserPoints(7);
-                else if (userPoints < 10) setUserPoints(10);
-                else if (userPoints < 12) setUserPoints(12);
-                else if (userPoints < 14) setUserPoints(14);
-                else setUserPoints(0);
-              }}
-              className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
-            >
-              Pontos: {userPoints}
-            </button>
-          )}
-        </div>
         {/* Banner Hero */}
         <section className="relative overflow-hidden bg-[#bd002a] rounded-2xl p-8 flex flex-col justify-center min-h-[160px] shadow-lg">
           <div className="absolute top-0 right-0 w-48 h-48 -mr-12 -mt-12 bg-[#e8173a] rounded-full opacity-20 blur-3xl"></div>

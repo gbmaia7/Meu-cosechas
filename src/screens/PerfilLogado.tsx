@@ -22,9 +22,6 @@ const phoneDropdownStyle = `
 export default function PerfilLogado() {
   const navigate = useNavigate();
   const { isAuthenticated, setIsAuthenticated, totalItems } = useCart();
-  const [isPhoneVerified, setIsPhoneVerified] = useState(() => {
-    return localStorage.getItem('isPhoneVerified') === 'true';
-  });
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [showChangePass, setShowChangePass] = useState(false);
@@ -57,12 +54,6 @@ export default function PerfilLogado() {
     disableDialCodeAndPrefix: true,
     onChange: ({ phone }) => setNewPhoneE164(phone),
   });
-
-  const togglePhoneVerified = () => {
-    const newState = !isPhoneVerified;
-    setIsPhoneVerified(newState);
-    localStorage.setItem('isPhoneVerified', String(newState));
-  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -234,25 +225,6 @@ export default function PerfilLogado() {
       </header>
 
       <main className="pt-24 pb-12 px-4 max-w-2xl mx-auto space-y-6">
-        {/* Simulator Toggle */}
-        <div className="flex justify-end gap-2 px-1">
-          <button
-            onClick={togglePhoneVerified}
-            className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
-          >
-            Simular: {isPhoneVerified ? 'Não Verificado' : 'Verificado'}
-          </button>
-          <button
-            onClick={() => {
-              setIsAuthenticated(false);
-              navigate('/perfil/nao-logado');
-            }}
-            className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
-          >
-            Simular: Não Logado
-          </button>
-        </div>
-
         {/* User Info Header */}
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-[#e5e2e1]/50 flex items-start justify-between">
           <div>

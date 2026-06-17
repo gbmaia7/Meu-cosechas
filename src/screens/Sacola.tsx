@@ -52,7 +52,7 @@ const FIT_EXTRAS_ORDER = ['Whey Protein', 'Colageno', 'Colágeno', 'Creatina'];
 export default function Sacola() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, userPoints, setUserPoints, isAuthenticated, setIsAuthenticated, phoneVerified, addActiveOrder } = useCart();
+  const { items, addToCart, updateQuantity, removeFromCart, updateItem, totalPrice, totalItems, userPoints, setUserPoints, isAuthenticated, phoneVerified, addActiveOrder } = useCart();
   const initialState = location.state as {
     modality?: 'counter' | 'delivery';
     address?: { block?: string; room?: string; complement?: string };
@@ -808,24 +808,6 @@ export default function Sacola() {
             })}
           </section>
         )}
-
-        {/* Simulator Toggle (Preview Only) */}
-        <div className="px-1 flex justify-end gap-2">
-          <button 
-            onClick={() => setIsAuthenticated(!isAuthenticated)}
-            className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
-          >
-            Simular: {isAuthenticated ? 'Sair' : 'Entrar'}
-          </button>
-          {isAuthenticated && (
-            <button 
-              onClick={() => setUserPoints(userPoints >= 7 ? 5 : 7)}
-              className="text-[9px] font-bold text-[#a8a29e] border border-[#a8a29e] px-2 py-1 rounded-md active:bg-[#f0eded]"
-            >
-              Pontos: {userPoints}
-            </button>
-          )}
-        </div>
 
         {/* Clube Cosechas */}
         {!isAuthenticated ? (
