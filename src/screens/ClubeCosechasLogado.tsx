@@ -50,6 +50,8 @@ export default function ClubeCosechasLogado() {
       referral_bonus: 'Indicação de amigo',
       expiration: 'Pontos expirados',
       manual: 'Ajuste manual',
+      counter_purchase: 'Compra no balcão',
+      counter_purchase_cancelled: 'Cancelamento — compra no balcão',
     };
     return map[reason] || reason;
   };

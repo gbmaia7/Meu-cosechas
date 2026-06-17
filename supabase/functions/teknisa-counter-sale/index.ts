@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
   const points = 1;
   const profile = await findVerifiedProfileByPhone(serviceClient, phoneE164);
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + 45 * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
   const status = profile ? 'claimed' : 'pending';
   const { data: eventRow, error: insertError } = await serviceClient
